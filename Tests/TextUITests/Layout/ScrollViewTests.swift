@@ -503,6 +503,75 @@ struct ScrollViewTests {
 
     // MARK: - Partially visible children
 
+    @Test("Child clipped at bottom still renders with full layout height")
+    func bottomClipPreservesLayout() {
+        // When a child extends below the viewport, it must still be
+        // rendered at its full height (via temp buffer) so its internal
+        // layout algorithm allocates correctly. Previously, the child
+        // was rendered with only the visible height, causing VStack
+        // greedy allocation to under-allocate to children.
+        let view = ScrollView(showsIndicator: false) {
+            VStack(spacing: 1) {
+                Text("First")
+                Text("Second")
+                Text("Third")
+                Text("Fourth")
+                Text("Fifth")
+                Text("Sixth")
+            }
+        }
+        // Viewport of 4 rows, content = 6 lines + 5 spacing = 11 rows
+        // At scrollOffset 0, child is clipped at bottom (11 > 4).
+        var buffer = Buffer(width: 10, height: 4)
+        let region = Region(row: 0, col: 0, width: 10, height: 4)
+        render(view, into: &buffer, region: region)
+
+        // First child should render correctly even though content overflows
+        #expect(buffer[0, 0].char == "F")
+        #expect(buffer[0, 1].char == "i")
+        #expect(buffer[0, 2].char == "r")
+        // Second child at row 2 (row 0 + spacing 1 + row 1)
+        #expect(buffer[2, 0].char == "S")
+        #expect(buffer[2, 1].char == "e")
+    }
+
+    @Test("Bordered items in VStack inside ScrollView render content")
+    func borderedItemsInScrollViewVStack() {
+        // Reproduces the demo bug: HStack with bordered padded Text
+        // inside a VStack inside ScrollView. When viewport < content
+        // height, the VStack must still lay out at full height.
+        let view = ScrollView(showsIndicator: false) {
+            VStack(spacing: 1) {
+                Text("Header")
+                HStack(spacing: 1) {
+                    Text("Hi")
+                        .padding(horizontal: 1)
+                        .border(.square)
+                    Text("Go")
+                        .padding(horizontal: 1)
+                        .border(.square)
+                }
+                Text("Footer")
+            }
+        }
+        // Content: Header(1) + sp(1) + HStack(3) + sp(1) + Footer(1) = 7
+        // Use viewport of 5 to trigger bottom-clip
+        var buffer = Buffer(width: 20, height: 5)
+        let region = Region(row: 0, col: 0, width: 20, height: 5)
+        render(view, into: &buffer, region: region)
+
+        // Header should be at row 0
+        #expect(buffer[0, 0].char == "H")
+
+        // HStack border at row 2 (Header + spacing)
+        #expect(buffer[2, 0].char == "┌")
+
+        // Text content inside border at row 3
+        // Border col 0=┌, inner: col 1=space(pad), col 2=H, col 3=i
+        #expect(buffer[3, 2].char == "H")
+        #expect(buffer[3, 3].char == "i")
+    }
+
     @Test("Partially visible child at bottom is clipped")
     func partiallyVisibleBottom() {
         let view = ScrollView(showsIndicator: false) {

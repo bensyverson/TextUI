@@ -168,20 +168,45 @@ enum StackLayout {
             return a.flexibility < b.flexibility
         }
 
-        // Greedy allocation
-        var remaining = available
+        // Two-phase greedy allocation:
+        // Phase 1: Guarantee each child its minimum size
+        // Phase 2: Distribute surplus above minimums (least flexible first)
+        //
+        // This prevents the equal-share division from under-allocating
+        // to children with higher minimums (e.g. bordered views) when
+        // multiple children have the same flexibility.
         var allocations = [Int](repeating: 0, count: children.count)
         var sizes = [Size2D](repeating: .zero, count: children.count)
 
-        for (i, flexChild) in flexChildren.enumerated() {
-            let remainingCount = flexChildren.count - i
-            let share = remaining / remainingCount
-            let childProposal = makeProposal(axis: axis, primary: share, cross: crossProposal)
-            let childSize = TextUI.sizeThatFits(flexChild.view, proposal: childProposal, context: context)
-            let actualPrimary = primaryDimension(childSize, axis: axis)
-            allocations[flexChild.index] = actualPrimary
-            sizes[flexChild.index] = childSize
-            remaining -= actualPrimary
+        let totalMinimum = flexChildren.map(\.minSize).reduce(0, +)
+
+        if available >= totalMinimum {
+            // Enough space: start from minimums, distribute surplus
+            var surplus = available - totalMinimum
+            for (i, flexChild) in flexChildren.enumerated() {
+                let remainingCount = flexChildren.count - i
+                let share = surplus > 0 ? surplus / remainingCount : 0
+                let offered = flexChild.minSize + share
+                let childProposal = makeProposal(axis: axis, primary: offered, cross: crossProposal)
+                let childSize = TextUI.sizeThatFits(flexChild.view, proposal: childProposal, context: context)
+                let actualPrimary = primaryDimension(childSize, axis: axis)
+                allocations[flexChild.index] = actualPrimary
+                sizes[flexChild.index] = childSize
+                surplus -= (actualPrimary - flexChild.minSize)
+            }
+        } else {
+            // Not enough for all minimums: equal-share squeeze
+            var remaining = available
+            for (i, flexChild) in flexChildren.enumerated() {
+                let remainingCount = flexChildren.count - i
+                let share = remaining / remainingCount
+                let childProposal = makeProposal(axis: axis, primary: share, cross: crossProposal)
+                let childSize = TextUI.sizeThatFits(flexChild.view, proposal: childProposal, context: context)
+                let actualPrimary = primaryDimension(childSize, axis: axis)
+                allocations[flexChild.index] = actualPrimary
+                sizes[flexChild.index] = childSize
+                remaining -= actualPrimary
+            }
         }
 
         // Place children sequentially in original order

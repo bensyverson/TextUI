@@ -114,6 +114,7 @@ final class RunLoop {
                 renderFrame()
             case let .resize(newSize):
                 screen.resize(width: newSize.width, height: newSize.height)
+                Terminal.clearScreen()
                 renderFrame()
             case .shutdown:
                 isRunning = false

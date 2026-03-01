@@ -6,7 +6,7 @@ import TextUI
 struct ViewsTab: View {
     var body: some View {
         ScrollView {
-            VStack(spacing: 1) {
+            VStack {
                 Text("All Views", style: .bold)
                     .padding(bottom: 1)
 
@@ -18,7 +18,7 @@ struct ViewsTab: View {
                     AttributedText.TextSpan("file ", style: .plain)
                     AttributedText.TextSpan("not found", style: Style(fg: .yellow).italicized())
                 }
-                .padding(bottom: 1)
+                .padding(bottom: 2)
 
                 // MARK: - ForEach
 
@@ -30,7 +30,7 @@ struct ViewsTab: View {
                             .border(.square)
                     }
                 }
-                .padding(bottom: 1)
+                .padding(bottom: 2)
 
                 // MARK: - Group
 
@@ -42,7 +42,7 @@ struct ViewsTab: View {
                         Text("Three", style: Style(fg: .magenta))
                     }
                 }
-                .padding(bottom: 1)
+                .padding(bottom: 2)
 
                 // MARK: - ZStack
 
@@ -52,7 +52,7 @@ struct ViewsTab: View {
                         .frame(width: 30, height: 3)
                     Text("Centered on blue", style: Style(fg: .white).bolded())
                 }
-                .padding(bottom: 1)
+                .padding(bottom: 2)
 
                 // MARK: - Canvas
 

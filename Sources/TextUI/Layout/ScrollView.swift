@@ -184,18 +184,20 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
             let skipRows = visibleTop - childTop
             let visibleHeight = visibleBottom - visibleTop
 
-            if skipRows == 0 {
-                // Fully visible from top (may be clipped at bottom)
+            if visibleHeight >= childHeight {
+                // Fully visible — render directly into the buffer
                 let childRegion = region.subregion(
                     row: rowInRegion,
                     col: 0,
                     width: contentWidth,
-                    height: visibleHeight,
+                    height: childHeight,
                 )
                 TextUI.render(child, into: &buffer, region: childRegion, context: childContext)
             } else {
-                // Child is partially above viewport — render into a temp buffer
-                // and copy the visible portion
+                // Partially visible (clipped at top, bottom, or both) —
+                // render at full height into a temp buffer, then copy
+                // the visible portion. This ensures the child's layout
+                // algorithm sees the full height it was sized for.
                 var tempBuffer = Buffer(width: contentWidth, height: childHeight)
                 let tempRegion = Region(row: 0, col: 0, width: contentWidth, height: childHeight)
                 TextUI.render(child, into: &tempBuffer, region: tempRegion, context: childContext)

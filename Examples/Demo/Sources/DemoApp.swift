@@ -27,6 +27,7 @@ struct DemoApp: App {
             }
 
             CommandBar()
+                .foregroundColor(.blue)
         }
         .environmentObject(state)
     }

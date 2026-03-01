@@ -146,4 +146,39 @@ struct VStackTests {
         let stack = VStack {}
         #expect(stack.sizeThatFits(.unspecified) == .zero)
     }
+
+    // MARK: - Greedy Allocation with Equal Flexibility
+
+    @Test("Bordered child gets enough height for content when siblings are equal flexibility")
+    func borderedChildGetsFullHeight() {
+        // Regression: when all children have the same flexibility, the
+        // old equal-share division could under-allocate bordered views
+        // (min height 2) leaving no room for their inner content.
+        let stack = VStack {
+            Text("Top")
+            Text("Middle")
+                .padding(horizontal: 1)
+                .border(.square)
+            Text("Bottom")
+        }
+        // Ideal: Top(1) + Middle(3) + Bottom(1) = 5
+        // Propose exactly 5 height — should allocate perfectly
+        let size = stack.sizeThatFits(SizeProposal(width: 20, height: 5))
+        #expect(size.height == 5)
+
+        var buffer = Buffer(width: 20, height: 5)
+        let region = Region(row: 0, col: 0, width: 20, height: 5)
+        render(stack, into: &buffer, region: region)
+
+        // Top text at row 0
+        #expect(buffer[0, 0].char == "T")
+        // Border at row 1
+        #expect(buffer[1, 0].char == "┌")
+        // Content inside border at row 2
+        #expect(buffer[2, 2].char == "M")
+        // Border bottom at row 3
+        #expect(buffer[3, 0].char == "└")
+        // Bottom text at row 4
+        #expect(buffer[4, 0].char == "B")
+    }
 }
