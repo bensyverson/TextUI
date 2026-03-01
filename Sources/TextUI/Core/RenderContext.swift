@@ -48,6 +48,12 @@ public struct RenderContext: Sendable {
     /// overlays that render on top of all other content.
     var overlayStore: OverlayStore?
 
+    /// The task store for view-scoped async task lifecycle.
+    ///
+    /// Set by `RunLoop` and used by ``TaskView`` to register and manage
+    /// async tasks that run while a view is in the tree.
+    var taskStore: TaskStore?
+
     /// The progress view style override, if any.
     ///
     /// Set by ``ProgressViewStyleView`` and read by ``ProgressView``

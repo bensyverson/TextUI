@@ -18,6 +18,9 @@ struct DemoApp: App {
                 TabView.Tab("Progress") {
                     ProgressTab()
                 }
+                TabView.Tab("Log") {
+                    LogTab()
+                }
                 TabView.Tab("Layout") {
                     LayoutTab()
                 }

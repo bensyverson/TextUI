@@ -53,6 +53,13 @@ to add styling or background fills.
   the child has already set a background are preserved.
 - **`.overlay(_:)`** — Renders additional content on top of the view.
 
+### Lifecycle Modifiers
+
+- **`.task {}`** — Runs an async closure when the view first appears.
+  The task is automatically cancelled when the view is removed from the
+  tree (e.g. when switching tabs). Useful for periodic updates, network
+  polling, or any async work scoped to a view's lifetime.
+
 ### Structural Modifiers
 
 - **`.border(_:)`** — Draws a box-drawing border, adding 2 to each axis.

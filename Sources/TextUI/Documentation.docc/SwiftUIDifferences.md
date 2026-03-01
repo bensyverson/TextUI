@@ -27,11 +27,12 @@ you compose views the same way; the difference is invisible at the call site.
 
 | SwiftUI | TextUI | Notes |
 |---------|--------|-------|
-| `@State` | — | Not available; use `@Observed` on a class instead |
+| `@State` | ``State`` | View-local state keyed by declaration site |
 | `@StateObject` | `@Observed` | Annotate properties on a `@MainActor final class` |
 | `@Binding` | Closures | Pass `onChange` closures instead of bindings |
 | `@ObservedObject` | `@EnvironmentObject` | Inject with `.environmentObject()` |
 | `@Published` | ``Observed`` | Every `@Observed` mutation signals a re-render |
+| `.task {}` | `.task {}` | View-scoped async work with automatic cancellation |
 | Equality gating | None | All mutations trigger a re-render; ``Screen``'s diff flush is the optimization layer |
 
 > Tip: See <doc:StateManagement> for the full pattern.
@@ -74,18 +75,28 @@ events. Navigation uses:
 ``FocusState`` works like SwiftUI's `@FocusState`, and `.focused(_:equals:)`
 binds views to focus values. See <doc:FocusSystem> for the full model.
 
-### Controls — What's Available
+### Familiar Views
 
-| Control | Status |
-|---------|--------|
-| ``Button`` | Available |
-| ``TextField`` | Available (single-line) |
-| ``Toggle`` | Available (checkbox-style) |
-| ``Picker`` | Available (inline cycling + dropdown overlay) |
-| ``ScrollView`` | Available (vertical, keyboard-driven) |
-| ``Table`` | Available (fixed + flex columns) |
-| ``TabView`` | Available (tab bar + content panes) |
-| ``ProgressView`` | Available (spinner + bar styles) |
+Most SwiftUI primitives have a direct TextUI counterpart:
+
+| SwiftUI | TextUI | Notes |
+|---------|--------|-------|
+| `Text` | ``Text`` | Single style per view; use ``AttributedText`` for mixed styles |
+| `HStack` / `VStack` / `ZStack` | ``HStack`` / ``VStack`` / ``ZStack`` | Same semantics; integer spacing |
+| `Spacer` | ``Spacer`` | minLength defaults to `0` |
+| `Divider` | ``Divider`` | Horizontal and vertical |
+| `Button` | ``Button`` | Enter/Space to activate |
+| `TextField` | ``TextField`` | Single-line only |
+| `Toggle` | ``Toggle`` | Checkbox-style `[x]` / `[ ]` |
+| `Picker` | ``Picker`` | Inline cycling + dropdown overlay |
+| `ScrollView` | ``ScrollView`` | Vertical only, keyboard-driven |
+| `Canvas` | ``Canvas`` | Draws into a character-cell ``Buffer`` instead of a `GraphicsContext` |
+| `Table` | ``Table`` | Fixed + flex columns; keyboard-scrollable |
+| `TabView` | ``TabView`` | Tab bar + content panes |
+| `ProgressView` | ``ProgressView`` | Spinner + bar styles |
+| `ForEach` | ``ForEach`` | Same pattern |
+| `Group` | ``Group`` | Same pattern |
+| `Color` | ``Color`` | Fills region with a solid terminal color |
 
 ### What's Missing from SwiftUI
 
@@ -94,7 +105,7 @@ These SwiftUI concepts have **no TextUI equivalent**:
 - `NavigationStack` / `NavigationLink` — use ``TabView`` or manual state
 - `List` — use ``ScrollView`` with ``ForEach``, or ``Table``
 - `Shape` / `Path` / `GeometryReader` — use ``Canvas`` for custom drawing
-- `@State` / `@Binding` — use ``Observed`` and closures
+- `@Binding` — use closures
 - Implicit animations / transitions
 - `Slider`, `DatePicker`, `Stepper`, `Menu`, `Alert`, `Sheet`
 - SwiftUI's `Layout` protocol — use stacks and ``PrimitiveView``
@@ -103,9 +114,7 @@ These SwiftUI concepts have **no TextUI equivalent**:
 
 These concepts exist in TextUI but have no direct SwiftUI counterpart:
 
-- ``Canvas`` — direct buffer drawing for custom visuals
 - ``CommandBar`` / command palette (Ctrl+P) — global shortcut system
-- ``Table`` — built-in multi-column data display
 - ``AnimationTick`` — explicit frame counter for animation
 - ``PrimitiveView`` — public protocol for custom sizing and rendering
 - ``AttributedText`` / ``SpanBuilder`` — styled text composition

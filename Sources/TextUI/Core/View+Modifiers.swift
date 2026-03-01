@@ -270,6 +270,31 @@ public extension View {
         KeyboardShortcutView(content: self, shortcut: shortcut)
     }
 
+    // MARK: - Task
+
+    /// Runs an async task when the view first appears in the tree.
+    ///
+    /// The task is automatically cancelled when the view is removed.
+    /// Use this to perform async work scoped to a view's lifetime:
+    ///
+    /// ```swift
+    /// ScrollView {
+    ///     ForEach(items) { item in Text(item.name) }
+    /// }
+    /// .task {
+    ///     for await batch in stream {
+    ///         items.append(contentsOf: batch)
+    ///     }
+    /// }
+    /// ```
+    func task(
+        fileID: String = #fileID,
+        line: Int = #line,
+        _ action: @escaping @Sendable () async -> Void,
+    ) -> some View {
+        TaskView(content: self, action: action, key: "\(fileID):\(line)")
+    }
+
     // MARK: - Environment
 
     /// Injects an environment object into the view hierarchy.

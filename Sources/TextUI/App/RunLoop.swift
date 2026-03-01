@@ -33,6 +33,9 @@ final class RunLoop {
     /// The focus manager, created once and reused across frames.
     private let focusStore: FocusStore
 
+    /// The focus store, accessible for ``State`` reads/writes outside the render pass.
+    var stateStore: FocusStore { focusStore }
+
     /// The animation tracker, created once and reused across frames.
     private let animationTracker: AnimationTracker
 
@@ -44,6 +47,9 @@ final class RunLoop {
 
     /// The overlay store for deferred overlay rendering (e.g. Picker dropdowns).
     private let overlayStore = OverlayStore()
+
+    /// The task store for view-scoped async task lifecycle.
+    private let taskStore = TaskStore()
 
     /// Internal event types that the run loop processes.
     enum Event: Sendable {
@@ -317,6 +323,7 @@ final class RunLoop {
         focusStore.beginFrame()
         animationTracker.beginFrame()
         overlayStore.beginFrame()
+        taskStore.beginFrame()
 
         // Thread stores into the render context
         var ctx = context
@@ -324,6 +331,7 @@ final class RunLoop {
         ctx.animationTracker = animationTracker
         ctx.commandRegistry = commandRegistry
         ctx.overlayStore = overlayStore
+        ctx.taskStore = taskStore
 
         screen.clear()
 
@@ -343,6 +351,9 @@ final class RunLoop {
             let palette = CommandPalette()
             palette.render(into: &screen.back, region: region, context: ctx)
         }
+
+        // Cancel tasks for views that are no longer in the tree
+        taskStore.endFrame()
 
         // Apply default focus on first frame
         focusStore.applyDefaultFocus()

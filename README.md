@@ -1,6 +1,6 @@
 # TextUI
 
-A SwiftUI-inspired framework for building expressive terminal user interfaces in Swift.
+A SwiftUI-inspired framework for building expressive terminal user interfaces in Swift, with zero dependencies.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ Add TextUI to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/example/TextUI.git", from: "1.0.0"),
+    .package(url: "https://github.com/bensyverson/TextUI.git", branch: "main"),
 ]
 ```
 
