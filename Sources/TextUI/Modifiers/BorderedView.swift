@@ -50,16 +50,16 @@ public struct BorderedView: PrimitiveView, Sendable {
         }
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         let inner = proposal.inset(horizontal: 2, vertical: 2)
-        let childSize = TextUI.sizeThatFits(content, proposal: inner)
+        let childSize = TextUI.sizeThatFits(content, proposal: inner, context: context)
         return Size2D(
             width: childSize.width + 2,
             height: childSize.height + 2,
         )
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard region.width >= 2, region.height >= 2 else { return }
 
         let lastCol = region.col + region.width - 1
@@ -93,6 +93,6 @@ public struct BorderedView: PrimitiveView, Sendable {
 
         // Render content inside
         let innerRegion = region.inset(top: 1, left: 1, bottom: 1, right: 1)
-        TextUI.render(content, into: &buffer, region: innerRegion)
+        TextUI.render(content, into: &buffer, region: innerRegion, context: context)
     }
 }

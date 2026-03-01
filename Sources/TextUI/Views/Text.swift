@@ -38,7 +38,7 @@ public struct Text: PrimitiveView, Sendable {
         lines.count
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context _: RenderContext) -> Size2D {
         let w: Int = switch proposal.width {
         case nil:
             idealWidth
@@ -61,7 +61,7 @@ public struct Text: PrimitiveView, Sendable {
         return Size2D(width: w, height: h)
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context _: RenderContext) {
         guard !region.isEmpty else { return }
         for (i, line) in lines.enumerated() {
             guard i < region.height else { break }

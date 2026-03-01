@@ -98,9 +98,9 @@ struct ViewBuilderTests {
 private struct StubView: PrimitiveView, Sendable {
     let tag: String
 
-    func sizeThatFits(_: SizeProposal) -> Size2D {
+    func sizeThatFits(_: SizeProposal, context _: RenderContext) -> Size2D {
         .zero
     }
 
-    func render(into _: inout Buffer, region _: Region) {}
+    func render(into _: inout Buffer, region _: Region, context _: RenderContext) {}
 }

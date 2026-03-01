@@ -26,31 +26,32 @@ public struct ZStack: PrimitiveView, Sendable {
         children = StackLayout.flattenChildren(content().children)
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         var maxW = 0
         var maxH = 0
         for child in children {
-            let size = TextUI.sizeThatFits(child, proposal: proposal)
+            let size = TextUI.sizeThatFits(child, proposal: proposal, context: context)
             maxW = max(maxW, size.width)
             maxH = max(maxH, size.height)
         }
         return Size2D(width: maxW, height: maxH)
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard !region.isEmpty else { return }
         let stackSize = Size2D(width: region.width, height: region.height)
         for child in children {
             let childSize = TextUI.sizeThatFits(
                 child,
                 proposal: SizeProposal(width: region.width, height: region.height),
+                context: context,
             )
             let offset = alignment.offset(child: childSize, in: stackSize)
             let childRegion = region.subregion(
                 row: offset.row, col: offset.col,
                 width: childSize.width, height: childSize.height,
             )
-            TextUI.render(child, into: &buffer, region: childRegion)
+            TextUI.render(child, into: &buffer, region: childRegion, context: context)
         }
     }
 }

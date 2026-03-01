@@ -18,7 +18,7 @@ public struct Color: PrimitiveView, Sendable {
         self.color = color
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context _: RenderContext) -> Size2D {
         // Greedy: fill all proposed space, ideal size is zero
         Size2D(
             width: proposal.width ?? 0,
@@ -26,7 +26,7 @@ public struct Color: PrimitiveView, Sendable {
         )
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context _: RenderContext) {
         buffer.fill(region, style: Style(bg: color))
     }
 }

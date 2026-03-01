@@ -44,7 +44,7 @@ public struct AttributedText: PrimitiveView, Sendable {
         spans.reduce(0) { $0 + $1.text.displayWidth }
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context _: RenderContext) -> Size2D {
         let w: Int = switch proposal.width {
         case nil: totalWidth
         case 0: 0
@@ -53,7 +53,7 @@ public struct AttributedText: PrimitiveView, Sendable {
         return Size2D(width: w, height: w > 0 ? 1 : 0)
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context _: RenderContext) {
         guard !region.isEmpty else { return }
         var col = region.col
         let maxCol = region.col + region.width

@@ -39,17 +39,18 @@ public struct HStack: PrimitiveView, Sendable {
         children = StackLayout.prepareChildren(flat, axis: .horizontal)
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         let result = StackLayout.layout(
             children: children,
             axis: .horizontal,
             spacing: spacing,
             proposal: proposal,
+            context: context,
         )
         return result.totalSize
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard !region.isEmpty else { return }
 
         let result = StackLayout.layout(
@@ -57,6 +58,7 @@ public struct HStack: PrimitiveView, Sendable {
             axis: .horizontal,
             spacing: spacing,
             proposal: SizeProposal(width: region.width, height: region.height),
+            context: context,
         )
 
         for childLayout in result.children {
@@ -75,7 +77,7 @@ public struct HStack: PrimitiveView, Sendable {
                 width: childLayout.size.width,
                 height: childLayout.size.height,
             )
-            TextUI.render(childLayout.view, into: &buffer, region: childRegion)
+            TextUI.render(childLayout.view, into: &buffer, region: childRegion, context: context)
         }
     }
 }

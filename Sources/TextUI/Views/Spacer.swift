@@ -52,7 +52,7 @@ public struct Spacer: PrimitiveView, Sendable {
         case both
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context _: RenderContext) -> Size2D {
         let w: Int
         let h: Int
 
@@ -71,7 +71,7 @@ public struct Spacer: PrimitiveView, Sendable {
         return Size2D(width: w, height: h)
     }
 
-    public func render(into _: inout Buffer, region _: Region) {
+    public func render(into _: inout Buffer, region _: Region, context _: RenderContext) {
         // Spacers are invisible — nothing to render
     }
 }

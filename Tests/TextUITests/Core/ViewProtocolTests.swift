@@ -46,11 +46,11 @@ struct ViewProtocolTests {
 private struct StubPrimitive: PrimitiveView {
     let fixedSize: Size2D
 
-    func sizeThatFits(_: SizeProposal) -> Size2D {
+    func sizeThatFits(_: SizeProposal, context _: RenderContext) -> Size2D {
         fixedSize
     }
 
-    func render(into buffer: inout Buffer, region: Region) {
+    func render(into buffer: inout Buffer, region: Region, context _: RenderContext) {
         guard !region.isEmpty else { return }
         buffer.write("X", row: region.row, col: region.col)
     }

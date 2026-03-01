@@ -13,15 +13,25 @@ public protocol PrimitiveView: View where Body == Never {
     /// The child always chooses its own size — the proposal is advisory.
     /// See ``SizeProposal`` for the meaning of `nil`, `0`, `.max`,
     /// and concrete values.
-    func sizeThatFits(_ proposal: SizeProposal) -> Size2D
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D
 
     /// Renders this view into the buffer within the given region.
-    func render(into buffer: inout Buffer, region: Region)
+    func render(into buffer: inout Buffer, region: Region, context: RenderContext)
 }
 
 public extension PrimitiveView {
     /// Primitive views do not have a body — accessing it is a programming error.
     var body: Never {
         fatalError("Primitive views do not have a body")
+    }
+
+    /// Convenience overload that uses an empty render context.
+    func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+        sizeThatFits(proposal, context: RenderContext())
+    }
+
+    /// Convenience overload that uses an empty render context.
+    func render(into buffer: inout Buffer, region: Region) {
+        render(into: &buffer, region: region, context: RenderContext())
     }
 }

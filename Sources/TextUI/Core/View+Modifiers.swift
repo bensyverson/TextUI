@@ -162,4 +162,19 @@ public extension View {
     func layoutPriority(_ priority: Double) -> some View {
         PrioritizedView(content: self, priority: priority)
     }
+
+    // MARK: - Environment
+
+    /// Injects an environment object into the view hierarchy.
+    ///
+    /// Descendant views can access this object using the
+    /// ``EnvironmentObject`` property wrapper.
+    ///
+    /// ```swift
+    /// MyView()
+    ///     .environmentObject(appState)
+    /// ```
+    func environmentObject(_ object: some AnyObject & Sendable) -> some View {
+        EnvironmentObjectView(content: self, object: object)
+    }
 }

@@ -16,16 +16,16 @@ public struct ViewGroup: PrimitiveView, LayoutTransparent, Sendable {
         self.children = children
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         // Bare ViewGroup outside a stack: size to first child
         guard let first = children.first else { return .zero }
-        return TextUI.sizeThatFits(first, proposal: proposal)
+        return TextUI.sizeThatFits(first, proposal: proposal, context: context)
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         // Bare ViewGroup outside a stack: render first child only
         guard let first = children.first else { return }
-        TextUI.render(first, into: &buffer, region: region)
+        TextUI.render(first, into: &buffer, region: region, context: context)
     }
 
     // MARK: - LayoutTransparent

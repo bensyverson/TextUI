@@ -10,23 +10,23 @@ struct PaddedView: PrimitiveView, Sendable {
     let bottom: Int
     let trailing: Int
 
-    func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         let inner = proposal.inset(
             horizontal: leading + trailing,
             vertical: top + bottom,
         )
-        let childSize = TextUI.sizeThatFits(content, proposal: inner)
+        let childSize = TextUI.sizeThatFits(content, proposal: inner, context: context)
         return Size2D(
             width: childSize.width + leading + trailing,
             height: childSize.height + top + bottom,
         )
     }
 
-    func render(into buffer: inout Buffer, region: Region) {
+    func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         let innerRegion = region.inset(
             top: top, left: leading, bottom: bottom, right: trailing,
         )
         guard !innerRegion.isEmpty else { return }
-        TextUI.render(content, into: &buffer, region: innerRegion)
+        TextUI.render(content, into: &buffer, region: innerRegion, context: context)
     }
 }

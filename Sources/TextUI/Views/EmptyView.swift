@@ -6,11 +6,11 @@ public struct EmptyView: PrimitiveView, Sendable {
     /// Creates an empty view.
     public init() {}
 
-    public func sizeThatFits(_: SizeProposal) -> Size2D {
+    public func sizeThatFits(_: SizeProposal, context _: RenderContext) -> Size2D {
         .zero
     }
 
-    public func render(into _: inout Buffer, region _: Region) {
+    public func render(into _: inout Buffer, region _: Region, context _: RenderContext) {
         // Nothing to render
     }
 }

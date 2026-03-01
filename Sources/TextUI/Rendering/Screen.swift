@@ -13,6 +13,12 @@ public struct Screen: Sendable {
     /// The next (pending) buffer that views render into.
     public var back: Buffer
 
+    /// The terminal's color capability level.
+    ///
+    /// When less than `.trueColor`, ``flush()`` will automatically
+    /// downgrade colors before generating ANSI sequences.
+    public var colorCapability: ColorCapability = .trueColor
+
     /// The width of the screen in columns.
     public var width: Int {
         front.width
@@ -70,12 +76,13 @@ public struct Screen: Sendable {
                 // Position cursor absolutely to avoid drift from wide characters
                 output.append("\u{1B}[\(row + 1);\(col + 1)H")
 
-                // Apply style delta
-                let styleSeq = backCell.style.ansiSequence(from: lastStyle)
+                // Apply style delta (downgrade colors if needed)
+                let cellStyle = backCell.style.downgraded(to: colorCapability)
+                let styleSeq = cellStyle.ansiSequence(from: lastStyle)
                 if !styleSeq.isEmpty {
                     output.append(styleSeq)
                 }
-                lastStyle = backCell.style
+                lastStyle = cellStyle
 
                 // Sanitize control characters to prevent cursor displacement
                 let ch = backCell.char

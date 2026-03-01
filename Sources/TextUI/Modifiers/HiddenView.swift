@@ -5,11 +5,11 @@
 struct HiddenView: PrimitiveView, Sendable {
     let content: any View
 
-    func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
-        TextUI.sizeThatFits(content, proposal: proposal)
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
+        TextUI.sizeThatFits(content, proposal: proposal, context: context)
     }
 
-    func render(into _: inout Buffer, region _: Region) {
+    func render(into _: inout Buffer, region _: Region, context _: RenderContext) {
         // Intentionally empty — hidden views occupy space but render nothing
     }
 }

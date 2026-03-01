@@ -9,30 +9,30 @@ struct FrameView: PrimitiveView, Sendable {
     let height: Int?
     let alignment: Alignment
 
-    func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         let childProposal = SizeProposal(
             width: width ?? proposal.width,
             height: height ?? proposal.height,
         )
-        let childSize = TextUI.sizeThatFits(content, proposal: childProposal)
+        let childSize = TextUI.sizeThatFits(content, proposal: childProposal, context: context)
         return Size2D(
             width: width ?? childSize.width,
             height: height ?? childSize.height,
         )
     }
 
-    func render(into buffer: inout Buffer, region: Region) {
+    func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         let childProposal = SizeProposal(
             width: width ?? region.width,
             height: height ?? region.height,
         )
-        let childSize = TextUI.sizeThatFits(content, proposal: childProposal)
+        let childSize = TextUI.sizeThatFits(content, proposal: childProposal, context: context)
         let containerSize = Size2D(width: region.width, height: region.height)
         let offset = alignment.offset(child: childSize, in: containerSize)
         let childRegion = region.subregion(
             row: offset.row, col: offset.col,
             width: childSize.width, height: childSize.height,
         )
-        TextUI.render(content, into: &buffer, region: childRegion)
+        TextUI.render(content, into: &buffer, region: childRegion, context: context)
     }
 }

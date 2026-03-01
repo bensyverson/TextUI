@@ -13,11 +13,11 @@ struct FlexFrameView: PrimitiveView, Sendable {
     let maxHeight: Int?
     let alignment: Alignment
 
-    func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         let adjustedW = clampProposal(proposal.width, min: minWidth, max: maxWidth)
         let adjustedH = clampProposal(proposal.height, min: minHeight, max: maxHeight)
         let childProposal = SizeProposal(width: adjustedW, height: adjustedH)
-        let childSize = TextUI.sizeThatFits(content, proposal: childProposal)
+        let childSize = TextUI.sizeThatFits(content, proposal: childProposal, context: context)
         return Size2D(
             width: clampResponse(
                 childSize.width,
@@ -34,16 +34,16 @@ struct FlexFrameView: PrimitiveView, Sendable {
         )
     }
 
-    func render(into buffer: inout Buffer, region: Region) {
+    func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         let childProposal = SizeProposal(width: region.width, height: region.height)
-        let childSize = TextUI.sizeThatFits(content, proposal: childProposal)
+        let childSize = TextUI.sizeThatFits(content, proposal: childProposal, context: context)
         let containerSize = Size2D(width: region.width, height: region.height)
         let offset = alignment.offset(child: childSize, in: containerSize)
         let childRegion = region.subregion(
             row: offset.row, col: offset.col,
             width: childSize.width, height: childSize.height,
         )
-        TextUI.render(content, into: &buffer, region: childRegion)
+        TextUI.render(content, into: &buffer, region: childRegion, context: context)
     }
 
     // MARK: - Private Clamping Helpers
@@ -52,9 +52,8 @@ struct FlexFrameView: PrimitiveView, Sendable {
         guard let p = proposal else { return nil }
         switch (min, max) {
         case let (lo?, hi?): return Swift.min(Swift.max(p, lo), hi)
-        case (_, nil): return p
         case (nil, let hi?): return Swift.min(p, hi)
-        case (nil, nil): return p
+        case (_, nil): return p
         }
     }
 

@@ -7,12 +7,12 @@ struct BackgroundView: PrimitiveView, Sendable {
     let content: any View
     let color: Style.Color
 
-    func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
-        TextUI.sizeThatFits(content, proposal: proposal)
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
+        TextUI.sizeThatFits(content, proposal: proposal, context: context)
     }
 
-    func render(into buffer: inout Buffer, region: Region) {
-        TextUI.render(content, into: &buffer, region: region)
+    func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
+        TextUI.render(content, into: &buffer, region: region, context: context)
         for r in region.row ..< min(region.row + region.height, buffer.height) {
             for c in region.col ..< min(region.col + region.width, buffer.width) {
                 guard r >= 0, c >= 0 else { continue }

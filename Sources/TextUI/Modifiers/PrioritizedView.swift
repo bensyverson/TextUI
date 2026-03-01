@@ -7,11 +7,11 @@ struct PrioritizedView: PrimitiveView, Sendable {
     let content: any View
     let priority: Double
 
-    func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
-        TextUI.sizeThatFits(content, proposal: proposal)
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
+        TextUI.sizeThatFits(content, proposal: proposal, context: context)
     }
 
-    func render(into buffer: inout Buffer, region: Region) {
-        TextUI.render(content, into: &buffer, region: region)
+    func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
+        TextUI.render(content, into: &buffer, region: region, context: context)
     }
 }

@@ -8,15 +8,15 @@ struct FixedSizeView: PrimitiveView, Sendable {
     let horizontal: Bool
     let vertical: Bool
 
-    func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         let adjusted = SizeProposal(
             width: horizontal ? nil : proposal.width,
             height: vertical ? nil : proposal.height,
         )
-        return TextUI.sizeThatFits(content, proposal: adjusted)
+        return TextUI.sizeThatFits(content, proposal: adjusted, context: context)
     }
 
-    func render(into buffer: inout Buffer, region: Region) {
-        TextUI.render(content, into: &buffer, region: region)
+    func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
+        TextUI.render(content, into: &buffer, region: region, context: context)
     }
 }

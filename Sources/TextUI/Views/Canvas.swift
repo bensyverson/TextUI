@@ -17,7 +17,7 @@ public struct Canvas: PrimitiveView, Sendable {
         self.draw = draw
     }
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context _: RenderContext) -> Size2D {
         // Greedy: fill proposed space
         Size2D(
             width: proposal.width ?? 0,
@@ -25,7 +25,7 @@ public struct Canvas: PrimitiveView, Sendable {
         )
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context _: RenderContext) {
         draw(&buffer, region)
     }
 }

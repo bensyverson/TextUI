@@ -31,7 +31,7 @@ public struct Divider: PrimitiveView, Sendable {
     /// A vertical divider line (`│`) that fills the available height.
     public static let vertical = Divider(.vertical)
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context _: RenderContext) -> Size2D {
         switch orientation {
         case .horizontal:
             let w = proposal.width ?? 1
@@ -42,7 +42,7 @@ public struct Divider: PrimitiveView, Sendable {
         }
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context _: RenderContext) {
         guard !region.isEmpty else { return }
         switch orientation {
         case .horizontal:

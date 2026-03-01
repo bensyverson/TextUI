@@ -33,13 +33,13 @@ public struct ForEach<Data: RandomAccessCollection & Sendable>: PrimitiveView, L
 
     // MARK: - PrimitiveView (bare usage outside a stack)
 
-    public func sizeThatFits(_ proposal: SizeProposal) -> Size2D {
+    public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         guard let first = children.first else { return .zero }
-        return TextUI.sizeThatFits(first, proposal: proposal)
+        return TextUI.sizeThatFits(first, proposal: proposal, context: context)
     }
 
-    public func render(into buffer: inout Buffer, region: Region) {
+    public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard let first = children.first else { return }
-        TextUI.render(first, into: &buffer, region: region)
+        TextUI.render(first, into: &buffer, region: region, context: context)
     }
 }

@@ -50,9 +50,30 @@ adapted for the character-grid world of terminal emulators.
 - ``Alignment``
 - ``HorizontalAlignment``
 - ``VerticalAlignment``
-- ``sizeThatFits(_:proposal:)``
-- ``render(_:into:region:)``
+- ``sizeThatFits(_:proposal:context:)``
+- ``render(_:into:region:context:)``
 - <doc:LayoutSystem>
+
+### Terminal I/O
+
+- ``Terminal``
+- ``KeyEvent``
+- ``KeyReader``
+- ``ColorCapability``
+- <doc:Terminal>
+
+### State Management
+
+- ``Observed``
+- ``StateSignal``
+- ``EnvironmentObject``
+- ``RenderContext``
+- ``RenderEnvironment``
+- <doc:StateManagement>
+
+### App Lifecycle
+
+- ``App``
 
 ### Core
 

@@ -57,6 +57,7 @@ enum StackLayout {
         axis: Axis,
         spacing: Int,
         proposal: SizeProposal,
+        context: RenderContext,
     ) -> (children: [ChildLayout], totalSize: Size2D) {
         guard !children.isEmpty else {
             return (children: [], totalSize: .zero)
@@ -75,6 +76,7 @@ enum StackLayout {
                 axis: axis,
                 spacing: spacing,
                 crossProposal: crossProposal,
+                context: context,
             )
         }
 
@@ -86,6 +88,7 @@ enum StackLayout {
             spacing: spacing,
             available: available,
             crossProposal: crossProposal,
+            context: context,
         )
     }
 
@@ -97,6 +100,7 @@ enum StackLayout {
         axis: Axis,
         spacing: Int,
         crossProposal: Int?,
+        context: RenderContext,
     ) -> (children: [ChildLayout], totalSize: Size2D) {
         var layouts: [ChildLayout] = []
         var primaryOffset = 0
@@ -104,7 +108,7 @@ enum StackLayout {
 
         for child in children {
             let childProposal = makeProposal(axis: axis, primary: nil, cross: crossProposal)
-            let childSize = TextUI.sizeThatFits(child, proposal: childProposal)
+            let childSize = TextUI.sizeThatFits(child, proposal: childProposal, context: context)
             let primary = primaryDimension(childSize, axis: axis)
             let cross = crossDimension(childSize, axis: axis)
 
@@ -126,6 +130,7 @@ enum StackLayout {
         spacing: Int,
         available: Int,
         crossProposal: Int?,
+        context: RenderContext,
     ) -> (children: [ChildLayout], totalSize: Size2D) {
         // Probe flexibility for each child
         struct FlexChild {
@@ -142,8 +147,14 @@ enum StackLayout {
         let maxProposal = makeProposal(axis: axis, primary: .max, cross: crossProposal)
 
         var flexChildren: [FlexChild] = children.enumerated().map { index, child in
-            let minPrimary = primaryDimension(TextUI.sizeThatFits(child, proposal: zeroProposal), axis: axis)
-            let maxPrimary = primaryDimension(TextUI.sizeThatFits(child, proposal: maxProposal), axis: axis)
+            let minPrimary = primaryDimension(
+                TextUI.sizeThatFits(child, proposal: zeroProposal, context: context),
+                axis: axis,
+            )
+            let maxPrimary = primaryDimension(
+                TextUI.sizeThatFits(child, proposal: maxProposal, context: context),
+                axis: axis,
+            )
             return FlexChild(index: index, view: child, minSize: minPrimary, maxSize: maxPrimary)
         }
 
@@ -166,7 +177,7 @@ enum StackLayout {
             let remainingCount = flexChildren.count - i
             let share = remaining / remainingCount
             let childProposal = makeProposal(axis: axis, primary: share, cross: crossProposal)
-            let childSize = TextUI.sizeThatFits(flexChild.view, proposal: childProposal)
+            let childSize = TextUI.sizeThatFits(flexChild.view, proposal: childProposal, context: context)
             let actualPrimary = primaryDimension(childSize, axis: axis)
             allocations[flexChild.index] = actualPrimary
             sizes[flexChild.index] = childSize
