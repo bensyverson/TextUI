@@ -29,7 +29,6 @@ TextUI's terminal layer provides low-level control over the terminal emulator. I
 
 ### Terminal Control
 
-- ``Terminal``
 - ``Terminal/Size-swift.struct``
 
 ### Keyboard Input

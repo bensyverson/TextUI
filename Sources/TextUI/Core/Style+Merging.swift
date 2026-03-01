@@ -2,7 +2,7 @@ public extension Style {
     /// Returns a new style where boolean attributes are OR'd together
     /// and non-nil colors from `override` replace this style's values.
     ///
-    /// This is used by ``StyledView`` for additive style application:
+    /// This is used by `StyledView` for additive style application:
     /// `.bold()` adds bold without clearing foreground color,
     /// `.foregroundColor(.red)` sets foreground without touching background.
     func merging(_ override: Style) -> Style {

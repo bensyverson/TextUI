@@ -6,7 +6,7 @@
 import Foundation
 
 /// Reads raw bytes from stdin on a detached thread and produces
-/// an ``AsyncStream`` of ``KeyEvent``s.
+/// an `AsyncStream` of ``KeyEvent``s.
 ///
 /// The reader runs on a detached OS thread (not a cooperative task)
 /// because `read(STDIN_FILENO)` blocks and cannot be cancelled by

@@ -6,26 +6,26 @@
 /// object returns a new context without mutating the original.
 ///
 /// The context also carries focus system state:
-/// - ``focusStore`` — the shared ``FocusStore`` for focus ring management
-/// - ``currentFocusSectionID`` — the active focus section (set by ``FocusSectionView``)
-/// - ``focusEnvironment`` — per-scope focus state (set by ``FocusedView``)
+/// - `focusStore` — the shared `FocusStore` for focus ring management
+/// - `currentFocusSectionID` — the active focus section (set by `FocusSectionView`)
+/// - `focusEnvironment` — per-scope focus state (set by `FocusedView`)
 public struct RenderContext: Sendable {
     /// The stored environment objects, keyed by their metatype.
     private var environmentObjects: [ObjectIdentifier: any Sendable] = [:]
 
     /// The focus store for the current render pass, if any.
     ///
-    /// Set by ``RunLoop`` and threaded through the render tree. Focusable
+    /// Set by `RunLoop` and threaded through the render tree. Focusable
     /// controls register themselves here during `render()`.
     var focusStore: FocusStore?
 
-    /// The active focus section ID, set by ``FocusSectionView``.
+    /// The active focus section ID, set by `FocusSectionView`.
     ///
     /// Controls registered within a focus section share this ID for
     /// directional (arrow key) navigation.
     var currentFocusSectionID: Int?
 
-    /// Per-scope focus state, set by ``FocusedView``.
+    /// Per-scope focus state, set by `FocusedView`.
     ///
     /// Controls read this to determine whether they are currently focused.
     var focusEnvironment: FocusEnvironment?

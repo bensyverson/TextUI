@@ -2,7 +2,7 @@
 ///
 /// TextField is greedy on width (fills available space) and has a fixed
 /// height of 1. When focused, it displays a cursor and captures keyboard
-/// input. Cursor position is stored in the ``FocusStore`` so it persists
+/// input. Cursor position is stored in the `FocusStore` so it persists
 /// across render frames.
 ///
 /// ```swift
@@ -22,6 +22,8 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
     /// - Parameters:
     ///   - placeholder: Dim text shown when the field is empty and unfocused.
     ///   - text: The current text content.
+    ///   - fileID: The source file identifier (used for automatic focus keys).
+    ///   - line: The source line number (used for automatic focus keys).
     ///   - onChange: Called with the new text when the user edits.
     public init(
         _ placeholder: String,

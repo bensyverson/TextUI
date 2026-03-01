@@ -13,7 +13,7 @@ programmatically with ``FocusState``.
 ### How It Works
 
 1. During each render frame, focusable controls (``Button``, ``TextField``,
-   ``Toggle``, ``Picker``) register themselves in the ``FocusStore``'s ring.
+   ``Toggle``, ``Picker``) register themselves in the `FocusStore`'s ring.
 2. Since rendering visits views top-to-bottom (in ``VStack``) and
    left-to-right (in ``HStack``), the ring is automatically ordered for
    Tab navigation.
@@ -113,10 +113,3 @@ TextField("Search", text: query) { query = $0 }
 - ``FocusInteraction``
 - ``KeyEventResult``
 
-### Focus Modifiers
-
-- ``FocusedView``
-- ``FocusSectionView``
-- ``DefaultFocusView``
-- ``OnKeyPressView``
-- ``OnSubmitView``

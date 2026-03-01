@@ -1,7 +1,7 @@
 /// A combined horizontal and vertical alignment for positioning
 /// a child within a larger container.
 ///
-/// Used by ``FrameView``, ``FlexFrameView``, ``ZStack``, and other
+/// Used by `FrameView`, `FlexFrameView`, ``ZStack``, and other
 /// container views that need to align a smaller child within a larger region.
 ///
 /// ```swift

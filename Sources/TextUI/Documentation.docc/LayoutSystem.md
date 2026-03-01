@@ -13,9 +13,9 @@ The child always chooses its own size — the proposal is advisory.
 
 Layout happens in two passes:
 
-1. **Sizing pass:** The parent calls ``sizeThatFits(_:proposal:)`` on the child
+1. **Sizing pass:** The parent calls ``sizeThatFits(_:proposal:context:)`` on the child
    with a ``SizeProposal``. The child returns a ``Size2D``.
-2. **Render pass:** The parent calls ``render(_:into:region:)`` with a ``Region``
+2. **Render pass:** The parent calls ``render(_:into:region:context:)`` with a ``Region``
    matching the child's chosen size. The child renders itself into the buffer.
 
 ### Four Proposal Modes
@@ -67,8 +67,8 @@ results are summed with spacing.
 
 - ``Size2D``
 - ``SizeProposal``
-- ``sizeThatFits(_:proposal:)``
-- ``render(_:into:region:)``
+- ``sizeThatFits(_:proposal:context:)``
+- ``render(_:into:region:context:)``
 
 ### Alignment
 

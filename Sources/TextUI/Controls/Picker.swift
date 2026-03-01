@@ -25,6 +25,8 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
     ///   - label: The text displayed before the arrows.
     ///   - selection: The index of the currently selected option.
     ///   - options: The display strings for each option.
+    ///   - fileID: The source file identifier (used for automatic focus keys).
+    ///   - line: The source line number (used for automatic focus keys).
     ///   - onChange: Called with the new selection index when changed.
     public init(
         _ label: String,

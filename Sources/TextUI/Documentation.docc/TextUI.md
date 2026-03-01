@@ -38,7 +38,7 @@ adapted for the character-grid world of terminal emulators.
 - ``ForEach``
 - ``Group``
 
-### Modifiers
+### View Modifiers
 
 - ``BorderedView``
 - <doc:Modifiers>
@@ -76,12 +76,16 @@ adapted for the character-grid world of terminal emulators.
 - ``FocusState``
 - ``FocusInteraction``
 - ``KeyEventResult``
-- ``FocusedView``
-- ``FocusSectionView``
-- ``DefaultFocusView``
-- ``OnKeyPressView``
-- ``OnSubmitView``
 - <doc:FocusSystem>
+
+### Container Views
+
+- ``ScrollView``
+- ``Table``
+- ``TabView``
+- ``ColumnBuilder``
+- ``TabBuilder``
+- <doc:Containers>
 
 ### Interactive Controls
 

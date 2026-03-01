@@ -12,7 +12,7 @@ public enum FocusInteraction: Friendly {
 
     /// The control captures keyboard input for editing.
     ///
-    /// Used by ``TextField``. The ``OnSubmitView`` modifier fires
+    /// Used by ``TextField``. The `OnSubmitView` modifier fires
     /// its handler on Enter for controls with this interaction type.
     case edit
 }

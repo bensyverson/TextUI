@@ -33,7 +33,7 @@
 /// focused. Setting it to `nil` removes focus from all bound views.
 ///
 /// - Note: Programmatic focus changes take effect immediately in the
-///   ``FocusStore``. The ``RunLoop`` re-renders after every key event,
+///   `FocusStore`. The `RunLoop` re-renders after every key event,
 ///   so the visual update follows automatically. If you set focus from
 ///   an `@Observed` property's `didSet`, the state change signal already
 ///   triggers a re-render.
@@ -79,7 +79,7 @@ public struct FocusState<Value: Hashable & Sendable>: Sendable {
     /// A binding to a ``FocusState`` that can be passed to `.focused()`.
     ///
     /// This is a marker type — the actual read/write happens through
-    /// the ``FocusStore``. The binding key is provided at the call site
+    /// the `FocusStore`. The binding key is provided at the call site
     /// via `.focused($focus, equals: .name)`.
     public struct Binding: Sendable {
         let focusState: FocusState<Value>

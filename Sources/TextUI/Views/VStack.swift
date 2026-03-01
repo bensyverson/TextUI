@@ -9,7 +9,7 @@
 /// ```
 ///
 /// The stack uses the flexibility-sorted greedy algorithm described
-/// in ``StackLayout``. Each child is proposed a share of the available
+/// in `StackLayout`. Each child is proposed a share of the available
 /// height; inflexible children are sized first so flexible ones
 /// (like ``Spacer``) absorb the remainder.
 public struct VStack: PrimitiveView, Sendable {

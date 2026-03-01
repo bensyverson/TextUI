@@ -20,6 +20,8 @@ public struct Toggle: PrimitiveView, @unchecked Sendable {
     /// - Parameters:
     ///   - label: The text displayed after the checkbox.
     ///   - isOn: The current on/off state.
+    ///   - fileID: The source file identifier (used for automatic focus keys).
+    ///   - line: The source line number (used for automatic focus keys).
     ///   - onChange: Called with the new value when toggled.
     public init(
         _ label: String,
