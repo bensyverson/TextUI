@@ -29,8 +29,12 @@ spinner is removed from the view tree).
 
 ### ProgressView
 
-``ProgressView`` is a built-in view that uses `@AnimationTick` internally
-to drive spinner and bar animations:
+``ProgressView`` is a composite view that uses `@AnimationTick` and
+`@ViewBuilder` to compose ``Text``, ``Canvas``, and ``HStack`` children
+depending on the style and label. Its `body` uses `if/else` branches
+returning different view types — enabled by ViewBuilder's
+`buildEither(first:)` / `buildEither(second:)` which type-erase both
+branches to `any View`:
 
 ```swift
 // Indeterminate spinner (animates automatically)

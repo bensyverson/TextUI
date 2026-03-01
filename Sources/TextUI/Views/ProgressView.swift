@@ -4,6 +4,10 @@
 /// (progress bar) modes. Animation is driven by ``AnimationTick``, which
 /// automatically starts the run loop's animation timer when the view is visible.
 ///
+/// `ProgressView` is a composite view — its `body` uses `@ViewBuilder` to
+/// conditionally compose ``Text``, ``Canvas``, and ``HStack`` children
+/// depending on the style and whether a label is present.
+///
 /// ```swift
 /// // Indeterminate spinner
 /// ProgressView()
@@ -17,7 +21,7 @@
 /// // With label and total
 /// ProgressView("Uploading", value: bytesWritten, total: totalBytes)
 /// ```
-public struct ProgressView: PrimitiveView, @unchecked Sendable {
+public struct ProgressView: View, @unchecked Sendable {
     /// The optional label displayed alongside the progress indicator.
     let label: String?
 
@@ -26,6 +30,9 @@ public struct ProgressView: PrimitiveView, @unchecked Sendable {
 
     /// The total value representing completion (default 1.0).
     let total: Double
+
+    /// The animation frame counter, driving spinner and bar animations.
+    @AnimationTick var tick
 
     /// Creates an indeterminate progress view.
     public init() {
@@ -67,115 +74,83 @@ public struct ProgressView: PrimitiveView, @unchecked Sendable {
     }
 
     /// The resolved style, considering context overrides.
-    private func resolvedStyle(context: RenderContext) -> ProgressViewStyle {
-        context.progressViewStyle ?? (isDeterminate ? .bar(showPercent: true) : .compact)
-    }
-
-    /// The width of the label portion including separator space.
-    private var labelWidth: Int {
-        guard let label else { return 0 }
-        return label.displayWidth + 1 // label + space
+    private var resolvedStyle: ProgressViewStyle {
+        RenderEnvironment.current.progressViewStyle
+            ?? (isDeterminate ? .bar(showPercent: true) : .compact)
     }
 
     // MARK: - Spinner frames
 
-    private static let spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-    private static let blockChars: [Character] = ["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
+    static let spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+    static let blockChars: [Character] = ["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 
-    // MARK: - PrimitiveView
+    // MARK: - Body
 
-    public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
-        let style = resolvedStyle(context: context)
-        switch style {
-        case .compact:
-            let indicatorWidth = 1
-            let width = labelWidth + indicatorWidth
-            let proposedW = proposal.width ?? width
-            return Size2D(width: min(width, proposedW), height: proposedW > 0 ? 1 : 0)
-        case .bar:
-            let minWidth = labelWidth + 1
-            let width = proposal.width ?? minWidth
-            return Size2D(width: width, height: width > 0 ? 1 : 0)
-        }
-    }
-
-    public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
-        guard !region.isEmpty else { return }
-
-        // Read tick from animation tracker (signals animation request)
-        let tracker = context.animationTracker
-        tracker?.requestAnimation()
-        let tick = tracker?.tickCount ?? 0
-
-        var col = region.col
-
-        // Render label if present
+    // swiftformat:disable redundantViewBuilder
+    @ViewBuilder
+    public var body: some View {
         if let label {
-            let labelLen = min(label.displayWidth, region.width)
-            buffer.write(String(label.prefix(labelLen)), row: region.row, col: col)
-            col += labelLen
-            if col < region.col + region.width {
-                buffer.write(" ", row: region.row, col: col)
-                col += 1
+            HStack(spacing: 1) {
+                Text(label)
+                indicator
             }
-        }
-
-        let remaining = region.col + region.width - col
-        guard remaining > 0 else { return }
-
-        let style = resolvedStyle(context: context)
-        switch style {
-        case .compact:
-            renderCompact(into: &buffer, row: region.row, col: col, tick: tick)
-        case let .bar(showPercent):
-            renderBar(
-                into: &buffer,
-                row: region.row,
-                col: col,
-                width: remaining,
-                showPercent: showPercent,
-                tick: tick,
-            )
+        } else {
+            indicator
         }
     }
 
-    // MARK: - Rendering Helpers
+    // swiftformat:enable redundantViewBuilder
 
-    private func renderCompact(into buffer: inout Buffer, row: Int, col: Int, tick: Int) {
+    /// The progress indicator view, styled according to the resolved style.
+    @ViewBuilder
+    private var indicator: some View {
+        switch resolvedStyle {
+        case .compact:
+            compactIndicator
+        case let .bar(showPercent):
+            barIndicator(showPercent: showPercent)
+        }
+    }
+
+    /// A single-character compact indicator.
+    @ViewBuilder
+    private var compactIndicator: some View {
         if isDeterminate {
             let index = Int(progress * Double(Self.blockChars.count - 1))
-            buffer.write(String(Self.blockChars[index]), row: row, col: col)
+            Text(String(Self.blockChars[index]))
         } else {
             let frame = Self.spinnerFrames[tick % Self.spinnerFrames.count]
-            buffer.write(frame, row: row, col: col)
+            Text(frame)
         }
     }
 
-    private func renderBar(
-        into buffer: inout Buffer,
-        row: Int,
-        col: Int,
-        width: Int,
-        showPercent: Bool,
-        tick: Int,
-    ) {
-        if isDeterminate {
-            let percentWidth = showPercent ? 5 : 0
-            let barWidth = max(0, width - percentWidth)
-            let filled = Int(progress * Double(barWidth))
-            let filledStr = String(repeating: "█", count: filled)
-            let emptyStr = String(repeating: "░", count: barWidth - filled)
-            buffer.write(filledStr + emptyStr, row: row, col: col)
-            if showPercent, barWidth + percentWidth <= width {
-                let pct = String(format: "%3d%%", Int(progress * 100))
-                buffer.write(" " + pct, row: row, col: col + barWidth)
-            }
-        } else {
-            for i in 0 ..< width {
-                let offset = (i + tick) % 4
-                let char: Character = offset == 0 ? "█" : "░"
-                buffer.write(String(char), row: row, col: col + i)
+    /// A horizontal bar indicator rendered via ``Canvas``.
+    @ViewBuilder
+    private func barIndicator(showPercent: Bool) -> some View {
+        let currentTick = tick
+        let currentProgress = progress
+        let determinate = isDeterminate
+        Canvas { buffer, region in
+            guard region.width > 0 else { return }
+            if determinate {
+                let percentWidth = showPercent ? 5 : 0
+                let barWidth = max(0, region.width - percentWidth)
+                let filled = Int(currentProgress * Double(barWidth))
+                let filledStr = String(repeating: "█", count: filled)
+                let emptyStr = String(repeating: "░", count: barWidth - filled)
+                buffer.write(filledStr + emptyStr, row: region.row, col: region.col)
+                if showPercent, barWidth + percentWidth <= region.width {
+                    let pct = String(format: "%3d%%", Int(currentProgress * 100))
+                    buffer.write(" " + pct, row: region.row, col: region.col + barWidth)
+                }
+            } else {
+                for i in 0 ..< region.width {
+                    let offset = (i + currentTick) % 4
+                    let char: Character = offset == 0 ? "█" : "░"
+                    buffer.write(String(char), row: region.row, col: region.col + i)
+                }
             }
         }
+        .frame(height: 1)
     }
 }
