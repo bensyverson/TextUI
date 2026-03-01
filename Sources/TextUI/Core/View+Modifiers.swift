@@ -222,6 +222,54 @@ public extension View {
         OnSubmitView(content: self, handler: handler)
     }
 
+    // MARK: - Progress View Style
+
+    /// Sets the style for descendant ``ProgressView`` instances.
+    ///
+    /// ```swift
+    /// ProgressView(value: 0.5)
+    ///     .progressViewStyle(.compact)
+    /// ```
+    func progressViewStyle(_ style: ProgressViewStyle) -> some View {
+        ProgressViewStyleView(content: self, style: style)
+    }
+
+    // MARK: - Keyboard Shortcuts
+
+    /// Attaches a keyboard shortcut to this view.
+    ///
+    /// Used inside ``CommandGroup`` to associate shortcuts with buttons:
+    ///
+    /// ```swift
+    /// Button("Save") { save() }
+    ///     .keyboardShortcut("s", modifiers: .control)
+    /// ```
+    func keyboardShortcut(
+        _ key: KeyEquivalent,
+        modifiers: EventModifiers = [],
+    ) -> some View {
+        KeyboardShortcutView(
+            content: self,
+            shortcut: KeyboardShortcut(key, modifiers: modifiers),
+        )
+    }
+
+    /// Attaches a keyboard shortcut from a character to this view.
+    func keyboardShortcut(
+        _ char: Character,
+        modifiers: EventModifiers = [],
+    ) -> some View {
+        KeyboardShortcutView(
+            content: self,
+            shortcut: KeyboardShortcut(char, modifiers: modifiers),
+        )
+    }
+
+    /// Attaches a pre-built keyboard shortcut to this view.
+    func keyboardShortcut(_ shortcut: KeyboardShortcut) -> some View {
+        KeyboardShortcutView(content: self, shortcut: shortcut)
+    }
+
     // MARK: - Environment
 
     /// Injects an environment object into the view hierarchy.

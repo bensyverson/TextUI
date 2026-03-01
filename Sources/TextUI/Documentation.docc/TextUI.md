@@ -95,6 +95,25 @@ adapted for the character-grid world of terminal emulators.
 - ``Picker``
 - <doc:InteractiveControls>
 
+### Commands
+
+- ``KeyEquivalent``
+- ``EventModifiers``
+- ``KeyboardShortcut``
+- ``CommandEntry``
+- ``CommandGroup``
+- ``CommandBuilder``
+- ``CommandBar``
+- ``EmptyCommands``
+- <doc:CommandSystem>
+
+### Animation & Progress
+
+- ``AnimationTick``
+- ``ProgressView``
+- ``ProgressViewStyle``
+- <doc:Animation>
+
 ### App Lifecycle
 
 - ``App``

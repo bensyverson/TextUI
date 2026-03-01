@@ -30,6 +30,24 @@ public struct RenderContext: Sendable {
     /// Controls read this to determine whether they are currently focused.
     var focusEnvironment: FocusEnvironment?
 
+    /// The animation tracker for the current render pass, if any.
+    ///
+    /// Set by `RunLoop` and read by ``AnimationTick`` to signal that
+    /// the animation timer should continue running.
+    var animationTracker: AnimationTracker?
+
+    /// The command registry for the current render pass, if any.
+    ///
+    /// Set by `RunLoop` and read by ``CommandBar`` and command palette
+    /// to display available commands.
+    var commandRegistry: CommandRegistry?
+
+    /// The progress view style override, if any.
+    ///
+    /// Set by ``ProgressViewStyleView`` and read by ``ProgressView``
+    /// to determine its rendering style.
+    var progressViewStyle: ProgressViewStyle?
+
     /// Creates an empty render context.
     public init() {}
 

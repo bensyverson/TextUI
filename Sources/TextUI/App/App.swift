@@ -26,11 +26,30 @@ public protocol App {
     /// The root view of the application.
     var body: Body { get }
 
+    /// The command groups for this application.
+    ///
+    /// Override this to register keyboard shortcuts:
+    ///
+    /// ```swift
+    /// var commands: [CommandGroup] {
+    ///     CommandGroup("File") {
+    ///         Button("Save") { save() }
+    ///             .keyboardShortcut("s", modifiers: .control)
+    ///     }
+    /// }
+    /// ```
+    var commands: [CommandGroup] { get }
+
     /// Creates a new instance of the application.
     init()
 }
 
 public extension App {
+    /// Default empty commands for apps that don't define any.
+    var commands: [CommandGroup] {
+        []
+    }
+
     /// Launches the application with the default run loop.
     ///
     /// This is the main entry point for a TextUI application. It:
@@ -41,7 +60,7 @@ public extension App {
     /// 5. Cleans up the terminal on exit (Ctrl+C or shutdown signal)
     static func main() async {
         let app = Self()
-        let runLoop = RunLoop(rootView: app.body)
+        let runLoop = RunLoop(rootView: app.body, commands: app.commands)
         await runLoop.run()
     }
 }
