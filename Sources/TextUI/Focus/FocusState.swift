@@ -58,11 +58,15 @@ public struct FocusState<Value: Hashable & Sendable>: Sendable {
         }
         nonmutating set {
             let store = RenderEnvironment.current.focusStore
-            if let hashable = newValue as? AnyHashable? {
-                store?.setFocusByBindingKey(hashable)
+            // When Value is Optional, unwrap before creating AnyHashable
+            // so that AnyHashable("email") matches the binding key.
+            // When nil, pass nil to clear focus.
+            let key: AnyHashable? = if let optional = newValue as? (any OptionalProtocol) {
+                optional._unwrappedHashable
             } else {
-                store?.setFocusByBindingKey(AnyHashable(newValue))
+                AnyHashable(newValue)
             }
+            store?.setFocusByBindingKey(key)
         }
     }
 
@@ -86,6 +90,21 @@ public struct FocusState<Value: Hashable & Sendable>: Sendable {
 
         init(focusState: FocusState<Value>) {
             self.focusState = focusState
+        }
+    }
+}
+
+/// Internal protocol for extracting the inner value from optional types.
+protocol OptionalProtocol {
+    /// The unwrapped value as `AnyHashable`, or `nil` if the optional is `nil`.
+    var _unwrappedHashable: AnyHashable? { get }
+}
+
+extension Optional: OptionalProtocol where Wrapped: Hashable {
+    var _unwrappedHashable: AnyHashable? {
+        switch self {
+        case let .some(value): AnyHashable(value)
+        case .none: nil
         }
     }
 }
