@@ -10,6 +10,12 @@ adapted for the character-grid world of terminal emulators.
 
 ## Topics
 
+### Guides
+
+- <doc:GettingStarted>
+- <doc:ViewCatalog>
+- <doc:FocusAndInput>
+
 ### Rendering
 
 - ``Style``

@@ -96,6 +96,52 @@ struct CommandRegistryTests {
         #expect(fired.value)
     }
 
+    @Test("filteredEntries returns all when filter is empty")
+    func filteredEntriesAllWhenEmpty() {
+        let registry = CommandRegistry()
+        let group = CommandGroup("File") {
+            Button("Save") {}
+            Button("Open") {}
+        }
+        registry.register([group])
+        #expect(registry.filteredEntries.count == 2)
+    }
+
+    @Test("filteredEntries filters case-insensitively")
+    func filteredEntriesCaseInsensitive() {
+        let registry = CommandRegistry()
+        let group = CommandGroup("File") {
+            Button("Save") {}
+            Button("Open") {}
+        }
+        registry.register([group])
+        registry.filterText = "sav"
+        #expect(registry.filteredEntries.count == 1)
+        #expect(registry.filteredEntries[0].name == "Save")
+    }
+
+    @Test("filteredEntries returns empty when no match")
+    func filteredEntriesNoMatch() {
+        let registry = CommandRegistry()
+        let group = CommandGroup("File") {
+            Button("Save") {}
+            Button("Open") {}
+        }
+        registry.register([group])
+        registry.filterText = "xyz"
+        #expect(registry.filteredEntries.isEmpty)
+    }
+
+    @Test("resetPaletteState clears filter and index")
+    func resetPaletteStateClearsBoth() {
+        let registry = CommandRegistry()
+        registry.filterText = "hello"
+        registry.selectedIndex = 3
+        registry.resetPaletteState()
+        #expect(registry.filterText == "")
+        #expect(registry.selectedIndex == 0)
+    }
+
     @Test("Entries without shortcuts are not matched")
     func noShortcutNotMatched() {
         let registry = CommandRegistry()

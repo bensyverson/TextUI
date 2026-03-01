@@ -10,6 +10,28 @@ final class CommandRegistry: @unchecked Sendable {
     /// Whether the command palette overlay is currently visible.
     var isPaletteVisible: Bool = false
 
+    /// The current filter text in the command palette.
+    var filterText: String = ""
+
+    /// The currently selected index in the command palette.
+    var selectedIndex: Int = 0
+
+    /// The entries matching the current filter text.
+    ///
+    /// Returns all entries when the filter is empty. Otherwise, performs
+    /// a case-insensitive substring match on entry names.
+    var filteredEntries: [CommandEntry] {
+        let query = filterText.lowercased()
+        guard !query.isEmpty else { return allEntries }
+        return allEntries.filter { $0.name.lowercased().contains(query) }
+    }
+
+    /// Resets palette state to defaults (empty filter, first item selected).
+    func resetPaletteState() {
+        filterText = ""
+        selectedIndex = 0
+    }
+
     /// All command entries across all groups.
     var allEntries: [CommandEntry] {
         groups.flatMap(\.entries)

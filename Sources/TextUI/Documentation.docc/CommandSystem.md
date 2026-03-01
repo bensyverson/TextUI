@@ -69,6 +69,30 @@ CommandBar()                        // All groups
 CommandBar(groups: ["File"])        // Only "File" group
 ```
 
+### Command Palette
+
+Press **Ctrl+P** at any time to open the command palette — a centered overlay
+that lets users search and execute commands by name. The palette supports:
+
+- **Typing** — filters commands case-insensitively by name
+- **Up / Down arrows** — navigate the filtered list
+- **Enter** — execute the highlighted command and close the palette
+- **Escape** or **Ctrl+P** — close the palette without executing
+
+The palette is automatically available in any app that defines commands
+via the `commands` property on ``App``. No additional views or
+configuration are required.
+
+```
+╭──── Command Palette ──────────────────╮
+│ > search text█                        │
+├───────────────────────────────────────┤
+│   Save                           ^S  │
+│ ▸ Open                           ^O  │
+│   Copy                           ^C  │
+╰───────────────────────────────────────╯
+```
+
 ## Topics
 
 ### Types

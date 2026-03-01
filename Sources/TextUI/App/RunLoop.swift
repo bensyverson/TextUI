@@ -160,14 +160,22 @@ final class RunLoop {
     ///
     /// Key routing order:
     /// 1. Ctrl+C always exits
-    /// 2. Command shortcuts → execute action
-    /// 3. Focus system (inline → onKeyPress → onSubmit)
-    /// 4. Tab/Shift-Tab → focus navigation
-    /// 5. Arrows → directional navigation
+    /// 2. If palette visible: route to ``handlePaletteKey(_:)``
+    /// 3. Command shortcuts → execute action
+    /// 4. Ctrl+P → open palette
+    /// 5. Focus system (inline → onKeyPress → onSubmit)
+    /// 6. Tab/Shift-Tab → focus navigation
+    /// 7. Arrows → directional navigation
     private func handleKey(_ key: KeyEvent) {
         // Ctrl+C always exits
         if key == .ctrl("c") {
             isRunning = false
+            return
+        }
+
+        // When palette is visible, route all keys through palette handler
+        if commandRegistry.isPaletteVisible {
+            handlePaletteKey(key)
             return
         }
 
@@ -180,7 +188,8 @@ final class RunLoop {
 
         // Toggle command palette with Ctrl+P
         if key == .ctrl("p") {
-            commandRegistry.isPaletteVisible.toggle()
+            commandRegistry.resetPaletteState()
+            commandRegistry.isPaletteVisible = true
             renderFrame()
             return
         }
@@ -215,6 +224,58 @@ final class RunLoop {
         }
     }
 
+    /// Handles key events while the command palette is visible.
+    ///
+    /// All keys except Ctrl+C are consumed by the palette:
+    /// - **Escape / Ctrl+P** — close palette
+    /// - **Enter** — execute selected command, close palette
+    /// - **Up / Down** — navigate selection
+    /// - **Backspace** — delete last filter character
+    /// - **Character** — append to filter text
+    private func handlePaletteKey(_ key: KeyEvent) {
+        switch key {
+        case .escape, .ctrl("p"):
+            commandRegistry.isPaletteVisible = false
+            commandRegistry.resetPaletteState()
+
+        case .enter:
+            let entries = commandRegistry.filteredEntries
+            let index = commandRegistry.selectedIndex
+            if index < entries.count {
+                let entry = entries[index]
+                commandRegistry.isPaletteVisible = false
+                commandRegistry.resetPaletteState()
+                entry.action()
+            }
+
+        case .up:
+            if commandRegistry.selectedIndex > 0 {
+                commandRegistry.selectedIndex -= 1
+            }
+
+        case .down:
+            let maxIndex = commandRegistry.filteredEntries.count - 1
+            if commandRegistry.selectedIndex < maxIndex {
+                commandRegistry.selectedIndex += 1
+            }
+
+        case .backspace:
+            if !commandRegistry.filterText.isEmpty {
+                commandRegistry.filterText.removeLast()
+                commandRegistry.selectedIndex = 0
+            }
+
+        case let .character(char):
+            commandRegistry.filterText.append(char)
+            commandRegistry.selectedIndex = 0
+
+        default:
+            break // Swallow all other keys
+        }
+
+        renderFrame()
+    }
+
     // MARK: - Rendering
 
     /// Renders a single frame: sizes the root view, renders into the
@@ -239,6 +300,12 @@ final class RunLoop {
 
         _ = TextUI.sizeThatFits(rootView, proposal: proposal, context: ctx)
         TextUI.render(rootView, into: &screen.back, region: region, context: ctx)
+
+        // Render command palette overlay if visible
+        if commandRegistry.isPaletteVisible {
+            let palette = CommandPalette()
+            palette.render(into: &screen.back, region: region, context: ctx)
+        }
 
         // Apply default focus on first frame
         focusStore.applyDefaultFocus()
