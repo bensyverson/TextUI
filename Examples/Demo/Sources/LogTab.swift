@@ -1,3 +1,4 @@
+import Foundation
 import TextUI
 
 /// A tab demonstrating `@State` and `.task {}` with a live-updating log.
@@ -33,7 +34,7 @@ struct LogTab: View {
                 let entry = LogEntry(
                     index: counter,
                     timestamp: LogEntry.currentTimestamp(),
-                    message: LogEntry.randomMessage()
+                    message: LogEntry.randomMessage(),
                 )
                 entries.append(entry)
             }
@@ -47,7 +48,9 @@ struct LogTab: View {
         let timestamp: String
         let message: String
 
-        var id: Int { index }
+        var id: Int {
+            index
+        }
 
         /// Zero-padded index for display alignment.
         var formattedIndex: String {
@@ -56,21 +59,12 @@ struct LogTab: View {
 
         /// Returns the current time as HH:MM:SS.
         static func currentTimestamp() -> String {
-            #if canImport(Darwin)
             let now = Date()
             let calendar = Calendar.current
-            let h = calendar.component(.hour, from: now)
-            let m = calendar.component(.minute, from: now)
-            let s = calendar.component(.second, from: now)
+            let h: Int = calendar.component(Calendar.Component.hour, from: now)
+            let m: Int = calendar.component(Calendar.Component.minute, from: now)
+            let s: Int = calendar.component(Calendar.Component.second, from: now)
             return String(format: "%02d:%02d:%02d", h, m, s)
-            #else
-            let now = Date()
-            let calendar = Calendar.current
-            let h = calendar.component(.hour, from: now)
-            let m = calendar.component(.minute, from: now)
-            let s = calendar.component(.second, from: now)
-            return String(format: "%02d:%02d:%02d", h, m, s)
-            #endif
         }
 
         /// Returns a random log message from a pool of realistic entries.

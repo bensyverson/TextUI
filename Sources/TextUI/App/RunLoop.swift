@@ -34,7 +34,9 @@ final class RunLoop {
     private let focusStore: FocusStore
 
     /// The focus store, accessible for ``State`` reads/writes outside the render pass.
-    var stateStore: FocusStore { focusStore }
+    var stateStore: FocusStore {
+        focusStore
+    }
 
     /// The animation tracker, created once and reused across frames.
     private let animationTracker: AnimationTracker

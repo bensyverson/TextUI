@@ -1,8 +1,11 @@
 import TextUI
 
 /// A tab demonstrating ProgressView in various styles.
+///
+/// Uses `@State` and `.task {}` to drive a looping progress animation
+/// without any shared state object.
 struct ProgressTab: View {
-    @EnvironmentObject var state: DemoState
+    @State var progress: Double = 0.0
 
     var body: some View {
         VStack(spacing: 1) {
@@ -13,8 +16,8 @@ struct ProgressTab: View {
             ProgressView("Loading")
             Text("")
 
-            Text("Determinate bar (35%):", style: .dim)
-            ProgressView("Download", value: state.progress)
+            Text("Determinate bar (\(Int(progress * 100))%):", style: .dim)
+            ProgressView("Download", value: progress)
             Text("")
 
             Text("Compact style:", style: .dim)
@@ -32,5 +35,16 @@ struct ProgressTab: View {
                 .progressViewStyle(.bar())
         }
         .padding(1)
+        .task {
+            while !Task.isCancelled {
+                progress = 0.0
+                for i in 1 ... 100 {
+                    try? await Task.sleep(for: .milliseconds(100))
+                    guard !Task.isCancelled else { return }
+                    progress = Double(i) / 100.0
+                }
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
     }
 }

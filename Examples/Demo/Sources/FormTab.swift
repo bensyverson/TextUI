@@ -2,7 +2,13 @@ import TextUI
 
 /// A tab demonstrating TextField, Toggle, Button, and focus navigation.
 struct FormTab: View {
-    @EnvironmentObject var state: DemoState
+    @State var name: String = ""
+    @State var email: String = ""
+    @State var darkMode: Bool = false
+    @State var notifications: Bool = true
+    @State var colorIndex: Int = 0
+    @State var statusMessage: String = "Ready"
+    @State var submitted: Bool = false
 
     enum Field: Hashable, Sendable {
         case name
@@ -18,53 +24,53 @@ struct FormTab: View {
 
             HStack(spacing: 1) {
                 Text("Name:  ", style: .dim)
-                TextField("Enter your name", text: state.name) { [state] newValue in
-                    state.name = newValue
+                TextField("Enter your name", text: name) { newValue in
+                    name = newValue
                 }
                 .focused($focus, equals: .name)
             }
 
             HStack(spacing: 1) {
                 Text("Email: ", style: .dim)
-                TextField("user@example.com", text: state.email) { [state] newValue in
-                    state.email = newValue
+                TextField("user@example.com", text: email) { newValue in
+                    email = newValue
                 }
                 .focused($focus, equals: .email)
             }
             .padding(bottom: 1)
 
-            Toggle("Dark mode", isOn: state.darkMode) { [state] newValue in
-                state.darkMode = newValue
+            Toggle("Dark mode", isOn: darkMode) { newValue in
+                darkMode = newValue
             }
 
-            Toggle("Notifications", isOn: state.notifications) { [state] newValue in
-                state.notifications = newValue
+            Toggle("Notifications", isOn: notifications) { newValue in
+                notifications = newValue
             }
             .padding(bottom: 1)
 
-            Picker("Theme", selection: state.colorIndex, options: [
+            Picker("Theme", selection: colorIndex, options: [
                 "Default", "Ocean", "Forest", "Sunset",
-            ]) { [state] newIndex in
-                state.colorIndex = newIndex
+            ]) { newIndex in
+                colorIndex = newIndex
             }
             .padding(bottom: 1)
 
-            Button("Submit") { [state] in
-                let name = state.name.isEmpty ? "Anonymous" : state.name
-                state.statusMessage = "Submitted: \(name)"
-                state.submitted = true
+            Button("Submit") {
+                let displayName = name.isEmpty ? "Anonymous" : name
+                statusMessage = "Submitted: \(displayName)"
+                submitted = true
             }
             .padding(bottom: 1)
 
-            Text(state.statusMessage, style: Style(fg: .green))
+            Text(statusMessage, style: Style(fg: .green))
 
-            if state.submitted {
+            if submitted {
                 VStack(spacing: 0) {
-                    Text("Name: \(state.name.isEmpty ? "Anonymous" : state.name)")
-                    Text("Email: \(state.email.isEmpty ? "(none)" : state.email)")
-                    Text("Dark mode: \(state.darkMode ? "on" : "off")")
-                    Text("Notifications: \(state.notifications ? "on" : "off")")
-                    Text("Theme: \(["Default", "Ocean", "Forest", "Sunset"][state.colorIndex])")
+                    Text("Name: \(name.isEmpty ? "Anonymous" : name)")
+                    Text("Email: \(email.isEmpty ? "(none)" : email)")
+                    Text("Dark mode: \(darkMode ? "on" : "off")")
+                    Text("Notifications: \(notifications ? "on" : "off")")
+                    Text("Theme: \(["Default", "Ocean", "Forest", "Sunset"][colorIndex])")
                 }
                 .padding(top: 1)
             }

@@ -2,8 +2,6 @@ import TextUI
 
 @main
 struct DemoApp: App {
-    let state = DemoState()
-
     var body: some View {
         VStack {
             Text(" TextUI Demo ", style: Style(fg: .white, bg: .blue).bolded())
@@ -32,21 +30,12 @@ struct DemoApp: App {
             CommandBar()
                 .foregroundColor(.blue)
         }
-        .environmentObject(state)
     }
 
     var commands: [CommandGroup] {
         [CommandGroup("App") {
             Button("Quit") { Application.quit() }
                 .keyboardShortcut("q", modifiers: .control)
-            Button("Reset Form") { [state] in
-                state.name = ""
-                state.email = ""
-                state.darkMode = false
-                state.notifications = true
-                state.statusMessage = "Form reset"
-            }
-            .keyboardShortcut("r", modifiers: .control)
         }]
     }
 }

@@ -35,8 +35,8 @@ public struct State<Value: Sendable>: Sendable {
     /// The storage key is derived from the declaration site, so each
     /// `@State` property in the source code gets its own slot.
     public init(wrappedValue: Value, fileID: String = #fileID, line: Int = #line) {
-        self.key = "\(fileID):\(line)"
-        self.defaultValue = wrappedValue
+        key = "\(fileID):\(line)"
+        defaultValue = wrappedValue
     }
 
     /// Resolves the backing store for this state property.
