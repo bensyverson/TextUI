@@ -3,6 +3,13 @@
 /// `RunLoop` manages the terminal lifecycle, event merging, and render
 /// cycle. It collects events from multiple sources (keyboard, state
 /// changes, resize signals, shutdown) and dispatches them sequentially.
+///
+/// Key events are routed through the ``FocusStore``:
+/// 1. Ctrl+C always exits
+/// 2. ``FocusStore/routeKeyEvent(_:)`` — inline handler → onKeyPress chain → onSubmit
+/// 3. If `.ignored`: Tab/Shift-Tab → ``FocusStore/focusNext()``/``FocusStore/focusPrevious()``
+/// 4. If `.ignored`: arrows → ``FocusStore/focusInDirection(_:)``
+/// 5. If anything was handled: ``renderFrame()``
 @MainActor
 final class RunLoop {
     /// The double-buffered screen for rendering.
@@ -19,6 +26,9 @@ final class RunLoop {
 
     /// Whether the run loop is still active.
     private var isRunning: Bool = true
+
+    /// The focus manager, created once and reused across frames.
+    private let focusStore: FocusStore
 
     /// Internal event types that the run loop processes.
     enum Event: Sendable {
@@ -43,6 +53,7 @@ final class RunLoop {
         keyReader = KeyReader()
         self.rootView = rootView
         context = RenderContext()
+        focusStore = FocusStore()
     }
 
     /// Runs the event loop until shutdown.
@@ -133,13 +144,46 @@ final class RunLoop {
 
     // MARK: - Key Handling
 
-    /// Handles a key event. Currently only Ctrl+C exits.
+    /// Handles a key event by routing through the focus system.
+    ///
+    /// Ctrl+C always exits. Other keys are first routed through the
+    /// ``FocusStore``'s handler chain, then through focus navigation
+    /// (Tab/Shift-Tab, arrows). A re-render is triggered if any handler
+    /// consumed the event or focus moved.
     private func handleKey(_ key: KeyEvent) {
-        switch key {
-        case .ctrl("c"):
+        // Ctrl+C always exits
+        if key == .ctrl("c") {
             isRunning = false
-        default:
-            break // Phase 5 adds focus-based key routing
+            return
+        }
+
+        var handled = false
+
+        // Route through focus system (inline → onKeyPress → onSubmit)
+        if focusStore.routeKeyEvent(key) == .handled {
+            handled = true
+        }
+
+        // Focus navigation
+        if !handled {
+            switch key {
+            case .tab:
+                focusStore.focusNext()
+                handled = true
+            case .shiftTab:
+                focusStore.focusPrevious()
+                handled = true
+            case .up, .down, .left, .right:
+                if focusStore.focusInDirection(key) == .handled {
+                    handled = true
+                }
+            default:
+                break
+            }
+        }
+
+        if handled {
+            renderFrame()
         }
     }
 
@@ -148,13 +192,23 @@ final class RunLoop {
     /// Renders a single frame: sizes the root view, renders into the
     /// back buffer, and flushes changed cells to the terminal.
     private func renderFrame() {
+        // Prepare focus store for this frame
+        focusStore.beginFrame()
+
+        // Thread focus store into the render context
+        var ctx = context
+        ctx.focusStore = focusStore
+
         screen.clear()
 
         let proposal = SizeProposal(width: screen.width, height: screen.height)
         let region = Region(row: 0, col: 0, width: screen.width, height: screen.height)
 
-        _ = TextUI.sizeThatFits(rootView, proposal: proposal, context: context)
-        TextUI.render(rootView, into: &screen.back, region: region, context: context)
+        _ = TextUI.sizeThatFits(rootView, proposal: proposal, context: ctx)
+        TextUI.render(rootView, into: &screen.back, region: region, context: ctx)
+
+        // Apply default focus on first frame
+        focusStore.applyDefaultFocus()
 
         let output = screen.flush()
         if !output.isEmpty {

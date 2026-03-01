@@ -163,6 +163,65 @@ public extension View {
         PrioritizedView(content: self, priority: priority)
     }
 
+    // MARK: - Focus
+
+    /// Binds this view to a focus value for programmatic focus management.
+    ///
+    /// When the binding's value matches `value`, this view is focused.
+    /// Setting the binding programmatically moves focus.
+    ///
+    /// ```swift
+    /// @FocusState var focus: Field?
+    ///
+    /// TextField("Name", text: $name)
+    ///     .focused($focus, equals: .name)
+    /// ```
+    func focused<Value: Hashable & Sendable>(
+        _: FocusState<Value?>.Binding,
+        equals value: Value,
+    ) -> some View {
+        FocusedView(content: self, bindingKey: AnyHashable(value))
+    }
+
+    /// Groups focusable descendants into a focus section.
+    ///
+    /// Arrow key navigation is constrained to controls within the
+    /// same section.
+    func focusSection() -> some View {
+        FocusSectionView(content: self)
+    }
+
+    /// Sets the default focus target for the first frame.
+    ///
+    /// On the first render pass, the focus system will focus the entry
+    /// matching `value` instead of the first entry in the ring.
+    func defaultFocus<Value: Hashable & Sendable>(
+        _: FocusState<Value?>.Binding,
+        _ value: Value,
+    ) -> some View {
+        DefaultFocusView(content: self, targetKey: AnyHashable(value))
+    }
+
+    /// Intercepts key events for focusable descendants.
+    ///
+    /// Return `.handled` to consume the event or `.ignored` to
+    /// let it propagate.
+    func onKeyPress(
+        _ handler: @escaping @Sendable (KeyEvent) -> KeyEventResult,
+    ) -> some View {
+        OnKeyPressView(content: self, handler: handler)
+    }
+
+    /// Handles submit (Enter) events from `.edit` controls.
+    ///
+    /// Fires when a focused ``TextField`` receives Enter and no
+    /// inline handler consumes it.
+    func onSubmit(
+        _ handler: @escaping @Sendable () -> Void,
+    ) -> some View {
+        OnSubmitView(content: self, handler: handler)
+    }
+
     // MARK: - Environment
 
     /// Injects an environment object into the view hierarchy.
