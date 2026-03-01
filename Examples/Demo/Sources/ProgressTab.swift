@@ -12,28 +12,23 @@ struct ProgressTab: View {
     var body: some View {
         VStack(spacing: 1) {
             Text("Progress Indicators", style: .bold)
-            Text("")
+				.padding(bottom: 2)
 
             Text("Indeterminate spinner:", style: .dim)
             ProgressView("Loading")
-            Text("")
+				.foregroundColor(theme.accentColor)
+				.padding(bottom: 2)
 
-            Text("Determinate bar (\(Int(progress * 100))%):", style: .dim)
+			Text("Compact progress:", style: .dim)
+			ProgressView("Indexing", value: progress)
+				.progressViewStyle(.compact)
+				.foregroundColor(theme.accentColor)
+				.padding(bottom: 2)
+
+			Text("Determinate bar (\(Int(progress * 100))%):", style: .dim)
             ProgressView("Download", value: progress)
                 .foregroundColor(theme.accentColor)
-            Text("")
-
-            Text("Compact style:", style: .dim)
-            ProgressView("Indexing", value: 0.72)
-                .progressViewStyle(.compact)
-                .foregroundColor(theme.accentColor)
-            Text("")
-
-            Text("Full bar style:", style: .dim)
-            ProgressView("Building", value: 0.58)
-                .progressViewStyle(.bar())
-                .foregroundColor(theme.accentColor)
-            Text("")
+				.padding(bottom: 2)
 
             Text("Indeterminate bar:", style: .dim)
             ProgressView("Syncing")
