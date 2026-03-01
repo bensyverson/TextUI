@@ -6,7 +6,7 @@ struct FormTab: View {
     @State var email: String = ""
     @State var darkMode: Bool = false
     @State var notifications: Bool = true
-    @State var colorIndex: Int = 0
+    @EnvironmentObject var theme: ThemeState
     @State var statusMessage: String = "Ready"
     @State var submitted: Bool = false
 
@@ -48,10 +48,8 @@ struct FormTab: View {
             }
             .padding(bottom: 1)
 
-            Picker("Theme", selection: colorIndex, options: [
-                "Default", "Ocean", "Forest", "Sunset",
-            ]) { newIndex in
-                colorIndex = newIndex
+            Picker("Theme", selection: theme.colorIndex, options: ThemeState.names) { [theme] newIndex in
+                theme.colorIndex = newIndex
             }
             .padding(bottom: 1)
 
@@ -70,7 +68,7 @@ struct FormTab: View {
                     Text("Email: \(email.isEmpty ? "(none)" : email)")
                     Text("Dark mode: \(darkMode ? "on" : "off")")
                     Text("Notifications: \(notifications ? "on" : "off")")
-                    Text("Theme: \(["Default", "Ocean", "Forest", "Sunset"][colorIndex])")
+                    Text("Theme: \(ThemeState.names[theme.colorIndex])")
                 }
                 .padding(top: 1)
             }

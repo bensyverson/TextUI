@@ -32,7 +32,7 @@ final class TaskStore: @unchecked Sendable {
     /// - Parameters:
     ///   - key: The view identity key (typically `#fileID:#line`).
     ///   - action: The async work to perform.
-    func markActive(key: String, action: @escaping @Sendable () async -> Void) {
+    func markActive(key: String, action: @escaping @MainActor @Sendable () async -> Void) {
         activeKeys.insert(key)
         if tasks[key] == nil {
             tasks[key] = Task { await action() }

@@ -4,11 +4,20 @@ import TextUI
 ///
 /// Demonstrates: AttributedText, ZStack, Canvas, ForEach, Group.
 struct ViewsTab: View {
+    @State var count: Int = 0
+
     var body: some View {
         ScrollView {
             VStack {
                 Text("All Views", style: .bold)
                     .padding(bottom: 1)
+
+                HStack(spacing: 1) {
+                    Text("Count: \(count)")
+                    Button("+1") {
+                        count += 1
+                    }.border()
+                }.padding(bottom: 2)
 
                 // MARK: - AttributedText
 

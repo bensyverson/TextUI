@@ -2,6 +2,8 @@ import TextUI
 
 @main
 struct DemoApp: App {
+    let theme = ThemeState()
+
     var body: some View {
         VStack {
             Text(" TextUI Demo ", style: Style(fg: .white, bg: .blue).bolded())
@@ -30,6 +32,7 @@ struct DemoApp: App {
             CommandBar()
                 .foregroundColor(.blue)
         }
+        .environmentObject(theme)
     }
 
     var commands: [CommandGroup] {

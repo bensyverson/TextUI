@@ -65,7 +65,7 @@ struct ModifierChainTests {
 
     @Test("layoutPriority affects stack distribution")
     func layoutPriorityDistribution() {
-        let view = HStack {
+        let view = HStack(spacing: 0) {
             Text("ABCDE").layoutPriority(1)
             Text("FGHIJ")
         }

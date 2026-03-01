@@ -42,7 +42,7 @@ you compose views the same way; the difference is invisible at the call site.
 The proposal/response contract is the same — parent proposes, child responds —
 but all values are integer cells. Key defaults that differ from SwiftUI:
 
-- **Default stack spacing** is `0` (SwiftUI uses ~8 points)
+- **Default stack spacing** is `0` for VStack, `1` for HStack (SwiftUI uses ~8 points)
 - **Spacer minimum length** is `0` (SwiftUI defaults to ~8 points)
 - **`.border()`** adds exactly **2 cells** to each axis (1 per side)
 - **`.frame()`** takes `Int` or `Int?` parameters, not `CGFloat`

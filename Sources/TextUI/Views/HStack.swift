@@ -26,11 +26,11 @@ public struct HStack: PrimitiveView, Sendable {
     ///
     /// - Parameters:
     ///   - alignment: The vertical alignment of children. Defaults to `.top`.
-    ///   - spacing: The number of columns between children. Defaults to `0`.
+    ///   - spacing: The number of columns between children. Defaults to `1`.
     ///   - content: A ``ViewBuilder`` closure producing the stack's children.
     public init(
         alignment: VerticalAlignment = .top,
-        spacing: Int = 0,
+        spacing: Int = 1,
         @ViewBuilder content: () -> ViewGroup,
     ) {
         self.alignment = alignment

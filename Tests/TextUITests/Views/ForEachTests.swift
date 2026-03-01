@@ -64,7 +64,7 @@ struct ForEachTests {
     @Test("ForEach in HStack")
     func inHStack() {
         let items = ["A", "B", "C"]
-        let view = HStack {
+        let view = HStack(spacing: 0) {
             ForEach(items) { item in
                 Text(item)
             }

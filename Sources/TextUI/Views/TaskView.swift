@@ -9,7 +9,7 @@
 /// on ``View``.
 struct TaskView: PrimitiveView, Sendable {
     let content: any View
-    let action: @Sendable () async -> Void
+    let action: @MainActor @Sendable () async -> Void
     let key: String
 
     func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {

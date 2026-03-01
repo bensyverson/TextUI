@@ -7,12 +7,23 @@ struct HStackTests {
 
     @Test("Ideal size sums child widths, max height")
     func idealSize() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("AB")
             Text("CD")
         }
         let size = stack.sizeThatFits(.unspecified)
         #expect(size == Size2D(width: 4, height: 1))
+    }
+
+    @Test("Default spacing is 1")
+    func defaultSpacing() {
+        let stack = HStack {
+            Text("A")
+            Text("B")
+        }
+        let size = stack.sizeThatFits(.unspecified)
+        // 1 + 1 + 1 = 3 (A + spacing + B)
+        #expect(size == Size2D(width: 3, height: 1))
     }
 
     @Test("Ideal size with spacing")
@@ -29,7 +40,7 @@ struct HStackTests {
 
     @Test("Minimum size is zero")
     func minimumSize() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("Hello")
             Text("World")
         }
@@ -41,7 +52,7 @@ struct HStackTests {
 
     @Test("Spacer absorbs remaining width")
     func spacerAbsorbs() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("L")
             Spacer()
             Text("R")
@@ -54,7 +65,7 @@ struct HStackTests {
 
     @Test("Renders children side by side")
     func renderBasic() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("AB")
             Text("CD")
         }
@@ -80,7 +91,7 @@ struct HStackTests {
 
     @Test("Spacer pushes text to right edge")
     func spacerPushesRight() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("left")
             Spacer()
             Text("right")
@@ -98,7 +109,7 @@ struct HStackTests {
 
     @Test("Top alignment (default)")
     func topAlignment() {
-        let stack = HStack(alignment: .top) {
+        let stack = HStack(alignment: .top, spacing: 0) {
             Text("A\nB")
             Text("X")
         }
@@ -112,7 +123,7 @@ struct HStackTests {
 
     @Test("Bottom alignment")
     func bottomAlignment() {
-        let stack = HStack(alignment: .bottom) {
+        let stack = HStack(alignment: .bottom, spacing: 0) {
             Text("A\nB")
             Text("X")
         }
@@ -128,7 +139,7 @@ struct HStackTests {
 
     @Test("Center alignment")
     func centerAlignment() {
-        let stack = HStack(alignment: .center) {
+        let stack = HStack(alignment: .center, spacing: 0) {
             Text("A\nB\nC")
             Text("X")
         }
@@ -143,7 +154,7 @@ struct HStackTests {
 
     @Test("Inflexible children get their ideal size")
     func inflexibleFirst() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("ABCDE") // 5 wide, inflexible
             Spacer() // fully flexible
         }
@@ -154,7 +165,7 @@ struct HStackTests {
 
     @Test("Vertical divider in HStack")
     func verticalDividerInHStack() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("A")
             Divider.vertical
             Text("B")

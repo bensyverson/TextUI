@@ -290,7 +290,7 @@ public extension View {
     func task(
         fileID: String = #fileID,
         line: Int = #line,
-        _ action: @escaping @Sendable () async -> Void,
+        _ action: @escaping @MainActor @Sendable () async -> Void,
     ) -> some View {
         TaskView(content: self, action: action, key: "\(fileID):\(line)")
     }

@@ -7,7 +7,7 @@ struct LayoutIntegrationTests {
 
     @Test("HStack with Spacer renders left and right text at edges")
     func statusBar() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("left")
             Spacer()
             Text("right")
@@ -52,7 +52,7 @@ struct LayoutIntegrationTests {
     @Test("HStack inside VStack")
     func nestedStacks() {
         let stack = VStack {
-            HStack {
+            HStack(spacing: 0) {
                 Text("A")
                 Text("B")
             }
@@ -69,7 +69,7 @@ struct LayoutIntegrationTests {
 
     @Test("VStack inside HStack")
     func vStackInsideHStack() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             VStack {
                 Text("1")
                 Text("2")
@@ -104,7 +104,7 @@ struct LayoutIntegrationTests {
 
     @Test("Stack with Spacer responds to all four proposal modes")
     func fourProposalModes() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("AB")
             Spacer()
             Text("CD")
@@ -132,7 +132,7 @@ struct LayoutIntegrationTests {
 
     @Test("Multiple spacers share remaining space equally")
     func multipleSpacer() {
-        let stack = HStack {
+        let stack = HStack(spacing: 0) {
             Text("A")
             Spacer()
             Text("B")
@@ -157,7 +157,7 @@ private struct StatusBar: View {
     let right: String
 
     var body: HStack {
-        HStack {
+        HStack(spacing: 0) {
             Text(left)
             Spacer()
             Text(right)

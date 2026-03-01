@@ -8,7 +8,7 @@ struct PriorityTests {
         // "Hello" (priority 1) and a Spacer and "World" (default priority)
         // Priority 1 gets allocated first with full share, then remainder to others
         // Use equal-flexibility children where priority changes allocation order
-        let view2 = HStack {
+        let view2 = HStack(spacing: 0) {
             Text("ABCDE").layoutPriority(1)
             Text("FGHIJ")
         }
@@ -28,7 +28,7 @@ struct PriorityTests {
     @Test("Default priority is 0")
     func defaultPriority() {
         // Without layoutPriority, both get equal shares
-        let view = HStack {
+        let view = HStack(spacing: 0) {
             Text("Hello")
             Text("World")
         }
@@ -49,7 +49,7 @@ struct PriorityTests {
     @Test("Priority with Spacer interaction")
     func priorityWithSpacer() {
         // Text with priority should get its full size before Spacer
-        let view = HStack {
+        let view = HStack(spacing: 0) {
             Text("Hello").layoutPriority(1)
             Spacer()
         }
@@ -66,7 +66,7 @@ struct PriorityTests {
     func multiplePriorities() {
         // Three texts: A(prio 2), B(prio 1), C(prio 0)
         // In 6 columns: A gets 1 first, then B gets min(1, remaining), then C
-        let view = HStack {
+        let view = HStack(spacing: 0) {
             Text("AA").layoutPriority(2)
             Text("BBB").layoutPriority(1)
             Text("CCCC")
