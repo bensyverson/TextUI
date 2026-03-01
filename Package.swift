@@ -28,4 +28,5 @@ let package = Package(
             dependencies: ["TextUI"],
         ),
     ],
+    swiftLanguageModes: [.v6],
 )

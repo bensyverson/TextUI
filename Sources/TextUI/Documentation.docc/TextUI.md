@@ -18,6 +18,32 @@ adapted for the character-grid world of terminal emulators.
 - ``Buffer``
 - ``Screen``
 
+### View Protocols
+
+- ``View``
+- ``PrimitiveView``
+
+### Views
+
+- ``Text``
+- ``EmptyView``
+- ``HStack``
+- ``VStack``
+- ``Spacer``
+- ``Divider``
+
+### Layout
+
+- ``Size2D``
+- ``SizeProposal``
+- ``HorizontalAlignment``
+- ``VerticalAlignment``
+- ``sizeThatFits(_:proposal:)``
+- ``render(_:into:region:)``
+- <doc:LayoutSystem>
+
 ### Core
 
 - ``Friendly``
+- ``ViewBuilder``
+- ``ViewGroup``
