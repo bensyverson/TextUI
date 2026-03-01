@@ -9,6 +9,10 @@ a parent **proposes** a size to its child, the child **responds** with the size
 it actually needs, and the parent positions the child within its allocated region.
 The child always chooses its own size — the proposal is advisory.
 
+> Note: SwiftUI developers: the contract is identical but all values are
+> **integer character cells**, not floating-point points. See
+> <doc:SwiftUIDifferences> for other layout differences.
+
 ### The Proposal/Response Contract
 
 Layout happens in two passes:
@@ -41,16 +45,27 @@ Views fall into three sizing categories based on how they respond to proposals:
 
 ## Stack Layout Algorithm
 
-``HStack`` and ``VStack`` use a shared flexibility-sorted greedy algorithm
+``HStack`` and ``VStack`` use a shared two-phase allocation algorithm
 implemented in `StackLayout`:
 
 1. **Spacing:** Subtract `spacing × (childCount - 1)` from available primary-axis space.
 2. **Flexibility probing:** For each child, query `sizeThatFits(0)` and
-   `sizeThatFits(.max)` on the primary axis. Flexibility = max - min.
-3. **Sort by flexibility ascending:** Least flexible children are allocated first.
-4. **Greedy allocation:** Each child receives `remaining / remainingCount` cells.
-   It responds with its actual size; unneeded surplus cascades to the next child.
-5. **Placement:** Children are positioned sequentially along the primary axis.
+   `sizeThatFits(.max)` on the primary axis. Flexibility = max − min.
+3. **Sort:** Children are sorted by `.layoutPriority()` **descending**,
+   then by flexibility **ascending**. Higher-priority children receive space
+   first; among equal priorities, least-flexible children are served first.
+4. **Phase 1 — Minimums:** Each child is guaranteed at least its minimum
+   size (the result of `sizeThatFits(0)`). The total of all minimums is
+   subtracted from available space to determine the surplus.
+5. **Phase 2 — Surplus distribution:** The remaining space is divided
+   equally among children in sorted order (`surplus / remainingCount`).
+   Each child is offered its minimum plus its share. If a child uses less
+   than offered, the unused portion cascades to later children.
+6. **Squeeze fallback:** If total available space is less than the sum of
+   all minimums, the two-phase approach is replaced by a simple equal-share
+   squeeze: each child receives `remaining / remainingCount` cells.
+7. **Placement:** Children are positioned sequentially along the primary
+   axis in their **original** (source) order, regardless of sort order.
 
 The stack's total primary size is the sum of children plus spacing. Its cross
 size is the maximum of all children's cross sizes.
@@ -79,3 +94,7 @@ results are summed with spacing.
 
 - ``HStack``
 - ``VStack``
+
+### Priority
+
+- ``View/layoutPriority(_:)``

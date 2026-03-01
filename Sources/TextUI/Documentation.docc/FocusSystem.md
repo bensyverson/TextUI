@@ -113,3 +113,14 @@ TextField("Search", text: query) { query = $0 }
 - ``FocusInteraction``
 - ``KeyEventResult``
 
+### Focus Modifiers
+
+- ``View/focused(_:equals:)``
+- ``View/focusSection()``
+- ``View/defaultFocus(_:_:)``
+
+### Key Event Handling
+
+- ``View/onKeyPress(_:)``
+- ``View/onSubmit(_:)``
+

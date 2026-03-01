@@ -15,6 +15,7 @@ adapted for the character-grid world of terminal emulators.
 - <doc:GettingStarted>
 - <doc:ViewCatalog>
 - <doc:FocusAndInput>
+- <doc:SwiftUIDifferences>
 
 ### Rendering
 
@@ -123,6 +124,7 @@ adapted for the character-grid world of terminal emulators.
 ### App Lifecycle
 
 - ``App``
+- ``Application``
 
 ### Core
 

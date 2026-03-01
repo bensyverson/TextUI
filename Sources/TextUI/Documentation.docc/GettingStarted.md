@@ -79,18 +79,14 @@ var body: some View {
 
 ### Adding State and Interactivity
 
-Create a state class with properties that trigger re-renders. Inject it
-into your view tree with `.environmentObject()`, and read it with
-`@EnvironmentObject`:
+Create a `@MainActor` state class with ``Observed`` properties that
+automatically trigger re-renders on mutation. Inject it into your view
+tree with `.environmentObject()`, and read it with `@EnvironmentObject`:
 
 ```swift
-final class AppState: @unchecked Sendable {
-    var count: Int = 0
-
-    func increment() {
-        count += 1
-        MainActor.assumeIsolated { StateSignal.send() }
-    }
+@MainActor
+final class AppState {
+    @Observed var count = 0
 }
 
 struct CounterView: View {
@@ -99,7 +95,7 @@ struct CounterView: View {
     var body: some View {
         VStack {
             Text("Count: \(state.count)")
-            Button("Increment") { [state] in state.increment() }
+            Button("Increment") { [state] in state.count += 1 }
         }
     }
 }

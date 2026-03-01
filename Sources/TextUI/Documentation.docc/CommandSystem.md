@@ -15,16 +15,16 @@ Use ``CommandGroup`` with `Button` and `.keyboardShortcut()` to declare commands
 ```swift
 struct MyApp: App {
     var commands: [CommandGroup] {
-        CommandGroup("File") {
+        [CommandGroup("File") {
             Button("Save") { save() }
                 .keyboardShortcut("s", modifiers: .control)
             Button("Open") { open() }
                 .keyboardShortcut("o", modifiers: .control)
-        }
+        },
         CommandGroup("Edit") {
             Button("Copy") { copy() }
                 .keyboardShortcut("c", modifiers: .control)
-        }
+        }]
     }
 
     var body: some View {

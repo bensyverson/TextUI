@@ -56,6 +56,12 @@ Key guides:
 - **Views** — Catalog of all built-in views with examples
 - **Focus and Input** — Keyboard navigation, @FocusState, key event handling
 - **Command System** — Global shortcuts, CommandBar, command palette
+- **TextUI vs SwiftUI** — Key differences for SwiftUI developers
+
+## Requirements
+
+- Swift 6.2+
+- macOS 13+ or Linux (glibc)
 
 ## Demo App
 

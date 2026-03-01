@@ -20,6 +20,10 @@ final class AppState {
 
 Every mutation triggers ``StateSignal/send()``, which the run loop consumes to schedule a re-render. No equality gating is performed — the ``Screen``'s differential flush efficiently handles no-op changes.
 
+> Note: SwiftUI developers: ``Observed`` replaces both `@State` and
+> `@Published`. There is no `@Binding` — pass `onChange` closures instead.
+> See <doc:SwiftUIDifferences> for a full comparison.
+
 ### Environment Objects
 
 Environment objects use dependency injection to share state across the view tree without explicit parameter passing.

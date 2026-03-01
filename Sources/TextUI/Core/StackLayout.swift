@@ -1,11 +1,14 @@
 /// Shared layout algorithm for ``HStack`` and ``VStack``.
 ///
-/// The stack layout uses a flexibility-sorted greedy allocation:
+/// The stack layout uses a two-phase allocation:
 /// 1. Subtract total spacing from available primary-axis space
-/// 2. Compute each child's flexibility (max size - min size on the primary axis)
-/// 3. Sort by flexibility ascending (least flexible first)
-/// 4. Allocate each child `remaining / remainingCount`; surplus cascades
-/// 5. Place children sequentially along the primary axis
+/// 2. Compute each child's flexibility (max size − min size on the primary axis)
+/// 3. Sort by `layoutPriority` descending, then flexibility ascending
+/// 4. **Phase 1 — Minimums:** Guarantee each child its minimum size
+/// 5. **Phase 2 — Surplus:** Distribute remaining space (`surplus / remainingCount`)
+///    to each child in sorted order; unused portions cascade forward
+/// 6. If total space < total minimums, fall back to equal-share squeeze
+/// 7. Place children sequentially in original order
 enum StackLayout {
     /// The result of laying out a single child within a stack.
     struct ChildLayout {
