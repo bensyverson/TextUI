@@ -25,12 +25,12 @@ enum StackLayout {
         case vertical
     }
 
-    /// Recursively flattens ``ViewGroup`` children into a flat array.
+    /// Recursively flattens ``LayoutTransparent`` children into a flat array.
     static func flattenChildren(_ views: [any View]) -> [any View] {
         var result: [any View] = []
         for view in views {
-            if let group = view as? ViewGroup {
-                result.append(contentsOf: flattenChildren(group.children))
+            if let transparent = view as? LayoutTransparent {
+                result.append(contentsOf: flattenChildren(transparent.layoutChildren))
             } else {
                 result.append(view)
             }
@@ -147,8 +147,15 @@ enum StackLayout {
             return FlexChild(index: index, view: child, minSize: minPrimary, maxSize: maxPrimary)
         }
 
-        // Sort by flexibility ascending (least flexible first)
-        flexChildren.sort { $0.flexibility < $1.flexibility }
+        // Sort: priority descending first, then flexibility ascending
+        flexChildren.sort { a, b in
+            let aPriority = (a.view as? PrioritizedView)?.priority ?? 0
+            let bPriority = (b.view as? PrioritizedView)?.priority ?? 0
+            if aPriority != bPriority {
+                return aPriority > bPriority
+            }
+            return a.flexibility < b.flexibility
+        }
 
         // Greedy allocation
         var remaining = available

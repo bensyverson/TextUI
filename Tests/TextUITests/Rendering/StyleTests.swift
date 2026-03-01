@@ -131,4 +131,67 @@ struct StyleTests {
         #expect(seq.contains("4"))
         #expect(seq.contains("36"))
     }
+
+    // MARK: - Merging
+
+    @Test("Merging bold into plain adds bold")
+    func mergingBold() {
+        let result = Style.plain.merging(Style(bold: true))
+        #expect(result.bold)
+        #expect(result.fg == nil)
+    }
+
+    @Test("Merging fg color into bold preserves bold")
+    func mergingFgPreservesBold() {
+        let base = Style(bold: true)
+        let result = base.merging(Style(fg: .red))
+        #expect(result.bold)
+        #expect(result.fg == .red)
+    }
+
+    @Test("Merging override fg replaces base fg")
+    func mergingOverrideFg() {
+        let base = Style(fg: .blue)
+        let result = base.merging(Style(fg: .red))
+        #expect(result.fg == .red)
+    }
+
+    @Test("Merging nil fg preserves base fg")
+    func mergingNilFgPreservesBase() {
+        let base = Style(fg: .blue)
+        let result = base.merging(Style(bold: true))
+        #expect(result.fg == .blue)
+        #expect(result.bold)
+    }
+
+    @Test("Merging ORs all boolean attributes")
+    func mergingORsBooleans() {
+        let base = Style(bold: true, italic: true)
+        let override = Style(dim: true, underline: true)
+        let result = base.merging(override)
+        #expect(result.bold)
+        #expect(result.italic)
+        #expect(result.dim)
+        #expect(result.underline)
+    }
+
+    @Test("Merging preserves bg when override bg is nil")
+    func mergingPreservesBg() {
+        let base = Style(bg: .green)
+        let result = base.merging(Style(bold: true))
+        #expect(result.bg == .green)
+    }
+
+    @Test("Merging override bg replaces base bg")
+    func mergingOverrideBg() {
+        let base = Style(bg: .green)
+        let result = base.merging(Style(bg: .red))
+        #expect(result.bg == .red)
+    }
+
+    @Test("Merging two plain styles is plain")
+    func mergingPlainIsPlain() {
+        let result = Style.plain.merging(.plain)
+        #expect(result == .plain)
+    }
 }

@@ -7,7 +7,7 @@
 ///
 /// You never create a `ViewGroup` directly — it is produced
 /// automatically by the `@ViewBuilder` result builder.
-public struct ViewGroup: PrimitiveView, Sendable {
+public struct ViewGroup: PrimitiveView, LayoutTransparent, Sendable {
     /// The child views contained in this group.
     public let children: [any View]
 
@@ -26,5 +26,11 @@ public struct ViewGroup: PrimitiveView, Sendable {
         // Bare ViewGroup outside a stack: render first child only
         guard let first = children.first else { return }
         TextUI.render(first, into: &buffer, region: region)
+    }
+
+    // MARK: - LayoutTransparent
+
+    var layoutChildren: [any View] {
+        children
     }
 }

@@ -26,16 +26,28 @@ adapted for the character-grid world of terminal emulators.
 ### Views
 
 - ``Text``
+- ``AttributedText``
 - ``EmptyView``
 - ``HStack``
 - ``VStack``
+- ``ZStack``
 - ``Spacer``
 - ``Divider``
+- ``Color``
+- ``Canvas``
+- ``ForEach``
+- ``Group``
+
+### Modifiers
+
+- ``BorderedView``
+- <doc:Modifiers>
 
 ### Layout
 
 - ``Size2D``
 - ``SizeProposal``
+- ``Alignment``
 - ``HorizontalAlignment``
 - ``VerticalAlignment``
 - ``sizeThatFits(_:proposal:)``
@@ -46,4 +58,5 @@ adapted for the character-grid world of terminal emulators.
 
 - ``Friendly``
 - ``ViewBuilder``
+- ``SpanBuilder``
 - ``ViewGroup``
