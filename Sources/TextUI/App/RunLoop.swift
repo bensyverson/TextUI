@@ -12,6 +12,9 @@
 /// 5. If anything was handled: ``renderFrame()``
 @MainActor
 final class RunLoop {
+    /// The currently running run loop instance, if any.
+    static var current: RunLoop?
+
     /// The double-buffered screen for rendering.
     private var screen: Screen
 
@@ -25,7 +28,7 @@ final class RunLoop {
     private var context: RenderContext
 
     /// Whether the run loop is still active.
-    private var isRunning: Bool = true
+    var isRunning: Bool = true
 
     /// The focus manager, created once and reused across frames.
     private let focusStore: FocusStore
@@ -73,6 +76,8 @@ final class RunLoop {
     /// This method blocks until the user presses Ctrl+C or a shutdown
     /// signal is received.
     func run() async {
+        RunLoop.current = self
+
         // Setup terminal
         Terminal.enableRawMode()
         Terminal.enterAlternateScreen()
@@ -81,6 +86,7 @@ final class RunLoop {
         Terminal.installSignalHandlers()
 
         defer {
+            RunLoop.current = nil
             // Always clean up, even on unexpected exit
             keyReader.stop()
             Terminal.showCursor()
@@ -135,10 +141,11 @@ final class RunLoop {
                 }
             }
 
-            // Forward resize events
-            let resizeContinuation = continuation
-            Terminal.onResize { size in
-                resizeContinuation.yield(.resize(size))
+            // Forward resize events (via async-signal-safe pipe)
+            let resizeTask = Task {
+                for await size in Terminal.resizeEvents() {
+                    continuation.yield(.resize(size))
+                }
             }
 
             // Forward shutdown signal
@@ -150,6 +157,7 @@ final class RunLoop {
             continuation.onTermination = { _ in
                 keyTask.cancel()
                 stateTask.cancel()
+                resizeTask.cancel()
             }
         }
     }
@@ -182,6 +190,13 @@ final class RunLoop {
         // Command shortcuts (before focus routing)
         if let entry = commandRegistry.matchShortcut(key) {
             entry.action()
+            renderFrame()
+            return
+        }
+
+        // Global tab switching with Ctrl+Shift+Arrow
+        if key == .ctrlShiftRight || key == .ctrlShiftLeft {
+            switchTab(direction: key == .ctrlShiftRight ? 1 : -1)
             renderFrame()
             return
         }
@@ -274,6 +289,18 @@ final class RunLoop {
         }
 
         renderFrame()
+    }
+
+    // MARK: - Tab Switching
+
+    /// Switches the innermost TabView by the given direction (-1 or +1).
+    private func switchTab(direction: Int) {
+        guard let tabKey = focusStore.tabViewKeys.last else { return }
+        var state = focusStore.controlState(forKey: tabKey, as: TabView.TabState.self)
+            ?? TabView.TabState()
+        guard state.tabCount > 0 else { return }
+        state.selectedIndex = (state.selectedIndex + direction + state.tabCount) % state.tabCount
+        focusStore.setControlState(state, forKey: tabKey)
     }
 
     // MARK: - Rendering

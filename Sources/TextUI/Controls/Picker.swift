@@ -1,8 +1,9 @@
 /// A focusable picker that cycles through a list of options.
 ///
 /// Picker renders as `Label: < Option >` and responds to Left/Right
-/// arrow keys when focused. The selection is owned by the caller via
-/// the `selection` parameter and `onChange` callback.
+/// arrow keys, Space, or Enter when focused. Pressing Space or Enter
+/// opens a dropdown overlay where Up/Down selects an option and Enter
+/// confirms.
 ///
 /// ```swift
 /// Picker("Color", selection: settings.colorIndex, options: colors) { newIndex in
@@ -18,6 +19,12 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
     let options: [String]
     let onChange: @Sendable (Int) -> Void
     let autoKey: AnyHashable
+
+    /// Persistent dropdown state for the picker.
+    struct PickerState: Sendable {
+        var isDropdownOpen: Bool = false
+        var highlightedIndex: Int = 0
+    }
 
     /// Creates a picker with a label and option list.
     ///
@@ -58,35 +65,82 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
     public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard region.height >= 1, !options.isEmpty else { return }
 
-        // Register in focus ring
+        // Register in focus ring (skip if FocusedView already registered us)
         let store = context.focusStore
-        let focusID = store?.register(
-            interaction: .activate,
-            region: region,
-            sectionID: context.currentFocusSectionID,
-            bindingKey: nil,
-            autoKey: autoKey,
-        )
-        let isFocused: Bool = if let env = context.focusEnvironment {
-            env.isFocused
+        let effectiveFocusID: Int?
+        let isFocused: Bool
+
+        if let env = context.focusEnvironment {
+            effectiveFocusID = env.focusID
+            isFocused = env.isFocused
         } else {
-            focusID.flatMap { store?.isFocused($0) } ?? false
+            let focusID = store?.register(
+                interaction: .activate,
+                region: region,
+                sectionID: context.currentFocusSectionID,
+                bindingKey: nil,
+                autoKey: autoKey,
+            )
+            effectiveFocusID = focusID
+            isFocused = focusID.flatMap { store?.isFocused($0) } ?? false
         }
 
+        // Read dropdown state
+        let pickerState = store?.controlState(forKey: autoKey, as: PickerState.self)
+            ?? PickerState()
+        let isDropdownOpen = pickerState.isDropdownOpen
+
         // Register inline handler when focused
-        if isFocused, let id = focusID {
+        if isFocused, let id = effectiveFocusID {
+            let capturedKey = autoKey
+            nonisolated(unsafe) let sendableKey = capturedKey
             store?.registerInlineHandler(for: id) { [selection, options, onChange] key in
-                switch key {
-                case .left:
-                    let newIndex = (selection - 1 + options.count) % options.count
-                    onChange(newIndex)
-                    return .handled
-                case .right:
-                    let newIndex = (selection + 1) % options.count
-                    onChange(newIndex)
-                    return .handled
-                default:
-                    return .ignored
+                guard let store else { return .ignored }
+                var state = store.controlState(forKey: sendableKey, as: PickerState.self)
+                    ?? PickerState()
+
+                if state.isDropdownOpen {
+                    // Dropdown mode: intercept all navigation keys
+                    switch key {
+                    case .up:
+                        state.highlightedIndex = (state.highlightedIndex - 1 + options.count) % options.count
+                        store.setControlState(state, forKey: sendableKey)
+                        return .handled
+                    case .down:
+                        state.highlightedIndex = (state.highlightedIndex + 1) % options.count
+                        store.setControlState(state, forKey: sendableKey)
+                        return .handled
+                    case .enter:
+                        onChange(state.highlightedIndex)
+                        state.isDropdownOpen = false
+                        store.setControlState(state, forKey: sendableKey)
+                        return .handled
+                    case .escape:
+                        state.isDropdownOpen = false
+                        store.setControlState(state, forKey: sendableKey)
+                        return .handled
+                    default:
+                        return .handled // Swallow all other keys while dropdown is open
+                    }
+                } else {
+                    // Normal mode
+                    switch key {
+                    case .left:
+                        let newIndex = (selection - 1 + options.count) % options.count
+                        onChange(newIndex)
+                        return .handled
+                    case .right:
+                        let newIndex = (selection + 1) % options.count
+                        onChange(newIndex)
+                        return .handled
+                    case .enter, .character(" "):
+                        state.isDropdownOpen = true
+                        state.highlightedIndex = selection
+                        store.setControlState(state, forKey: sendableKey)
+                        return .handled
+                    default:
+                        return .ignored
+                    }
                 }
             }
         }
@@ -98,7 +152,12 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
         var col = region.col
         col += buffer.write(label, row: region.row, col: col, style: style)
         col += buffer.write(": ", row: region.row, col: col, style: style)
-        col += buffer.write("< ", row: region.row, col: col, style: style)
+
+        if isDropdownOpen {
+            col += buffer.write("▼ ", row: region.row, col: col, style: style)
+        } else {
+            col += buffer.write("< ", row: region.row, col: col, style: style)
+        }
         col += buffer.write(currentOption, row: region.row, col: col, style: style)
         // Pad to max option width for consistent layout
         let padding = maxOptionWidth - currentOption.displayWidth
@@ -110,13 +169,45 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
                 style: style,
             )
         }
-        col += buffer.write(" >", row: region.row, col: col, style: style)
+        if isDropdownOpen {
+            col += buffer.write(" ▼", row: region.row, col: col, style: style)
+        } else {
+            col += buffer.write(" >", row: region.row, col: col, style: style)
+        }
 
         // Fill remaining width when focused
         if isFocused {
             while col < region.col + region.width, col < buffer.width {
                 buffer[region.row, col].style = buffer[region.row, col].style.merging(style)
                 col += 1
+            }
+        }
+
+        // Render dropdown overlay below the picker
+        if isDropdownOpen, isFocused {
+            let dropdownCol = region.col
+            let dropdownRow = region.row + 1
+            let dropdownWidth = label.displayWidth + 2 + 2 + maxOptionWidth + 2
+
+            for (i, option) in options.enumerated() {
+                let row = dropdownRow + i
+                guard row < buffer.height else { break }
+
+                let optionStyle: Style = i == pickerState.highlightedIndex
+                    ? Style(inverse: true)
+                    : Style(fg: .black, bg: .white)
+
+                // Clear the row area first
+                var optCol = dropdownCol
+                let prefix = i == pickerState.highlightedIndex ? "▸ " : "  "
+                optCol += buffer.write(prefix, row: row, col: optCol, style: optionStyle)
+                optCol += buffer.write(option, row: row, col: optCol, style: optionStyle)
+
+                // Pad to consistent width
+                while optCol < dropdownCol + dropdownWidth, optCol < buffer.width {
+                    buffer[row, optCol] = Cell(char: " ", style: optionStyle)
+                    optCol += 1
+                }
             }
         }
     }

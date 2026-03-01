@@ -19,6 +19,7 @@ Navigate the ring with:
 - **Tab** — move to the next control
 - **Shift+Tab** — move to the previous control
 - **Arrow keys** — move directionally within a focus section
+- **Ctrl+Shift+Left/Right** — switch tabs globally in the innermost ``TabView``
 
 ### @FocusState
 

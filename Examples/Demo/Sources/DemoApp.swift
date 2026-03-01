@@ -33,7 +33,7 @@ struct DemoApp: App {
 
     var commands: [CommandGroup] {
         [CommandGroup("App") {
-            Button("Quit") { /* Ctrl+C handles this */ }
+            Button("Quit") { Application.quit() }
                 .keyboardShortcut("q", modifiers: .control)
             Button("Reset Form") { [state] in
                 state.name = ""

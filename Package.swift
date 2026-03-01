@@ -23,9 +23,9 @@ let package = Package(
             name: "TextUI",
         ),
         .executableTarget(
-            name: "BufferDemo",
+            name: "Demo",
             dependencies: ["TextUI"],
-            path: "Examples/BufferDemo",
+            path: "Examples/Demo/Sources",
         ),
         .testTarget(
             name: "TextUITests",

@@ -125,31 +125,74 @@ public enum Terminal {
 
     // MARK: - Signal Handling
 
-    /// The resize handler, if installed.
-    private nonisolated(unsafe) static var resizeHandler: (@Sendable (Size) -> Void)?
+    /// File descriptor pair for the resize self-pipe (async-signal-safe).
+    private nonisolated(unsafe) static var resizePipeFDs: (read: Int32, write: Int32) = (-1, -1)
 
     /// The shutdown handler, if installed.
     private nonisolated(unsafe) static var shutdownHandler: (@Sendable () -> Void)?
-
-    /// Registers a handler called when the terminal is resized (SIGWINCH).
-    public static func onResize(_ handler: @escaping @Sendable (Size) -> Void) {
-        resizeHandler = handler
-    }
 
     /// Registers a handler called on SIGTERM/SIGINT for graceful cleanup.
     public static func onShutdown(_ handler: @escaping @Sendable () -> Void) {
         shutdownHandler = handler
     }
 
+    /// Returns an async stream that yields the new terminal size each time
+    /// a SIGWINCH signal is received.
+    ///
+    /// Uses a self-pipe internally so that the signal handler only calls
+    /// `write()` (which is async-signal-safe), and the actual size query
+    /// happens on a detached task reading from the pipe.
+    public static func resizeEvents() -> AsyncStream<Size> {
+        AsyncStream { continuation in
+            let fd = resizePipeFDs.read
+            guard fd >= 0 else {
+                continuation.finish()
+                return
+            }
+            let readTask = Task.detached {
+                while !Task.isCancelled {
+                    var buf = [UInt8](repeating: 0, count: 1)
+                    #if canImport(Darwin)
+                        let n = Darwin.read(fd, &buf, 1)
+                    #elseif canImport(Glibc)
+                        let n = Glibc.read(fd, &buf, 1)
+                    #else
+                        let n = Foundation.read(fd, &buf, 1)
+                    #endif
+                    guard n > 0 else { break }
+                    let size = Terminal.size()
+                    continuation.yield(size)
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in
+                readTask.cancel()
+            }
+        }
+    }
+
     /// Installs signal handlers for SIGWINCH (resize) and SIGTERM (shutdown).
     ///
-    /// Call this once at startup. The handlers forward to the closures
-    /// registered via ``onResize(_:)`` and ``onShutdown(_:)``.
+    /// Call this once at startup. SIGWINCH writes a byte to a self-pipe
+    /// (async-signal-safe); use ``resizeEvents()`` to consume resize events.
+    /// SIGTERM forwards to the closure registered via ``onShutdown(_:)``.
     public static func installSignalHandlers() {
-        // SIGWINCH — terminal resized
+        // Create self-pipe for SIGWINCH
+        var fds: [Int32] = [0, 0]
+        _ = pipe(&fds)
+        resizePipeFDs = (fds[0], fds[1])
+        // Set write end to non-blocking so signal handler never blocks
+        let flags = fcntl(fds[1], F_GETFL)
+        _ = fcntl(fds[1], F_SETFL, flags | O_NONBLOCK)
+
+        // SIGWINCH — write a byte to the pipe (async-signal-safe)
         signal(SIGWINCH) { _ in
-            let size = Terminal.size()
-            Terminal.resizeHandler?(size)
+            var byte: UInt8 = 1
+            #if canImport(Darwin)
+                _ = Darwin.write(Terminal.resizePipeFDs.write, &byte, 1)
+            #elseif canImport(Glibc)
+                _ = Glibc.write(Terminal.resizePipeFDs.write, &byte, 1)
+            #endif
         }
 
         // SIGTERM — graceful shutdown

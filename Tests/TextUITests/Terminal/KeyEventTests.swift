@@ -241,6 +241,41 @@ struct KeyEventTests {
         }
     }
 
+    // MARK: - Modified Arrow Keys
+
+    @Test("parses Ctrl+Shift+Right (CSI 1;6C)")
+    func ctrlShiftRight() throws {
+        // ESC [ 1 ; 6 C
+        let bytes: [UInt8] = [0x1B, 0x5B, 0x31, 0x3B, 0x36, 0x43]
+        let result = try #require(KeyEvent.parse(bytes))
+        #expect(result.event == .ctrlShiftRight)
+        #expect(result.consumed == 6)
+    }
+
+    @Test("parses Ctrl+Shift+Left (CSI 1;6D)")
+    func ctrlShiftLeft() throws {
+        let bytes: [UInt8] = [0x1B, 0x5B, 0x31, 0x3B, 0x36, 0x44]
+        let result = try #require(KeyEvent.parse(bytes))
+        #expect(result.event == .ctrlShiftLeft)
+        #expect(result.consumed == 6)
+    }
+
+    @Test("parses Shift+Right (CSI 1;2C)")
+    func shiftRight() throws {
+        let bytes: [UInt8] = [0x1B, 0x5B, 0x31, 0x3B, 0x32, 0x43]
+        let result = try #require(KeyEvent.parse(bytes))
+        #expect(result.event == .shiftRight)
+        #expect(result.consumed == 6)
+    }
+
+    @Test("parses Ctrl+Up (CSI 1;5A)")
+    func ctrlUp() throws {
+        let bytes: [UInt8] = [0x1B, 0x5B, 0x31, 0x3B, 0x35, 0x41]
+        let result = try #require(KeyEvent.parse(bytes))
+        #expect(result.event == .ctrlUp)
+        #expect(result.consumed == 6)
+    }
+
     // MARK: - Edge Cases
 
     @Test("empty buffer returns nil")

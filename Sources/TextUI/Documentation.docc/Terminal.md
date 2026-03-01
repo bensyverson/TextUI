@@ -13,13 +13,13 @@ TextUI's terminal layer provides low-level control over the terminal emulator. I
 
 ### Terminal Control
 
-``Terminal`` provides static methods for entering and exiting raw mode, managing the alternate screen buffer, cursor visibility, and querying terminal size. Signal handlers can be installed for resize (SIGWINCH) and shutdown (SIGTERM) events.
+``Terminal`` provides static methods for entering and exiting raw mode, managing the alternate screen buffer, cursor visibility, and querying terminal size. Signal handlers can be installed for resize (SIGWINCH) and shutdown (SIGTERM) events. Resize events use a self-pipe pattern internally for async-signal safety, exposed via ``Terminal/resizeEvents()``.
 
 ### Keyboard Input
 
 ``KeyReader`` spawns a dedicated OS thread to read from stdin (since `read()` is a blocking call that can't be cancelled by Swift concurrency). It produces an `AsyncStream<KeyEvent>` that the run loop consumes.
 
-``KeyEvent`` represents all supported key inputs — printable characters (including multi-byte UTF-8), arrow keys, function keys (F1–F12), navigation keys (Home, End, Page Up/Down), modifier combinations (Ctrl+key, Shift+Tab), and escape.
+``KeyEvent`` represents all supported key inputs — printable characters (including multi-byte UTF-8), arrow keys, function keys (F1–F12), navigation keys (Home, End, Page Up/Down), modifier combinations (Ctrl+key, Shift+Tab, Shift+Arrow, Ctrl+Arrow, Ctrl+Shift+Arrow), and escape.
 
 ### Color Capability
 

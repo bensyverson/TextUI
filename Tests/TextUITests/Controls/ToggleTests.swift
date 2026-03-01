@@ -66,4 +66,28 @@ struct ToggleTests {
         #expect(result == .handled)
         #expect(received.value == true) // toggled from false → true
     }
+
+    @Test("Enter toggles via onChange when focused")
+    func enterToggles() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+
+        let received = Box(false)
+        let toggle = Toggle("Test", isOn: false) { newValue in
+            received.value = newValue
+        }
+
+        var buffer = Buffer(width: 20, height: 1)
+        let region = Region(row: 0, col: 0, width: 20, height: 1)
+
+        render(toggle, into: &buffer, region: region, context: ctx)
+        store.applyDefaultFocus()
+        store.beginFrame()
+        render(toggle, into: &buffer, region: region, context: ctx)
+
+        let result = store.routeKeyEvent(.enter)
+        #expect(result == .handled)
+        #expect(received.value == true)
+    }
 }

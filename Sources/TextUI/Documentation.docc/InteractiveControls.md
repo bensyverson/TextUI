@@ -58,7 +58,7 @@ Toggle("Dark mode", isOn: settings.darkMode) { newValue in
 ```
 
 Toggles render as `[x] Label` (on) or `[ ] Label` (off) and respond
-to Space when focused. They use ``FocusInteraction/activate``.
+to Space or Enter when focused. They use ``FocusInteraction/activate``.
 
 ### Picker
 
@@ -71,7 +71,9 @@ Picker("Color", selection: state.colorIndex, options: ["Red", "Green", "Blue"]) 
 ```
 
 Pickers render as `Label: < Option >` and respond to Left/Right arrow
-keys when focused. They use ``FocusInteraction/activate``.
+keys when focused. Pressing Space or Enter opens a dropdown overlay
+where Up/Down navigates options, Enter confirms, and Escape cancels.
+They use ``FocusInteraction/activate``.
 
 ### Building a Form
 
@@ -97,6 +99,15 @@ struct SettingsView: View {
 }
 ```
 
+### Quitting the Application
+
+Use ``Application/quit()`` to stop the run loop programmatically:
+
+```swift
+Button("Quit") { Application.quit() }
+    .keyboardShortcut("q", modifiers: .control)
+```
+
 ## Topics
 
 ### Controls
@@ -105,3 +116,7 @@ struct SettingsView: View {
 - ``TextField``
 - ``Toggle``
 - ``Picker``
+
+### Lifecycle
+
+- ``Application``

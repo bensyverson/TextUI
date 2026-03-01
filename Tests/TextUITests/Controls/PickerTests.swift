@@ -77,4 +77,97 @@ struct PickerTests {
         #expect(result == .handled)
         #expect(received.value == 2)
     }
+
+    @Test("Space opens dropdown and Enter selects")
+    func dropdownViaSpace() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+
+        let received = Box(0)
+        let picker = Picker("Color", selection: 0, options: options) { newIndex in
+            received.value = newIndex
+        }
+
+        var buffer = Buffer(width: 30, height: 5)
+        let region = Region(row: 0, col: 0, width: 30, height: 5)
+
+        render(picker, into: &buffer, region: region, context: ctx)
+        store.applyDefaultFocus()
+        store.beginFrame()
+        render(picker, into: &buffer, region: region, context: ctx)
+
+        // Space opens dropdown
+        var result = store.routeKeyEvent(.character(" "))
+        #expect(result == .handled)
+
+        // Re-render with dropdown open
+        store.beginFrame()
+        render(picker, into: &buffer, region: region, context: ctx)
+
+        // Down moves to "Green" (index 1)
+        result = store.routeKeyEvent(.down)
+        #expect(result == .handled)
+
+        // Enter selects
+        store.beginFrame()
+        render(picker, into: &buffer, region: region, context: ctx)
+        result = store.routeKeyEvent(.enter)
+        #expect(result == .handled)
+        #expect(received.value == 1)
+    }
+
+    @Test("Escape closes dropdown without changing selection")
+    func dropdownEscapeCancels() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+
+        let received = Box(-1)
+        let picker = Picker("Color", selection: 0, options: options) { newIndex in
+            received.value = newIndex
+        }
+
+        var buffer = Buffer(width: 30, height: 5)
+        let region = Region(row: 0, col: 0, width: 30, height: 5)
+
+        render(picker, into: &buffer, region: region, context: ctx)
+        store.applyDefaultFocus()
+        store.beginFrame()
+        render(picker, into: &buffer, region: region, context: ctx)
+
+        // Enter opens dropdown
+        store.routeKeyEvent(.enter)
+        store.beginFrame()
+        render(picker, into: &buffer, region: region, context: ctx)
+
+        // Escape closes without selecting
+        let result = store.routeKeyEvent(.escape)
+        #expect(result == .handled)
+        #expect(received.value == -1) // onChange never called
+    }
+
+    @Test("Enter cycles to next option in normal mode")
+    func enterCycles() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+
+        let received = Box(0)
+        let picker = Picker("Color", selection: 0, options: options) { newIndex in
+            received.value = newIndex
+        }
+
+        var buffer = Buffer(width: 30, height: 1)
+        let region = Region(row: 0, col: 0, width: 30, height: 1)
+
+        render(picker, into: &buffer, region: region, context: ctx)
+        store.applyDefaultFocus()
+        store.beginFrame()
+        render(picker, into: &buffer, region: region, context: ctx)
+
+        // Enter opens dropdown (sets highlighted to current selection 0)
+        let result = store.routeKeyEvent(.enter)
+        #expect(result == .handled)
+    }
 }

@@ -35,6 +35,15 @@ public enum KeyEvent: Hashable, Equatable, Sendable {
     /// Arrow keys.
     case up, down, left, right
 
+    /// Shift+Arrow key combinations.
+    case shiftUp, shiftDown, shiftLeft, shiftRight
+
+    /// Ctrl+Arrow key combinations.
+    case ctrlUp, ctrlDown, ctrlLeft, ctrlRight
+
+    /// Ctrl+Shift+Arrow key combinations (for tab switching, etc.).
+    case ctrlShiftUp, ctrlShiftDown, ctrlShiftLeft, ctrlShiftRight
+
     /// Home / End keys.
     case home, end
 
@@ -148,6 +157,32 @@ extension KeyEvent {
         let finalByte = bytes[idx]
         let consumed = idx + 1
         let params = Array(bytes[2 ..< idx])
+
+        // Parse modifier parameter from "1;N" format (CSI 1;N <letter>)
+        let paramStr = String(bytes: params, encoding: .ascii) ?? ""
+        let modifier: Int? = if let semicolonIdx = paramStr.firstIndex(of: ";") {
+            Int(paramStr[paramStr.index(after: semicolonIdx)...])
+        } else {
+            nil
+        }
+
+        // Map arrow final bytes with modifiers
+        if let modifier, [0x41, 0x42, 0x43, 0x44].contains(finalByte) {
+            let baseEvent: (unmodified: KeyEvent, shift: KeyEvent, ctrl: KeyEvent, ctrlShift: KeyEvent) = switch finalByte {
+            case 0x41: (.up, .shiftUp, .ctrlUp, .ctrlShiftUp)
+            case 0x42: (.down, .shiftDown, .ctrlDown, .ctrlShiftDown)
+            case 0x43: (.right, .shiftRight, .ctrlRight, .ctrlShiftRight)
+            case 0x44: (.left, .shiftLeft, .ctrlLeft, .ctrlShiftLeft)
+            default: (.unknown(Array(bytes[0 ..< consumed])), .unknown(Array(bytes[0 ..< consumed])),
+                      .unknown(Array(bytes[0 ..< consumed])), .unknown(Array(bytes[0 ..< consumed])))
+            }
+            switch modifier {
+            case 2: return (baseEvent.shift, consumed)
+            case 5: return (baseEvent.ctrl, consumed)
+            case 6: return (baseEvent.ctrlShift, consumed)
+            default: return (baseEvent.unmodified, consumed)
+            }
+        }
 
         switch finalByte {
         case 0x41: return (.up, consumed) // CSI A

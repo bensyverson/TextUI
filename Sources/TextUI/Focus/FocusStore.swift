@@ -98,6 +98,11 @@ final class FocusStore: @unchecked Sendable {
     /// Whether the first frame has been processed (default focus applied).
     private var hasAppliedDefaultFocus: Bool = false
 
+    // MARK: - TabView Keys
+
+    /// Auto keys of TabViews registered during the current frame (innermost last).
+    var tabViewKeys: [AnyHashable] = []
+
     // MARK: - Frame Lifecycle
 
     /// Resets the focus ring for a new render pass.
@@ -110,6 +115,7 @@ final class FocusStore: @unchecked Sendable {
         inlineHandlers = [:]
         keyHandlerStack = []
         submitHandlerStack = []
+        tabViewKeys = []
         nextID = 0
     }
 

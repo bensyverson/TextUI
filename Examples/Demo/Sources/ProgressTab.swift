@@ -25,6 +25,11 @@ struct ProgressTab: View {
             Text("Full bar style:", style: .dim)
             ProgressView("Building", value: 0.58)
                 .progressViewStyle(.bar())
+            Text("")
+
+            Text("Indeterminate bar:", style: .dim)
+            ProgressView("Syncing")
+                .progressViewStyle(.bar())
         }
         .padding(1)
     }

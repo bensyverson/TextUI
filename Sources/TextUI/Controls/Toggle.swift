@@ -45,25 +45,30 @@ public struct Toggle: PrimitiveView, @unchecked Sendable {
     public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard region.height >= 1 else { return }
 
-        // Register in focus ring
+        // Register in focus ring (skip if FocusedView already registered us)
         let store = context.focusStore
-        let focusID = store?.register(
-            interaction: .activate,
-            region: region,
-            sectionID: context.currentFocusSectionID,
-            bindingKey: nil,
-            autoKey: autoKey,
-        )
-        let isFocused: Bool = if let env = context.focusEnvironment {
-            env.isFocused
+        let effectiveFocusID: Int?
+        let isFocused: Bool
+
+        if let env = context.focusEnvironment {
+            effectiveFocusID = env.focusID
+            isFocused = env.isFocused
         } else {
-            focusID.flatMap { store?.isFocused($0) } ?? false
+            let focusID = store?.register(
+                interaction: .activate,
+                region: region,
+                sectionID: context.currentFocusSectionID,
+                bindingKey: nil,
+                autoKey: autoKey,
+            )
+            effectiveFocusID = focusID
+            isFocused = focusID.flatMap { store?.isFocused($0) } ?? false
         }
 
         // Register inline handler when focused
-        if isFocused, let id = focusID {
+        if isFocused, let id = effectiveFocusID {
             store?.registerInlineHandler(for: id) { [isOn, onChange] key in
-                if key == .character(" ") {
+                if key == .character(" ") || key == .enter {
                     onChange(!isOn)
                     return .handled
                 }

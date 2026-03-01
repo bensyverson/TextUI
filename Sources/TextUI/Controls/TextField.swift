@@ -51,19 +51,24 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
     public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard region.height >= 1, region.width >= 1 else { return }
 
-        // Register in focus ring
+        // Register in focus ring (skip if FocusedView already registered us)
         let store = context.focusStore
-        let focusID = store?.register(
-            interaction: .edit,
-            region: region,
-            sectionID: context.currentFocusSectionID,
-            bindingKey: nil,
-            autoKey: AnyHashable(autoKey),
-        )
-        let isFocused: Bool = if let env = context.focusEnvironment {
-            env.isFocused
+        let effectiveFocusID: Int?
+        let isFocused: Bool
+
+        if let env = context.focusEnvironment {
+            effectiveFocusID = env.focusID
+            isFocused = env.isFocused
         } else {
-            focusID.flatMap { store?.isFocused($0) } ?? false
+            let focusID = store?.register(
+                interaction: .edit,
+                region: region,
+                sectionID: context.currentFocusSectionID,
+                bindingKey: nil,
+                autoKey: AnyHashable(autoKey),
+            )
+            effectiveFocusID = focusID
+            isFocused = focusID.flatMap { store?.isFocused($0) } ?? false
         }
 
         // Get or initialize cursor position
@@ -74,7 +79,7 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
         }
 
         // Register inline handler when focused
-        if isFocused, let id = focusID {
+        if isFocused, let id = effectiveFocusID {
             let capturedStateKey = AnyHashable(stateKey)
             nonisolated(unsafe) let sendableKey = capturedStateKey
             let initialCursor = cursorPos

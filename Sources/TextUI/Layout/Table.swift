@@ -144,8 +144,27 @@ public struct Table: PrimitiveView, @unchecked Sendable {
         let tableWidth = region.width - indicatorWidth
         let columnWidths = computeColumnWidths(availableWidth: tableWidth)
 
-        // Render header row (bold)
-        renderHeaderRow(into: &buffer, region: region, columnWidths: columnWidths)
+        // Register as focusable (skip if FocusedView already registered us)
+        let effectiveFocusID: Int?
+        let isFocused: Bool
+
+        if let env = context.focusEnvironment {
+            effectiveFocusID = env.focusID
+            isFocused = env.isFocused
+        } else {
+            let focusID = store?.register(
+                interaction: .activate,
+                region: region,
+                sectionID: context.currentFocusSectionID,
+                bindingKey: nil,
+                autoKey: AnyHashable(autoKey),
+            )
+            effectiveFocusID = focusID
+            isFocused = focusID.flatMap { store?.isFocused($0) } ?? false
+        }
+
+        // Render header row (bold, inverse when focused)
+        renderHeaderRow(into: &buffer, region: region, columnWidths: columnWidths, isFocused: isFocused)
 
         // Render divider row
         guard region.height > 1 else { return }
@@ -161,20 +180,6 @@ public struct Table: PrimitiveView, @unchecked Sendable {
         var state = store?.controlState(forKey: autoKey, as: ScrollState.self) ?? ScrollState()
         state.offset = max(0, min(state.offset, maxOffset))
         store?.setControlState(state, forKey: autoKey)
-
-        // Register as focusable
-        let focusID = store?.register(
-            interaction: .activate,
-            region: region,
-            sectionID: context.currentFocusSectionID,
-            bindingKey: nil,
-            autoKey: AnyHashable(autoKey),
-        )
-        let isFocused: Bool = if let env = context.focusEnvironment {
-            env.isFocused
-        } else {
-            focusID.flatMap { store?.isFocused($0) } ?? false
-        }
 
         // Scroll handler
         let scrollHandler: @Sendable (KeyEvent) -> KeyEventResult = { [autoKey] key in
@@ -194,7 +199,7 @@ public struct Table: PrimitiveView, @unchecked Sendable {
             return .handled
         }
 
-        if isFocused, let id = focusID {
+        if isFocused, let id = effectiveFocusID {
             store?.registerInlineHandler(for: id, handler: scrollHandler)
         }
 
@@ -231,8 +236,9 @@ public struct Table: PrimitiveView, @unchecked Sendable {
         into buffer: inout Buffer,
         region: Region,
         columnWidths: [Int],
+        isFocused: Bool = false,
     ) {
-        let boldStyle = Style(bold: true)
+        let boldStyle: Style = isFocused ? Style(bold: true, inverse: true) : Style(bold: true)
         var colOffset = region.col
         for (i, column) in columns.enumerated() {
             let width = columnWidths[i]

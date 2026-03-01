@@ -61,6 +61,7 @@ public struct TabView: PrimitiveView, @unchecked Sendable {
     /// Persistent tab selection state.
     struct TabState: Sendable {
         var selectedIndex: Int = 0
+        var tabCount: Int = 0
     }
 
     // MARK: - Sizing
@@ -97,26 +98,33 @@ public struct TabView: PrimitiveView, @unchecked Sendable {
         // Read selected tab
         var state = store?.controlState(forKey: autoKey, as: TabState.self) ?? TabState()
         state.selectedIndex = max(0, min(state.selectedIndex, tabs.count - 1))
+        state.tabCount = tabs.count
         store?.setControlState(state, forKey: autoKey)
+        store?.tabViewKeys.append(AnyHashable(autoKey))
         let selectedIndex = state.selectedIndex
 
-        // Register tab bar as focusable
+        // Register tab bar as focusable (skip if FocusedView already registered us)
         let tabBarRegion = region.subregion(row: 0, col: 0, width: region.width, height: 1)
-        let focusID = store?.register(
-            interaction: .activate,
-            region: tabBarRegion,
-            sectionID: context.currentFocusSectionID,
-            bindingKey: nil,
-            autoKey: AnyHashable(autoKey),
-        )
-        let isFocused: Bool = if let env = context.focusEnvironment {
-            env.isFocused
+        let effectiveFocusID: Int?
+        let isFocused: Bool
+
+        if let env = context.focusEnvironment {
+            effectiveFocusID = env.focusID
+            isFocused = env.isFocused
         } else {
-            focusID.flatMap { store?.isFocused($0) } ?? false
+            let focusID = store?.register(
+                interaction: .activate,
+                region: tabBarRegion,
+                sectionID: context.currentFocusSectionID,
+                bindingKey: nil,
+                autoKey: AnyHashable(autoKey),
+            )
+            effectiveFocusID = focusID
+            isFocused = focusID.flatMap { store?.isFocused($0) } ?? false
         }
 
         // Register inline handler for Left/Right tab switching
-        if isFocused, let id = focusID {
+        if isFocused, let id = effectiveFocusID {
             store?.registerInlineHandler(for: id) { [autoKey, tabCount = tabs.count] key in
                 guard let store else { return .ignored }
                 var state = store.controlState(forKey: autoKey, as: TabState.self) ?? TabState()
