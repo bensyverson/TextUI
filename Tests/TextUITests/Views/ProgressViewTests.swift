@@ -135,8 +135,8 @@ struct ProgressViewTests {
         }
 
         // 50% of 10 = 5 filled, 5 empty
-        #expect(buffer[0, 0].char == "█")
-        #expect(buffer[0, 4].char == "█")
+        #expect(buffer[0, 0].char == "▓")
+        #expect(buffer[0, 4].char == "▓")
         #expect(buffer[0, 5].char == "░")
         #expect(buffer[0, 9].char == "░")
     }
@@ -176,10 +176,10 @@ struct ProgressViewTests {
             render(pv, into: &buffer, region: region, context: ctx)
         }
 
-        // tick=0: pattern at col 0 = (0+0)%4=0 → █, col 1 = (1+0)%4=1 → ░, etc.
-        #expect(buffer[0, 0].char == "█")
+        // tick=0: pattern at col 0 = (0+0)%4=0 → ▓, col 1 = (1+0)%4=1 → ░, etc.
+        #expect(buffer[0, 0].char == "▓")
         #expect(buffer[0, 1].char == "░")
-        #expect(buffer[0, 4].char == "█")
+        #expect(buffer[0, 4].char == "▓")
     }
 
     // MARK: - With Label

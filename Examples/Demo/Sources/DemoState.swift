@@ -48,6 +48,10 @@ final class DemoState: @unchecked Sendable {
         didSet { notifyChange() }
     }
 
+    var submitted: Bool = false {
+        didSet { notifyChange() }
+    }
+
     private func notifyChange() {
         MainActor.assumeIsolated {
             StateSignal.send()

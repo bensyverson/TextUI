@@ -372,6 +372,37 @@ struct ScrollViewTests {
         #expect(!col9chars.contains("█"))
     }
 
+    @Test("Sizing and rendering propose same width to children with indicator")
+    func sizingMatchesRenderingWithIndicator() {
+        // When showsIndicator is true, both sizeThatFits and render should
+        // propose (width - 1) to children, avoiding layout mismatches.
+        let view = ScrollView(showsIndicator: true) {
+            HStack(spacing: 1) {
+                ForEach(["Hi", "Go"]) { item in
+                    Text(item)
+                        .padding(horizontal: 1)
+                        .border(.square)
+                }
+            }
+        }
+
+        // Render into a buffer with indicator space
+        var buffer = Buffer(width: 20, height: 3)
+        let region = Region(row: 0, col: 0, width: 20, height: 3)
+        render(view, into: &buffer, region: region)
+
+        // Content width is 19 (20 - 1 for indicator). Each bordered item:
+        // border(2) + pad(2) + text(2) = 6 wide, with spacing 1 between = 13 total
+        // Check that the first item's border and content rendered correctly
+        #expect(buffer[0, 0].char == "┌")
+        #expect(buffer[1, 2].char == "H")
+        #expect(buffer[1, 3].char == "i")
+
+        // Second item starts at col 7
+        #expect(buffer[1, 9].char == "G")
+        #expect(buffer[1, 10].char == "o")
+    }
+
     @Test("Content width reduced by 1 when indicator is shown")
     func contentWidthReducedForIndicator() {
         let view = ScrollView(showsIndicator: true) {

@@ -8,7 +8,7 @@ struct ViewsTab: View {
         ScrollView {
             VStack(spacing: 1) {
                 Text("All Views", style: .bold)
-                Text("")
+                    .padding(bottom: 1)
 
                 // MARK: - AttributedText
 
@@ -18,7 +18,7 @@ struct ViewsTab: View {
                     AttributedText.TextSpan("file ", style: .plain)
                     AttributedText.TextSpan("not found", style: Style(fg: .yellow).italicized())
                 }
-                Text("")
+                .padding(bottom: 1)
 
                 // MARK: - ForEach
 
@@ -30,7 +30,7 @@ struct ViewsTab: View {
                             .border(.square)
                     }
                 }
-                Text("")
+                .padding(bottom: 1)
 
                 // MARK: - Group
 
@@ -42,7 +42,7 @@ struct ViewsTab: View {
                         Text("Three", style: Style(fg: .magenta))
                     }
                 }
-                Text("")
+                .padding(bottom: 1)
 
                 // MARK: - ZStack
 
@@ -52,7 +52,7 @@ struct ViewsTab: View {
                         .frame(width: 30, height: 3)
                     Text("Centered on blue", style: Style(fg: .white).bolded())
                 }
-                Text("")
+                .padding(bottom: 1)
 
                 // MARK: - Canvas
 

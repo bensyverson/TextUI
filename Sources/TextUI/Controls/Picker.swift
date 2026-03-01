@@ -183,32 +183,79 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
             }
         }
 
-        // Render dropdown overlay below the picker
+        // Register deferred overlay for dropdown (renders on top of everything)
         if isDropdownOpen, isFocused {
-            let dropdownCol = region.col
-            let dropdownRow = region.row + 1
+            let capturedOptions = options
+            let highlightedIndex = pickerState.highlightedIndex
+            let pickerRow = region.row
+            let pickerCol = region.col
             let dropdownWidth = label.displayWidth + 2 + 2 + maxOptionWidth + 2
 
-            for (i, option) in options.enumerated() {
-                let row = dropdownRow + i
-                guard row < buffer.height else { break }
+            context.overlayStore?.addOverlay(OverlayStore.Overlay { buffer, fullRegion in
+                let spaceBelow = fullRegion.row + fullRegion.height - (pickerRow + 1)
+                let spaceAbove = pickerRow - fullRegion.row
+                let optionCount = capturedOptions.count
 
-                let optionStyle: Style = i == pickerState.highlightedIndex
-                    ? Style(inverse: true)
-                    : Style(fg: .black, bg: .white)
-
-                // Clear the row area first
-                var optCol = dropdownCol
-                let prefix = i == pickerState.highlightedIndex ? "▸ " : "  "
-                optCol += buffer.write(prefix, row: row, col: optCol, style: optionStyle)
-                optCol += buffer.write(option, row: row, col: optCol, style: optionStyle)
-
-                // Pad to consistent width
-                while optCol < dropdownCol + dropdownWidth, optCol < buffer.width {
-                    buffer[row, optCol] = Cell(char: " ", style: optionStyle)
-                    optCol += 1
+                // Choose direction: prefer below, flip above if needed
+                let renderBelow: Bool
+                let visibleCount: Int
+                if optionCount <= spaceBelow {
+                    renderBelow = true
+                    visibleCount = optionCount
+                } else if optionCount <= spaceAbove {
+                    renderBelow = false
+                    visibleCount = optionCount
+                } else if spaceBelow >= spaceAbove {
+                    renderBelow = true
+                    visibleCount = spaceBelow
+                } else {
+                    renderBelow = false
+                    visibleCount = spaceAbove
                 }
-            }
+
+                guard visibleCount > 0 else { return }
+
+                // Compute scroll offset to keep highlighted item visible
+                let scrollOffset: Int = if optionCount <= visibleCount {
+                    0
+                } else if highlightedIndex < visibleCount / 2 {
+                    0
+                } else if highlightedIndex > optionCount - visibleCount / 2 - 1 {
+                    optionCount - visibleCount
+                } else {
+                    highlightedIndex - visibleCount / 2
+                }
+
+                // Compute starting row
+                let startRow: Int = if renderBelow {
+                    pickerRow + 1
+                } else {
+                    pickerRow - visibleCount
+                }
+
+                for i in 0 ..< visibleCount {
+                    let optionIndex = scrollOffset + i
+                    guard optionIndex < capturedOptions.count else { break }
+                    let row = startRow + i
+                    guard row >= 0, row < buffer.height else { continue }
+
+                    let option = capturedOptions[optionIndex]
+                    let optionStyle: Style = optionIndex == highlightedIndex
+                        ? Style(inverse: true)
+                        : Style(fg: .black, bg: .white)
+
+                    var optCol = pickerCol
+                    let prefix = optionIndex == highlightedIndex ? "▸ " : "  "
+                    optCol += buffer.write(prefix, row: row, col: optCol, style: optionStyle)
+                    optCol += buffer.write(option, row: row, col: optCol, style: optionStyle)
+
+                    // Pad to consistent width
+                    while optCol < pickerCol + dropdownWidth, optCol < buffer.width {
+                        buffer[row, optCol] = Cell(char: " ", style: optionStyle)
+                        optCol += 1
+                    }
+                }
+            })
         }
     }
 }

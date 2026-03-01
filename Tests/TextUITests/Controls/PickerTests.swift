@@ -147,6 +147,89 @@ struct PickerTests {
         #expect(received.value == -1) // onChange never called
     }
 
+    @Test("Dropdown renders via deferred overlay")
+    func dropdownUsesOverlay() {
+        let store = FocusStore()
+        let overlayStore = OverlayStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+        ctx.overlayStore = overlayStore
+
+        let picker = Picker("Color", selection: 0, options: options) { _ in }
+
+        var buffer = Buffer(width: 30, height: 6)
+        let region = Region(row: 0, col: 0, width: 30, height: 6)
+
+        render(picker, into: &buffer, region: region, context: ctx)
+        store.applyDefaultFocus()
+        store.beginFrame()
+        overlayStore.beginFrame()
+        render(picker, into: &buffer, region: region, context: ctx)
+
+        // Open dropdown
+        _ = store.routeKeyEvent(.character(" "))
+        store.beginFrame()
+        overlayStore.beginFrame()
+        render(picker, into: &buffer, region: region, context: ctx)
+
+        // Overlay should have been registered
+        #expect(overlayStore.overlays.count == 1)
+
+        // Execute overlay into buffer
+        for overlay in overlayStore.overlays {
+            overlay.render(&buffer, region)
+        }
+
+        // Row 1 should have dropdown content (first option "Red" highlighted)
+        // "▸ Red" starts at col 0, row 1
+        #expect(buffer[1, 0].char == "▸")
+        #expect(buffer[1, 2].char == "R")
+        #expect(buffer[1, 3].char == "e")
+        #expect(buffer[1, 4].char == "d")
+    }
+
+    @Test("Dropdown flips above when near bottom edge")
+    func dropdownFlipsAbove() {
+        let store = FocusStore()
+        let overlayStore = OverlayStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+        ctx.overlayStore = overlayStore
+
+        let picker = Picker("Color", selection: 0, options: options) { _ in }
+
+        // Place picker at bottom of a small buffer (row 4 of 6 rows)
+        // Only 1 row below, 4 rows above — should flip above
+        var buffer = Buffer(width: 30, height: 6)
+        let pickerRegion = Region(row: 4, col: 0, width: 30, height: 1)
+        let fullRegion = Region(row: 0, col: 0, width: 30, height: 6)
+
+        render(picker, into: &buffer, region: pickerRegion, context: ctx)
+        store.applyDefaultFocus()
+        store.beginFrame()
+        overlayStore.beginFrame()
+        render(picker, into: &buffer, region: pickerRegion, context: ctx)
+
+        // Open dropdown
+        _ = store.routeKeyEvent(.character(" "))
+        store.beginFrame()
+        overlayStore.beginFrame()
+        render(picker, into: &buffer, region: pickerRegion, context: ctx)
+
+        #expect(overlayStore.overlays.count == 1)
+
+        // Execute overlay with full region
+        for overlay in overlayStore.overlays {
+            overlay.render(&buffer, fullRegion)
+        }
+
+        // With 3 options and picker at row 4, only 1 row below (row 5).
+        // 4 rows above (rows 0-3). Should flip above: rows 1, 2, 3.
+        #expect(buffer[1, 2].char == "R") // Red
+        #expect(buffer[2, 2].char == "G") // Green
+        #expect(buffer[3, 2].char == "B") // Blue
+    }
+
     @Test("Enter cycles to next option in normal mode")
     func enterCycles() {
         let store = FocusStore()

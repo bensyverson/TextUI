@@ -42,6 +42,12 @@ public struct RenderContext: Sendable {
     /// to display available commands.
     var commandRegistry: CommandRegistry?
 
+    /// The overlay store for deferred overlay rendering.
+    ///
+    /// Set by `RunLoop` and used by views like ``Picker`` to register
+    /// overlays that render on top of all other content.
+    var overlayStore: OverlayStore?
+
     /// The progress view style override, if any.
     ///
     /// Set by ``ProgressViewStyleView`` and read by ``ProgressView``

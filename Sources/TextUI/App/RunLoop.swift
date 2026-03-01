@@ -42,6 +42,9 @@ final class RunLoop {
     /// The command registry for shortcut matching.
     private let commandRegistry: CommandRegistry
 
+    /// The overlay store for deferred overlay rendering (e.g. Picker dropdowns).
+    private let overlayStore = OverlayStore()
+
     /// Internal event types that the run loop processes.
     enum Event: Sendable {
         /// A key was pressed.
@@ -194,9 +197,10 @@ final class RunLoop {
             return
         }
 
-        // Global tab switching with Ctrl+Shift+Arrow
-        if key == .ctrlShiftRight || key == .ctrlShiftLeft {
-            switchTab(direction: key == .ctrlShiftRight ? 1 : -1)
+        // Global tab switching with Ctrl+Shift+Arrow or Alt+Arrow
+        if key == .ctrlShiftRight || key == .ctrlShiftLeft || key == .altRight || key == .altLeft {
+            let direction = (key == .ctrlShiftRight || key == .altRight) ? 1 : -1
+            switchTab(direction: direction)
             renderFrame()
             return
         }
@@ -308,17 +312,17 @@ final class RunLoop {
     /// Renders a single frame: sizes the root view, renders into the
     /// back buffer, and flushes changed cells to the terminal.
     private func renderFrame() {
-        // Prepare focus store for this frame
+        // Prepare stores for this frame
         focusStore.beginFrame()
-
-        // Prepare animation tracker for this frame
         animationTracker.beginFrame()
+        overlayStore.beginFrame()
 
-        // Thread focus store, animation tracker, and command registry into the render context
+        // Thread stores into the render context
         var ctx = context
         ctx.focusStore = focusStore
         ctx.animationTracker = animationTracker
         ctx.commandRegistry = commandRegistry
+        ctx.overlayStore = overlayStore
 
         screen.clear()
 
@@ -327,6 +331,11 @@ final class RunLoop {
 
         _ = TextUI.sizeThatFits(rootView, proposal: proposal, context: ctx)
         TextUI.render(rootView, into: &screen.back, region: region, context: ctx)
+
+        // Execute deferred overlays (e.g. Picker dropdowns)
+        for overlay in overlayStore.overlays {
+            overlay.render(&screen.back, region)
+        }
 
         // Render command palette overlay if visible
         if commandRegistry.isPaletteVisible {

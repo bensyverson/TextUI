@@ -14,7 +14,7 @@ struct FormTab: View {
     var body: some View {
         VStack(spacing: 1) {
             Text("User Profile", style: .bold)
-            Text("")
+                .padding(bottom: 1)
 
             HStack(spacing: 1) {
                 Text("Name:  ", style: .dim)
@@ -31,8 +31,7 @@ struct FormTab: View {
                 }
                 .focused($focus, equals: .email)
             }
-
-            Text("")
+            .padding(bottom: 1)
 
             Toggle("Dark mode", isOn: state.darkMode) { [state] newValue in
                 state.darkMode = newValue
@@ -41,24 +40,34 @@ struct FormTab: View {
             Toggle("Notifications", isOn: state.notifications) { [state] newValue in
                 state.notifications = newValue
             }
-
-            Text("")
+            .padding(bottom: 1)
 
             Picker("Theme", selection: state.colorIndex, options: [
                 "Default", "Ocean", "Forest", "Sunset",
             ]) { [state] newIndex in
                 state.colorIndex = newIndex
             }
-
-            Text("")
+            .padding(bottom: 1)
 
             Button("Submit") { [state] in
                 let name = state.name.isEmpty ? "Anonymous" : state.name
                 state.statusMessage = "Submitted: \(name)"
+                state.submitted = true
             }
+            .padding(bottom: 1)
 
-            Text("")
             Text(state.statusMessage, style: Style(fg: .green))
+
+            if state.submitted {
+                VStack(spacing: 0) {
+                    Text("Name: \(state.name.isEmpty ? "Anonymous" : state.name)")
+                    Text("Email: \(state.email.isEmpty ? "(none)" : state.email)")
+                    Text("Dark mode: \(state.darkMode ? "on" : "off")")
+                    Text("Notifications: \(state.notifications ? "on" : "off")")
+                    Text("Theme: \(["Default", "Ocean", "Forest", "Sunset"][state.colorIndex])")
+                }
+                .padding(top: 1)
+            }
         }
         .padding(1)
     }

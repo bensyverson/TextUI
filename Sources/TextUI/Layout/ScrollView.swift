@@ -58,8 +58,12 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
     public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         guard !children.isEmpty else { return .zero }
 
-        // Measure children at ideal height, with offered width
-        let childProposal = SizeProposal(width: proposal.width, height: nil)
+        // Measure children at ideal height, with offered width (minus indicator)
+        let indicatorWidth = showsIndicator ? 1 : 0
+        let childProposal = SizeProposal(
+            width: proposal.width.map { max(0, $0 - indicatorWidth) },
+            height: nil,
+        )
         var totalHeight = 0
         var maxWidth = 0
         for child in children {

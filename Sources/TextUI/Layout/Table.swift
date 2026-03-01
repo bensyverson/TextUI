@@ -238,7 +238,7 @@ public struct Table: PrimitiveView, @unchecked Sendable {
         columnWidths: [Int],
         isFocused: Bool = false,
     ) {
-        let boldStyle: Style = isFocused ? Style(bold: true, inverse: true) : Style(bold: true)
+        let boldStyle: Style = isFocused ? Style(bold: true, underline: true) : Style(bold: true)
         var colOffset = region.col
         for (i, column) in columns.enumerated() {
             let width = columnWidths[i]

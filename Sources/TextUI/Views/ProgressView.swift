@@ -136,7 +136,7 @@ public struct ProgressView: View, @unchecked Sendable {
                 let percentWidth = showPercent ? 5 : 0
                 let barWidth = max(0, region.width - percentWidth)
                 let filled = Int(currentProgress * Double(barWidth))
-                let filledStr = String(repeating: "█", count: filled)
+                let filledStr = String(repeating: "▓", count: filled)
                 let emptyStr = String(repeating: "░", count: barWidth - filled)
                 buffer.write(filledStr + emptyStr, row: region.row, col: region.col)
                 if showPercent, barWidth + percentWidth <= region.width {
@@ -146,7 +146,7 @@ public struct ProgressView: View, @unchecked Sendable {
             } else {
                 for i in 0 ..< region.width {
                     let offset = (i + currentTick) % 4
-                    let char: Character = offset == 0 ? "█" : "░"
+                    let char: Character = offset == 0 ? "▓" : "░"
                     buffer.write(String(char), row: region.row, col: region.col + i)
                 }
             }

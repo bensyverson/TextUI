@@ -78,4 +78,36 @@ struct ForEachTests {
         #expect(buffer[0, 1].char == "B")
         #expect(buffer[0, 2].char == "C")
     }
+
+    @Test("ForEach in HStack with padding and border renders content")
+    func inHStackWithPaddingAndBorder() {
+        let view = HStack(spacing: 1) {
+            ForEach(["Hi", "Go"]) { item in
+                Text(item)
+                    .padding(horizontal: 1)
+                    .border(.square)
+            }
+        }
+        // Each item: border(2) + pad(2) + text(2) = 6 wide, 3 tall
+        let size = sizeThatFits(view, proposal: SizeProposal(width: 40, height: 10))
+        #expect(size.width == 13) // 6 + 1 + 6
+        #expect(size.height == 3) // border top + content + border bottom
+
+        var buffer = Buffer(width: size.width, height: size.height)
+        let region = Region(row: 0, col: 0, width: size.width, height: size.height)
+        render(view, into: &buffer, region: region)
+
+        // Check border corners exist
+        #expect(buffer[0, 0].char == "┌")
+        #expect(buffer[2, 0].char == "└")
+
+        // Check text content is actually rendered inside the border
+        // Row 1 (middle): │ Hi │  (col 0=│, col 1=space(pad), col 2=H, col 3=i, col 4=space(pad), col 5=│)
+        #expect(buffer[1, 2].char == "H")
+        #expect(buffer[1, 3].char == "i")
+
+        // Second item starts at col 7 (6 + 1 spacing)
+        #expect(buffer[1, 9].char == "G")
+        #expect(buffer[1, 10].char == "o")
+    }
 }

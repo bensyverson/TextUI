@@ -276,6 +276,40 @@ struct KeyEventTests {
         #expect(result.consumed == 6)
     }
 
+    // MARK: - Alt+Arrow Keys
+
+    @Test("parses Alt+Up (CSI 1;3A)")
+    func altUp() throws {
+        let bytes: [UInt8] = [0x1B, 0x5B, 0x31, 0x3B, 0x33, 0x41]
+        let result = try #require(KeyEvent.parse(bytes))
+        #expect(result.event == .altUp)
+        #expect(result.consumed == 6)
+    }
+
+    @Test("parses Alt+Down (CSI 1;3B)")
+    func altDown() throws {
+        let bytes: [UInt8] = [0x1B, 0x5B, 0x31, 0x3B, 0x33, 0x42]
+        let result = try #require(KeyEvent.parse(bytes))
+        #expect(result.event == .altDown)
+        #expect(result.consumed == 6)
+    }
+
+    @Test("parses Alt+Right (CSI 1;3C)")
+    func altRight() throws {
+        let bytes: [UInt8] = [0x1B, 0x5B, 0x31, 0x3B, 0x33, 0x43]
+        let result = try #require(KeyEvent.parse(bytes))
+        #expect(result.event == .altRight)
+        #expect(result.consumed == 6)
+    }
+
+    @Test("parses Alt+Left (CSI 1;3D)")
+    func altLeft() throws {
+        let bytes: [UInt8] = [0x1B, 0x5B, 0x31, 0x3B, 0x33, 0x44]
+        let result = try #require(KeyEvent.parse(bytes))
+        #expect(result.event == .altLeft)
+        #expect(result.consumed == 6)
+    }
+
     // MARK: - Edge Cases
 
     @Test("empty buffer returns nil")

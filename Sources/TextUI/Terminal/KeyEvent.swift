@@ -44,6 +44,9 @@ public enum KeyEvent: Hashable, Equatable, Sendable {
     /// Ctrl+Shift+Arrow key combinations (for tab switching, etc.).
     case ctrlShiftUp, ctrlShiftDown, ctrlShiftLeft, ctrlShiftRight
 
+    /// Alt+Arrow key combinations (for tab switching in terminals where Ctrl+Shift is intercepted).
+    case altUp, altDown, altLeft, altRight
+
     /// Home / End keys.
     case home, end
 
@@ -168,16 +171,17 @@ extension KeyEvent {
 
         // Map arrow final bytes with modifiers
         if let modifier, [0x41, 0x42, 0x43, 0x44].contains(finalByte) {
-            let baseEvent: (unmodified: KeyEvent, shift: KeyEvent, ctrl: KeyEvent, ctrlShift: KeyEvent) = switch finalByte {
-            case 0x41: (.up, .shiftUp, .ctrlUp, .ctrlShiftUp)
-            case 0x42: (.down, .shiftDown, .ctrlDown, .ctrlShiftDown)
-            case 0x43: (.right, .shiftRight, .ctrlRight, .ctrlShiftRight)
-            case 0x44: (.left, .shiftLeft, .ctrlLeft, .ctrlShiftLeft)
-            default: (.unknown(Array(bytes[0 ..< consumed])), .unknown(Array(bytes[0 ..< consumed])),
-                      .unknown(Array(bytes[0 ..< consumed])), .unknown(Array(bytes[0 ..< consumed])))
+            let unk: KeyEvent = .unknown(Array(bytes[0 ..< consumed]))
+            let baseEvent: (unmodified: KeyEvent, shift: KeyEvent, alt: KeyEvent, ctrl: KeyEvent, ctrlShift: KeyEvent) = switch finalByte {
+            case 0x41: (.up, .shiftUp, .altUp, .ctrlUp, .ctrlShiftUp)
+            case 0x42: (.down, .shiftDown, .altDown, .ctrlDown, .ctrlShiftDown)
+            case 0x43: (.right, .shiftRight, .altRight, .ctrlRight, .ctrlShiftRight)
+            case 0x44: (.left, .shiftLeft, .altLeft, .ctrlLeft, .ctrlShiftLeft)
+            default: (unk, unk, unk, unk, unk)
             }
             switch modifier {
             case 2: return (baseEvent.shift, consumed)
+            case 3: return (baseEvent.alt, consumed)
             case 5: return (baseEvent.ctrl, consumed)
             case 6: return (baseEvent.ctrlShift, consumed)
             default: return (baseEvent.unmodified, consumed)
