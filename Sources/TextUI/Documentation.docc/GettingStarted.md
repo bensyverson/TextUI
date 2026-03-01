@@ -21,7 +21,7 @@ let package = Package(
     name: "MyApp",
     platforms: [.macOS(.v13)],
     dependencies: [
-        .package(url: "https://github.com/example/TextUI.git", from: "1.0.0"),
+        .package(url: "https://github.com/bensyverson/TextUI.git", from: "1.0.0"),
     ],
     targets: [
         .executableTarget(
@@ -79,9 +79,27 @@ var body: some View {
 
 ### Adding State and Interactivity
 
-Create a `@MainActor` state class with ``Observed`` properties that
-automatically trigger re-renders on mutation. Inject it into your view
-tree with `.environmentObject()`, and read it with `@EnvironmentObject`:
+Use ``State`` for view-local mutable values. Mutations automatically
+trigger a re-render:
+
+```swift
+struct CounterView: View {
+    @State var count: Int = 0
+
+    var body: some View {
+        HStack {
+            Text("Count: \(count)")
+            Button("+1") { count += 1 }
+        }
+    }
+}
+```
+
+### Sharing State Across Views
+
+When multiple views need access to the same state, create a
+`@MainActor` class with ``Observed`` properties. Inject it with
+`.environmentObject()` and read it with `@EnvironmentObject`:
 
 ```swift
 @MainActor
@@ -93,9 +111,9 @@ struct CounterView: View {
     @EnvironmentObject var state: AppState
 
     var body: some View {
-        VStack {
+        HStack {
             Text("Count: \(state.count)")
-            Button("Increment") { [state] in state.count += 1 }
+            Button("+1") { [state] in state.count += 1 }
         }
     }
 }
@@ -147,9 +165,9 @@ and executing commands by name.
 
 ### State
 
+- ``State``
 - ``Observed``
 - ``EnvironmentObject``
-- ``StateSignal``
 
 ### Commands
 

@@ -1,6 +1,6 @@
 /// A property wrapper that provides view-local mutable state.
 ///
-/// `@State` stores its value in the ``FocusStore``'s control state
+/// `@State` stores its value in the `FocusStore`'s control state
 /// dictionary, using the declaration site (`#fileID:#line`) as the key.
 /// This means the value persists across render frames without polluting
 /// shared state objects.

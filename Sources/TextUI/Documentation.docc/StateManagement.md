@@ -89,7 +89,7 @@ struct LogView: View {
 }
 ```
 
-Tasks are managed by an internal ``TaskStore`` using the same `beginFrame()`/`endFrame()` lifecycle as the focus and animation systems. When a view with `.task {}` is no longer rendered (e.g. switching tabs), the task is automatically cancelled.
+Tasks are managed by an internal `TaskStore` using the same `beginFrame()`/`endFrame()` lifecycle as the focus and animation systems. When a view with `.task {}` is no longer rendered (e.g. switching tabs), the task is automatically cancelled.
 
 ### App Protocol
 
