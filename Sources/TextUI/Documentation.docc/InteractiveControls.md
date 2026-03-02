@@ -99,6 +99,22 @@ struct SettingsView: View {
 }
 ```
 
+### Disabling Controls
+
+Use `.disabled(_:)` to prevent interaction with controls. Disabled controls
+render with dim styling and are removed from the focus ring:
+
+```swift
+Button("Submit") { send() }
+    .disabled(isLoading)
+
+VStack {
+    TextField("Name", text: name) { name = $0 }
+    Button("Save") { save() }
+}
+.disabled(!isFormValid)
+```
+
 ### Quitting the Application
 
 Use ``Application/quit()`` to stop the run loop programmatically:

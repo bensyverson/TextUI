@@ -65,6 +65,19 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
     public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard region.height >= 1, !options.isEmpty else { return }
 
+        // When disabled, render label and current option only — no focus registration
+        if context.isDisabled == true {
+            let clampedSelection = min(max(selection, 0), options.count - 1)
+            let currentOption = options[clampedSelection]
+            var col = region.col
+            col += buffer.write(label, row: region.row, col: col, style: .plain)
+            col += buffer.write(": ", row: region.row, col: col, style: .plain)
+            col += buffer.write("< ", row: region.row, col: col, style: .plain)
+            col += buffer.write(currentOption, row: region.row, col: col, style: .plain)
+            _ = buffer.write(" >", row: region.row, col: col, style: .plain)
+            return
+        }
+
         // Register in focus ring (skip if FocusedView already registered us)
         let store = context.focusStore
         let effectiveFocusID: Int?

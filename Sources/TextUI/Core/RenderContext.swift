@@ -86,6 +86,13 @@ public struct RenderContext: Sendable {
     /// `nil` defaults to ``HorizontalAlignment/leading``.
     var multilineTextAlignment: HorizontalAlignment?
 
+    /// Whether interactive controls in this subtree are disabled.
+    ///
+    /// Set by ``DisabledView`` and read by interactive controls (``Button``,
+    /// ``TextField``, ``Toggle``, ``Picker``) to skip focus registration
+    /// and become non-interactive. `nil` means not disabled.
+    var isDisabled: Bool?
+
     /// Creates an empty render context.
     public init() {}
 

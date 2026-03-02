@@ -51,6 +51,16 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
     public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard region.height >= 1, region.width >= 1 else { return }
 
+        // When disabled, render text or placeholder only — no focus registration
+        if context.isDisabled == true {
+            if text.isEmpty {
+                _ = buffer.write(placeholder, row: region.row, col: region.col, style: Style(dim: true))
+            } else {
+                _ = buffer.write(text, row: region.row, col: region.col, style: .plain)
+            }
+            return
+        }
+
         // Register in focus ring (skip if FocusedView already registered us)
         let store = context.focusStore
         let effectiveFocusID: Int?

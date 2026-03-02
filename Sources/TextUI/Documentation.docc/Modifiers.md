@@ -66,6 +66,13 @@ through the render context so all descendant `Text` views inherit the setting.
 - **`.multilineTextAlignment(_:)`** — Aligns wrapped lines within the available
   width: `.leading` (default), `.center`, or `.trailing`.
 
+### Interaction Modifiers
+
+- **`.disabled(_:)`** — Disables interactive controls in the view's subtree.
+  When `true`, descendant controls (``Button``, ``TextField``, ``Toggle``,
+  ``Picker``) skip focus registration and become non-interactive. Disabled
+  content is rendered with dim styling.
+
 ### Lifecycle Modifiers
 
 - **`.task {}`** — Runs an async closure when the view first appears.

@@ -45,6 +45,15 @@ public struct Toggle: PrimitiveView, @unchecked Sendable {
     public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard region.height >= 1 else { return }
 
+        // When disabled, render checkbox and label only — no focus registration
+        if context.isDisabled == true {
+            let checkbox = isOn ? "[x] " : "[ ] "
+            var col = region.col
+            col += buffer.write(checkbox, row: region.row, col: col, style: .plain)
+            _ = buffer.write(label, row: region.row, col: col, style: .plain)
+            return
+        }
+
         // Register in focus ring (skip if FocusedView already registered us)
         let store = context.focusStore
         let effectiveFocusID: Int?

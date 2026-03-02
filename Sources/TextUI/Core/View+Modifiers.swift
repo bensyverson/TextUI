@@ -356,6 +356,22 @@ public extension View {
         MultilineTextAlignmentView(content: self, alignment: alignment)
     }
 
+    // MARK: - Disabled
+
+    /// Disables interactive controls in this view's subtree.
+    ///
+    /// When `isDisabled` is `true`, descendant controls skip focus
+    /// registration and cannot receive input. The content is rendered
+    /// with dim styling.
+    ///
+    /// ```swift
+    /// Button("Submit") { send() }
+    ///     .disabled(isLoading)
+    /// ```
+    func disabled(_ isDisabled: Bool) -> some View {
+        DisabledView(content: self, isDisabled: isDisabled)
+    }
+
     // MARK: - Environment
 
     /// Injects an environment object into the view hierarchy.

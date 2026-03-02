@@ -20,7 +20,7 @@ struct LogTab: View {
                         Text(entry.formattedIndex, style: Style(fg: .white).dimmed())
                         Text(entry.timestamp, style: Style(fg: .cyan))
                         Text(entry.message)
-                    }
+                    }.frame(maxWidth: Int.max, alignment: .leading)
                 }
             }
             .defaultScrollAnchor(.bottom)

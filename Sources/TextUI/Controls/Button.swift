@@ -48,6 +48,12 @@ public struct Button: PrimitiveView, @unchecked Sendable {
     }
 
     public func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
+        // When disabled, render label only — no focus registration or handler
+        if context.isDisabled == true {
+            TextUI.render(label, into: &buffer, region: region, context: context)
+            return
+        }
+
         // Register in focus ring (skip if FocusedView already registered us)
         let store = context.focusStore
         let effectiveFocusID: Int?

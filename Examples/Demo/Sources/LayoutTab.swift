@@ -58,6 +58,28 @@ struct LayoutTab: View {
                             .border(.square)
                     }
                 }
+
+                // MARK: - Group
+
+                Text("Group (layout-transparent):", style: .dim)
+                HStack(spacing: 2) {
+                    Group {
+                        Text("One", style: Style(fg: .green))
+                        Text("Two", style: Style(fg: .yellow))
+                        Text("Three", style: Style(fg: .magenta))
+                    }
+                }
+                .padding(bottom: 2)
+
+                // MARK: - ZStack
+
+                Text("ZStack (overlaid layers):", style: .dim)
+                ZStack {
+                    Color(.blue)
+                        .frame(width: 30, height: 3)
+                    Text("Centered on blue", style: Style(fg: .white).bolded())
+                }
+                .padding(bottom: 2)
             }
             .padding(1)
         } // ScrollView
