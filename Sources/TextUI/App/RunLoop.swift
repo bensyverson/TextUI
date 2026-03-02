@@ -55,7 +55,8 @@ final class RunLoop {
     private let commandRegistry: CommandRegistry
 
     /// The timestamp of the last completed render, used for deduplication.
-    private var lastRenderTime: ContinuousClock.Instant = .now
+    /// Initialized to the past so the first `renderFrame()` call always succeeds.
+    private var lastRenderTime = ContinuousClock.now.advanced(by: .seconds(-1))
 
     /// The number of frames rendered, exposed for testing.
     private(set) var renderCount: Int = 0
