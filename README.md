@@ -49,11 +49,11 @@ struct HelloApp: App {
 
 [Browse the documentation online](https://bensyverson.com/documentation/TextUI/), or check out the DocC catalog at [`Sources/TextUI/Documentation.docc/`](Sources/TextUI/Documentation.docc/). Key articles:
 
-- **[Getting Started](Sources/Operator/Documentation.docc/GettingStarted.md)** — Get up to speed on the core concepts quickly
-- **[SwiftUI Differences](Sources/Operator/Documentation.docc/SwiftUIDifferences.md)** — Coming from SwiftUI? Read this first.
-- **[Focus System](Sources/Operator/Documentation.docc/FocusSystem.md)** — Learn how TextUI approaches focus and keyboard navigation
-- **[StateManagement](Sources/Operator/Documentation.docc/StateManagement.md)** — Observe and interact with local or shared state
-- **[Animation](Sources/Operator/Documentation.docc/Animation.md)** — Create animations using TextUI's global `@AnimationTick`
+- **[Getting Started](Sources/TextUI/Documentation.docc/GettingStarted.md)** — Get up to speed on the core concepts quickly
+- **[SwiftUI Differences](Sources/TextUI/Documentation.docc/SwiftUIDifferences.md)** — Coming from SwiftUI? Read this first.
+- **[Focus System](Sources/TextUI/Documentation.docc/FocusSystem.md)** — Learn how TextUI approaches focus and keyboard navigation
+- **[StateManagement](Sources/TextUI/Documentation.docc/StateManagement.md)** — Observe and interact with local or shared state
+- **[Animation](Sources/TextUI/Documentation.docc/Animation.md)** — Create animations using TextUI's global `@AnimationTick`
 
 You can generate the API documentation with DocC:
 
