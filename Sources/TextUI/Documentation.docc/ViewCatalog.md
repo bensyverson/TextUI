@@ -102,7 +102,9 @@ Group {
 
 ### Containers
 
-``ScrollView`` enables vertical scrolling with an optional scroll indicator:
+``ScrollView`` enables vertical scrolling with an optional scroll indicator.
+Use ``View/defaultScrollAnchor(_:)`` to pin to the bottom for live-updating
+content:
 
 ```swift
 ScrollView {
@@ -110,6 +112,7 @@ ScrollView {
         Text(item.description)
     }
 }
+.defaultScrollAnchor(.bottom)
 ```
 
 ``Table`` displays tabular data with fixed and flexible columns:

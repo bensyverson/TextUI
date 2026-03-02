@@ -60,6 +60,12 @@ public struct RenderContext: Sendable {
     /// to determine its rendering style.
     var progressViewStyle: ProgressViewStyle?
 
+    /// The default scroll anchor for descendant ``ScrollView`` instances.
+    ///
+    /// Set by ``DefaultScrollAnchorView`` and read by ``ScrollView``
+    /// to determine initial and auto-scroll behavior.
+    var defaultScrollAnchor: VerticalAlignment?
+
     /// Creates an empty render context.
     public init() {}
 

@@ -27,6 +27,20 @@ ScrollView {
 }
 ```
 
+Use ``View/defaultScrollAnchor(_:)`` to pin the viewport to the bottom — ideal
+for live logs or chat feeds. The ScrollView will start at the bottom and
+auto-follow new content, but respects the user's position if they scroll away.
+Scrolling back to the bottom resumes auto-following.
+
+```swift
+ScrollView {
+    ForEach(logEntries) { entry in
+        Text(entry.message)
+    }
+}
+.defaultScrollAnchor(.bottom)
+```
+
 ScrollView registers itself in the focus ring, so Tab cycles to it. When a
 focusable child (e.g. a Button) inside the ScrollView is focused, scroll keys
 still work via the ancestor handler chain.

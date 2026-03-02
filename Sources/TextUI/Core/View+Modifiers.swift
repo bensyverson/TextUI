@@ -295,6 +295,26 @@ public extension View {
         TaskView(content: self, action: action, key: "\(fileID):\(line)")
     }
 
+    // MARK: - Scroll Anchor
+
+    /// Sets the default scroll anchor for descendant ``ScrollView`` instances.
+    ///
+    /// When set to ``VerticalAlignment/bottom``, a ScrollView will start
+    /// at the bottom and automatically follow new content as it's added —
+    /// unless the user has scrolled away from the bottom.
+    ///
+    /// ```swift
+    /// ScrollView {
+    ///     ForEach(logEntries) { entry in
+    ///         Text(entry.message)
+    ///     }
+    /// }
+    /// .defaultScrollAnchor(.bottom)
+    /// ```
+    func defaultScrollAnchor(_ anchor: VerticalAlignment) -> some View {
+        DefaultScrollAnchorView(content: self, anchor: anchor)
+    }
+
     // MARK: - Environment
 
     /// Injects an environment object into the view hierarchy.

@@ -23,6 +23,7 @@ struct LogTab: View {
                     }
                 }
             }
+            .defaultScrollAnchor(.bottom)
         }
         .padding(1)
         .task {

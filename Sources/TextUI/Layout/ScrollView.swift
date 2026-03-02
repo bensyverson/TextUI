@@ -51,6 +51,10 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
     /// Persistent scroll state stored in ``FocusStore/controlState``.
     struct ScrollState: Sendable {
         var offset: Int = 0
+        /// The maximum scroll offset from the previous render pass.
+        /// Used by ``defaultScrollAnchor`` to detect whether the user
+        /// was at the bottom before new content arrived.
+        var lastMaxOffset: Int?
     }
 
     // MARK: - Sizing
@@ -110,10 +114,24 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
         }
         let totalContentHeight = cumulativeOffsets.last!
 
-        // Read scroll offset, clamp
+        // Read scroll offset, apply anchor logic, clamp
         let viewportHeight = region.height
         let maxOffset = max(0, totalContentHeight - viewportHeight)
         var state = store?.controlState(forKey: autoKey, as: ScrollState.self) ?? ScrollState()
+
+        let anchor = context.defaultScrollAnchor
+        if anchor == .bottom {
+            if state.lastMaxOffset == nil {
+                // First render — snap to bottom
+                state.offset = maxOffset
+            } else if state.offset >= state.lastMaxOffset! {
+                // Was at (or past) bottom — stay at bottom
+                state.offset = maxOffset
+            }
+            // else: user scrolled up, leave offset alone
+        }
+        state.lastMaxOffset = maxOffset
+
         state.offset = max(0, min(state.offset, maxOffset))
         store?.setControlState(state, forKey: autoKey)
 
