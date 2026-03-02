@@ -93,14 +93,18 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
 
         // Get or initialize editing state.
         // If the stored text matches the current text, use the stored cursor.
-        // Otherwise, the external text has changed — reset to end of new text.
+        // Otherwise, the external text has changed — reset to end of new text
+        // and persist the reset so the handler sees it.
         let editState: EditState = {
-            if let stored = store?.controlState(forKey: AnyHashable(stateKey), as: EditState.self),
+            let key = AnyHashable(stateKey)
+            if let stored = store?.controlState(forKey: key, as: EditState.self),
                stored.text == text
             {
-                return EditState(cursor: min(stored.cursor, text.count), text: text)
+                return stored
             }
-            return EditState(cursor: text.count, text: text)
+            let reset = EditState(cursor: text.count, text: text)
+            store?.setControlState(reset, forKey: key)
+            return reset
         }()
         let cursorPos = editState.cursor
 
@@ -148,8 +152,11 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
                     return .ignored
                 }
 
+                let textChanged = state.text != editState.text
                 store.setControlState(state, forKey: sendableKey)
-                onChange(state.text)
+                if textChanged {
+                    onChange(state.text)
+                }
                 return .handled
             }
         }

@@ -225,6 +225,67 @@ struct TextFieldTests {
         #expect(received.value == "hiab")
     }
 
+    @Test("Cursor-only movement does not fire onChange")
+    func cursorMovementNoOnChange() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+
+        let callCount = Box(0)
+
+        var buffer = Buffer(width: 20, height: 1)
+        let region = Region(row: 0, col: 0, width: 20, height: 1)
+
+        let field1 = testField(text: "abc") { _ in callCount.value += 1 }
+        render(field1, into: &buffer, region: region, context: ctx)
+        store.applyDefaultFocus()
+
+        store.beginFrame()
+        let field2 = testField(text: "abc") { _ in callCount.value += 1 }
+        render(field2, into: &buffer, region: region, context: ctx)
+
+        // Cursor movements should NOT trigger onChange
+        store.routeKeyEvent(.left)
+        store.routeKeyEvent(.right)
+        store.routeKeyEvent(.home)
+        store.routeKeyEvent(.end)
+        #expect(callCount.value == 0)
+    }
+
+    @Test("External text reset clears stored state")
+    func externalTextReset() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+
+        let received = Box("")
+
+        var buffer = Buffer(width: 20, height: 1)
+        let region = Region(row: 0, col: 0, width: 20, height: 1)
+
+        // Render with "hello", type to build up cursor
+        let field1 = testField(text: "hello") { received.value = $0 }
+        render(field1, into: &buffer, region: region, context: ctx)
+        store.applyDefaultFocus()
+
+        store.beginFrame()
+        let field2 = testField(text: "hello") { received.value = $0 }
+        render(field2, into: &buffer, region: region, context: ctx)
+
+        // Type a char (cursor now 6, text "hellox")
+        store.routeKeyEvent(.character("x"))
+        #expect(received.value == "hellox")
+
+        // External reset: re-render with empty text (simulates submit clearing)
+        store.beginFrame()
+        let field3 = testField(text: "") { received.value = $0 }
+        render(field3, into: &buffer, region: region, context: ctx)
+
+        // Type 'a' — should start from "" not "hellox"
+        store.routeKeyEvent(.character("a"))
+        #expect(received.value == "a")
+    }
+
     @Test("Cursor position renders with inverse style when focused")
     func cursorRendering() {
         let store = FocusStore()
