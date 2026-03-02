@@ -15,7 +15,7 @@ public enum Application {
     /// synchronously on the main actor during the render/event cycle.
     public static func quit() {
         MainActor.assumeIsolated {
-            RunLoop.current?.isRunning = false
+            RunLoop.current?.requestShutdown()
         }
     }
 }

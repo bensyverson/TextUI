@@ -24,7 +24,7 @@ struct HelloApp: App {
     var body: some View {
         VStack(spacing: 1) {
             Text("Hello, TextUI!", style: .bold)
-            Button("Quit") {}
+            Button("Quit") { Application.quit() }
                 .keyboardShortcut("q", modifiers: .control)
             CommandBar()
         }

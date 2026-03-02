@@ -30,6 +30,13 @@ final class RunLoop {
     /// Whether the run loop is still active.
     var isRunning: Bool = true
 
+    /// Injects a shutdown event into the event stream, causing the run
+    /// loop to exit promptly without waiting for another event.
+    func requestShutdown() {
+        isRunning = false
+        eventContinuation?.yield(.shutdown)
+    }
+
     /// The focus manager, created once and reused across frames.
     private let focusStore: FocusStore
 
@@ -52,6 +59,9 @@ final class RunLoop {
 
     /// The task store for view-scoped async task lifecycle.
     private let taskStore = TaskStore()
+
+    /// The merged event stream continuation, used to inject shutdown events.
+    private var eventContinuation: AsyncStream<Event>.Continuation?
 
     /// Internal event types that the run loop processes.
     enum Event: Sendable {
@@ -139,6 +149,8 @@ final class RunLoop {
     /// child tasks when the stream is finished.
     private func mergedEvents() -> AsyncStream<Event> {
         AsyncStream<Event> { continuation in
+            self.eventContinuation = continuation
+
             // Forward key events
             let keyTask = Task { [keyReader] in
                 for await key in keyReader.events {
