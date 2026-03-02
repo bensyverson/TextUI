@@ -22,19 +22,27 @@ public struct HStack: PrimitiveView, Sendable {
     /// The flattened, axis-prepared children.
     let children: [any View]
 
+    /// Auto-generated key for stable identity and layout caching.
+    let autoKey: String
+
     /// Creates a horizontal stack.
     ///
     /// - Parameters:
     ///   - alignment: The vertical alignment of children. Defaults to `.top`.
     ///   - spacing: The number of columns between children. Defaults to `1`.
+    ///   - fileID: Auto-captured file ID for stable identity.
+    ///   - line: Auto-captured line number for stable identity.
     ///   - content: A ``ViewBuilder`` closure producing the stack's children.
     public init(
         alignment: VerticalAlignment = .top,
         spacing: Int = 1,
+        fileID: String = #fileID,
+        line: Int = #line,
         @ViewBuilder content: () -> ViewGroup,
     ) {
         self.alignment = alignment
         self.spacing = spacing
+        autoKey = "\(fileID):\(line)"
         let flat = StackLayout.flattenChildren(content().children)
         children = StackLayout.prepareChildren(flat, axis: .horizontal)
     }

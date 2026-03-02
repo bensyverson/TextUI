@@ -106,6 +106,14 @@ public struct RenderContext: Sendable {
     /// hasn't changed.
     var isTickOnlyRender: Bool = false
 
+    /// The per-frame layout cache, if any.
+    ///
+    /// Created fresh by ``RunLoop`` at the start of each render pass and
+    /// discarded at the end. Views like ``ScrollView`` use this to avoid
+    /// redundant child measurements when probed multiple times within a
+    /// single frame (e.g. by ``StackLayout`` flexibility probes).
+    var layoutCache: LayoutCache?
+
     /// Creates an empty render context.
     public init() {}
 

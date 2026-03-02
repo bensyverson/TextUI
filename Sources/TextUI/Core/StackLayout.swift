@@ -22,6 +22,20 @@ enum StackLayout {
         let size: Size2D
     }
 
+    /// Sendable snapshot of layout geometry, stored in ``LayoutCache``.
+    struct CachedLayout: Sendable {
+        /// Per-child offset and size, in original child order.
+        let entries: [Entry]
+
+        /// The total size of the stack.
+        let totalSize: Size2D
+
+        struct Entry: Sendable {
+            let primaryOffset: Int
+            let size: Size2D
+        }
+    }
+
     /// The axis a stack lays out along.
     enum Axis {
         case horizontal
@@ -55,15 +69,32 @@ enum StackLayout {
     /// Lays out children along the given axis with the given spacing and proposal.
     ///
     /// Returns the child layouts (with offsets) and the total size of the stack.
+    ///
+    /// - Parameter cacheKey: When provided, the result is cached in the
+    ///   per-frame ``LayoutCache`` so that identical proposals within the
+    ///   same frame return instantly.
     static func layout(
         children: [any View],
         axis: Axis,
         spacing: Int,
         proposal: SizeProposal,
         context: RenderContext,
+        cacheKey: String? = nil,
     ) -> (children: [ChildLayout], totalSize: Size2D) {
         guard !children.isEmpty else {
             return (children: [], totalSize: .zero)
+        }
+
+        // Check per-frame cache
+        let frameCacheKey: AnyHashable? = cacheKey.map { "\($0):layout:\(proposal)" as AnyHashable }
+        if let frameCacheKey,
+           let cached = context.layoutCache?.get(forKey: frameCacheKey, as: CachedLayout.self),
+           cached.entries.count == children.count
+        {
+            let layouts: [ChildLayout] = zip(children, cached.entries).map { child, entry in
+                ChildLayout(view: child, primaryOffset: entry.primaryOffset, size: entry.size)
+            }
+            return (children: layouts, totalSize: cached.totalSize)
         }
 
         let totalSpacing = spacing * (children.count - 1)
@@ -72,27 +103,42 @@ enum StackLayout {
         let primaryProposal = axis == .horizontal ? proposal.width : proposal.height
         let crossProposal = axis == .horizontal ? proposal.height : proposal.width
 
+        let result: (children: [ChildLayout], totalSize: Size2D)
+
         // Special case: nil primary proposal (ideal size query)
         if primaryProposal == nil {
-            return layoutIdeal(
+            result = layoutIdeal(
                 children: children,
                 axis: axis,
                 spacing: spacing,
                 crossProposal: crossProposal,
                 context: context,
             )
+        } else {
+            // Concrete primary proposal — run the greedy algorithm
+            let available = max(0, primaryProposal! - totalSpacing)
+            result = layoutGreedy(
+                children: children,
+                axis: axis,
+                spacing: spacing,
+                available: available,
+                crossProposal: crossProposal,
+                context: context,
+            )
         }
 
-        // Concrete primary proposal — run the greedy algorithm
-        let available = max(0, primaryProposal! - totalSpacing)
-        return layoutGreedy(
-            children: children,
-            axis: axis,
-            spacing: spacing,
-            available: available,
-            crossProposal: crossProposal,
-            context: context,
-        )
+        // Store in per-frame cache
+        if let frameCacheKey {
+            let cached = CachedLayout(
+                entries: result.children.map {
+                    CachedLayout.Entry(primaryOffset: $0.primaryOffset, size: $0.size)
+                },
+                totalSize: result.totalSize,
+            )
+            context.layoutCache?.set(cached, forKey: frameCacheKey)
+        }
+
+        return result
     }
 
     // MARK: - Private

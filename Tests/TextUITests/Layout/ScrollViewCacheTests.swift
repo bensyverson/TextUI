@@ -1,6 +1,25 @@
 import Testing
 @testable import TextUI
 
+/// A view that counts how many times `sizeThatFits` is called, for verifying cache behavior.
+private final class SizeCounter: @unchecked Sendable {
+    var count = 0
+}
+
+private struct CountingText: PrimitiveView, @unchecked Sendable {
+    let text: String
+    let counter: SizeCounter
+
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
+        counter.count += 1
+        return TextUI.sizeThatFits(Text(text), proposal: proposal, context: context)
+    }
+
+    func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
+        TextUI.render(Text(text), into: &buffer, region: region, context: context)
+    }
+}
+
 @Suite("ScrollView Size Caching")
 struct ScrollViewCacheTests {
     @Test("Cache is populated after sizeThatFits")
@@ -133,5 +152,80 @@ struct ScrollViewCacheTests {
         #expect(buffer[0, 0].char == "A")
         #expect(buffer[1, 0].char == "B")
         #expect(buffer[2, 0].char == "C")
+    }
+
+    @Test("Per-frame cache prevents repeated child measurement across probes")
+    func perFrameCacheDedup() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+        ctx.layoutCache = LayoutCache()
+
+        let counter = SizeCounter()
+        let view = ScrollView(showsIndicator: false) {
+            CountingText(text: "Line0", counter: counter)
+            CountingText(text: "Line1", counter: counter)
+            CountingText(text: "Line2", counter: counter)
+        }
+
+        // Simulate the 3 probes that layoutGreedy makes:
+        // Probe 1 (height: 0) — cache miss, measures all 3 children
+        _ = sizeThatFits(view, proposal: SizeProposal(width: 20, height: 0), context: ctx)
+        #expect(counter.count == 3)
+
+        // Probe 2 (height: .max) — per-frame cache hit, no new measurements
+        _ = sizeThatFits(view, proposal: SizeProposal(width: 20, height: .max), context: ctx)
+        #expect(counter.count == 3)
+
+        // Probe 3 (height: 10) — per-frame cache hit, no new measurements
+        _ = sizeThatFits(view, proposal: SizeProposal(width: 20, height: 10), context: ctx)
+        #expect(counter.count == 3)
+    }
+
+    @Test("Per-frame cache does not persist across frames")
+    func perFrameCacheFrameIsolation() {
+        let store = FocusStore()
+
+        let counter = SizeCounter()
+        let view = ScrollView(showsIndicator: false) {
+            CountingText(text: "Line0", counter: counter)
+            CountingText(text: "Line1", counter: counter)
+        }
+
+        // Frame 1
+        var ctx1 = RenderContext()
+        ctx1.focusStore = store
+        ctx1.layoutCache = LayoutCache()
+        _ = sizeThatFits(view, proposal: SizeProposal(width: 20, height: 5), context: ctx1)
+        #expect(counter.count == 2)
+
+        // Frame 2 with a fresh LayoutCache — should re-measure
+        var ctx2 = RenderContext()
+        ctx2.focusStore = store
+        ctx2.layoutCache = LayoutCache()
+        _ = sizeThatFits(view, proposal: SizeProposal(width: 20, height: 5), context: ctx2)
+        #expect(counter.count == 4)
+    }
+
+    @Test("Per-frame cache produces correct sizes")
+    func perFrameCacheCorrectness() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+        ctx.layoutCache = LayoutCache()
+
+        let view = ScrollView(showsIndicator: false) {
+            Text("Short")
+            Text("A longer line here")
+        }
+
+        // First probe populates cache
+        let size1 = sizeThatFits(view, proposal: SizeProposal(width: 30, height: 0), context: ctx)
+        // Second probe uses cache — result should differ only in height
+        let size2 = sizeThatFits(view, proposal: SizeProposal(width: 30, height: 10), context: ctx)
+
+        #expect(size1.width == size2.width)
+        #expect(size1.height == 0) // proposed height 0
+        #expect(size2.height == 10) // proposed height 10
     }
 }

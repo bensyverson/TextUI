@@ -381,13 +381,16 @@ final class RunLoop {
         ctx.overlayStore = overlayStore
         ctx.taskStore = taskStore
         ctx.isTickOnlyRender = isTickOnly
+        ctx.layoutCache = LayoutCache()
 
         screen.clear()
 
-        let proposal = SizeProposal(width: screen.width, height: screen.height)
         let region = Region(row: 0, col: 0, width: screen.width, height: screen.height)
 
-        _ = TextUI.sizeThatFits(rootView, proposal: proposal, context: ctx)
+        // Render directly — each PrimitiveView's render() handles its own
+        // internal sizing (VStack calls StackLayout.layout, ScrollView
+        // measures children, etc.), so a separate top-level sizeThatFits
+        // pass is redundant.
         TextUI.render(rootView, into: &screen.back, region: region, context: ctx)
 
         // Execute deferred overlays (e.g. Picker dropdowns)
@@ -421,9 +424,9 @@ final class RunLoop {
             ctx.overlayStore = overlayStore
             ctx.taskStore = taskStore
             ctx.isTickOnlyRender = false
+            ctx.layoutCache = LayoutCache()
 
             screen.clear()
-            _ = TextUI.sizeThatFits(rootView, proposal: proposal, context: ctx)
             TextUI.render(rootView, into: &screen.back, region: region, context: ctx)
 
             for overlay in overlayStore.overlays {

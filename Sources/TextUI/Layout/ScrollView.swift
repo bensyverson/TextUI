@@ -75,10 +75,30 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
             height: nil,
         )
 
-        // Check for tick-only render with valid cache
-        let cacheKey: AnyHashable = "\(autoKey):sizeCache"
+        let focusCacheKey: AnyHashable = "\(autoKey):sizeCache"
+
+        // Per-frame cache: eliminates redundant measurements when layoutGreedy
+        // probes the same ScrollView multiple times within a single frame.
+        // The childProposal strips the incoming height to nil, so all probes
+        // produce the same child measurements — only the final height differs.
+        let frameCacheKey: AnyHashable = "\(autoKey):frameSizes:\(childProposal)"
+        if let cache = context.layoutCache?.get(forKey: frameCacheKey, as: SizeCache.self),
+           cache.sizes.count == children.count
+        {
+            let totalHeight = cache.sizes.reduce(0) { $0 + $1.height }
+            let maxWidth = cache.sizes.reduce(0) { max($0, $1.width) }
+            let height: Int = if let proposed = proposal.height { proposed } else { totalHeight }
+            let width: Int = if let proposed = proposal.width { min(maxWidth, proposed) } else { maxWidth }
+
+            // Also update the FocusStore cache so render() can use it
+            context.focusStore?.setControlState(cache, forKey: focusCacheKey)
+
+            return Size2D(width: width, height: height)
+        }
+
+        // Cross-frame cache: tick-only renders reuse sizes from the previous frame
         if context.isTickOnlyRender,
-           let cache = context.focusStore?.controlState(forKey: cacheKey, as: SizeCache.self),
+           let cache = context.focusStore?.controlState(forKey: focusCacheKey, as: SizeCache.self),
            cache.proposal == childProposal,
            cache.sizes.count == children.count
         {
@@ -89,6 +109,7 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
             return Size2D(width: width, height: height)
         }
 
+        // Cache miss — measure all children
         var totalHeight = 0
         var maxWidth = 0
         var sizes: [Size2D] = []
@@ -100,9 +121,10 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
             maxWidth = max(maxWidth, size.width)
         }
 
-        // Cache sizes for reuse in render()
+        // Store in both caches
         let cache = SizeCache(sizes: sizes, proposal: childProposal)
-        context.focusStore?.setControlState(cache, forKey: cacheKey)
+        context.layoutCache?.set(cache, forKey: frameCacheKey)
+        context.focusStore?.setControlState(cache, forKey: focusCacheKey)
 
         // Greedy on height: take what's offered (or ideal sum if nil)
         let height: Int = if let proposed = proposal.height {
