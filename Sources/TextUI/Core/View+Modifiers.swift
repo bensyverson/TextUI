@@ -315,6 +315,47 @@ public extension View {
         DefaultScrollAnchorView(content: self, anchor: anchor)
     }
 
+    // MARK: - Line Limit
+
+    /// Sets the maximum number of lines for descendant ``Text`` views.
+    ///
+    /// Pass `nil` to remove any previously set limit.
+    ///
+    /// ```swift
+    /// Text("A long paragraph…")
+    ///     .lineLimit(3)
+    /// ```
+    func lineLimit(_ limit: Int?) -> some View {
+        LineLimitView(content: self, limit: limit)
+    }
+
+    // MARK: - Truncation Mode
+
+    /// Sets the truncation mode for descendant ``Text`` views.
+    ///
+    /// Controls where the ellipsis appears when text is truncated.
+    ///
+    /// ```swift
+    /// Text("Hello, world!")
+    ///     .lineLimit(1)
+    ///     .truncationMode(.middle)
+    /// ```
+    func truncationMode(_ mode: Text.TruncationMode) -> some View {
+        TruncationModeView(content: self, mode: mode)
+    }
+
+    // MARK: - Multiline Text Alignment
+
+    /// Sets the alignment for wrapped lines in descendant ``Text`` views.
+    ///
+    /// ```swift
+    /// Text("A paragraph that wraps…")
+    ///     .multilineTextAlignment(.center)
+    /// ```
+    func multilineTextAlignment(_ alignment: HorizontalAlignment) -> some View {
+        MultilineTextAlignmentView(content: self, alignment: alignment)
+    }
+
     // MARK: - Environment
 
     /// Injects an environment object into the view hierarchy.

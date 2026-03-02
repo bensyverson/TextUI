@@ -66,6 +66,26 @@ public struct RenderContext: Sendable {
     /// to determine initial and auto-scroll behavior.
     var defaultScrollAnchor: VerticalAlignment?
 
+    /// The maximum number of lines for descendant ``Text`` views.
+    ///
+    /// Set by ``LineLimitView`` and read by ``Text`` to cap the number
+    /// of visible lines. `nil` means unlimited.
+    var lineLimit: Int?
+
+    /// The truncation mode for descendant ``Text`` views.
+    ///
+    /// Set by ``TruncationModeView`` and read by ``Text`` to determine
+    /// where the ellipsis appears when content is truncated.
+    /// `nil` defaults to ``Text/TruncationMode/tail``.
+    var truncationMode: Text.TruncationMode?
+
+    /// The horizontal alignment for wrapped lines in descendant ``Text`` views.
+    ///
+    /// Set by ``MultilineTextAlignmentView`` and read by ``Text`` to
+    /// position wrapped lines within the available width.
+    /// `nil` defaults to ``HorizontalAlignment/leading``.
+    var multilineTextAlignment: HorizontalAlignment?
+
     /// Creates an empty render context.
     public init() {}
 

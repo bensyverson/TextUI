@@ -59,12 +59,12 @@ struct PaddingTests {
         #expect(size.height == 1)
     }
 
-    @Test("Padding with tight proposal shrinks content")
+    @Test("Padding with tight proposal wraps content")
     func tightProposal() {
         let view = Text("Hello").padding(1)
-        // Propose width 4: inner gets 2, "Hello" (5 wide) truncates to 2
-        let size = sizeThatFits(view, proposal: SizeProposal(width: 4, height: 5))
+        // Propose width 4: inner gets 2, "Hello" (5 wide) wraps to 3 lines at width 2
+        let size = sizeThatFits(view, proposal: SizeProposal(width: 4, height: 10))
         #expect(size.width == 4) // 2 + 1 + 1
-        #expect(size.height == 3) // 1 + 1 + 1
+        #expect(size.height == 5) // 3 (wrapped) + 1 + 1
     }
 }

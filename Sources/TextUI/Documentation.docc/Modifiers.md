@@ -53,6 +53,19 @@ to add styling or background fills.
   the child has already set a background are preserved.
 - **`.overlay(_:)`** — Renders additional content on top of the view.
 
+### Text Modifiers
+
+Text modifiers control how ``Text`` views wrap and truncate content. They flow
+through the render context so all descendant `Text` views inherit the setting.
+
+- **`.lineLimit(_:)`** — Caps the maximum number of visible lines. When content
+  exceeds the limit, the boundary line shows an ellipsis. Pass `nil` to remove
+  a previously set limit.
+- **`.truncationMode(_:)`** — Controls where the ellipsis appears when text is
+  truncated: `.tail` (default), `.head`, or `.middle`.
+- **`.multilineTextAlignment(_:)`** — Aligns wrapped lines within the available
+  width: `.leading` (default), `.center`, or `.trailing`.
+
 ### Lifecycle Modifiers
 
 - **`.task {}`** — Runs an async closure when the view first appears.

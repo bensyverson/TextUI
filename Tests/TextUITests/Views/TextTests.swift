@@ -47,10 +47,10 @@ struct TextTests {
         #expect(size == Size2D(width: 2, height: 1))
     }
 
-    @Test("Text narrower than content truncates to proposed width")
+    @Test("Text narrower than content wraps to proposed width")
     func narrowerThanContent() {
-        let size = Text("Hello").sizeThatFits(SizeProposal(width: 3, height: 1))
-        #expect(size == Size2D(width: 3, height: 1))
+        let size = Text("Hello World").sizeThatFits(SizeProposal(width: 5, height: 10))
+        #expect(size == Size2D(width: 5, height: 2))
     }
 
     // MARK: - CJK Width

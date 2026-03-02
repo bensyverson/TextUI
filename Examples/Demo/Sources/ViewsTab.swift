@@ -80,6 +80,50 @@ struct ViewsTab: View {
                     }
                 }
                 .frame(width: 30, height: 2)
+                .padding(bottom: 2)
+
+                // MARK: - Text Wrapping
+
+                Text("Text wrapping:", style: .dim)
+                Text("TextUI is a SwiftUI-inspired framework for building expressive terminal UIs in Swift, with zero dependencies. Why? Why not! It makes building fancy terminal apps super fun.")
+                    .frame(maxWidth: 29)
+                    .padding(bottom: 2)
+
+                // MARK: - Line Limit
+
+                Text("lineLimit(2):", style: .dim)
+                Text("This text has a line limit of 2. Any content beyond the second line will be truncated with an ellipsis to indicate there is more.")
+                    .lineLimit(2)
+                    .frame(maxWidth: 29)
+                    .padding(bottom: 2)
+
+                // MARK: - Truncation Mode
+
+                Text("truncationMode(.head):", style: .dim)
+                Text("Head-truncated: shows the end of the text with an ellipsis at the beginning.")
+                    .lineLimit(1)
+                    .truncationMode(.head)
+                    .frame(maxWidth: 29)
+
+                Text("truncationMode(.middle):", style: .dim)
+                Text("Middle-truncated: shows start and end with an ellipsis in the middle of the text.")
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: 29)
+                    .padding(bottom: 2)
+
+                // MARK: - Multiline Text Alignment
+
+                Text("multilineTextAlignment(.center):", style: .dim)
+                Text("Centered text wraps and aligns each line to the center of the available space.")
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 29)
+                    .padding(bottom: 1)
+
+                Text("multilineTextAlignment(.trailing):", style: .dim)
+                Text("Trailing-aligned text wraps and aligns each line to the right edge.")
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 29)
             }
             .padding(1)
         } // ScrollView

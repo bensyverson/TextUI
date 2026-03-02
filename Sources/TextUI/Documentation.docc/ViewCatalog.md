@@ -10,11 +10,18 @@ their own sizing and rendering; composite views define a `body` property.
 
 ### Text Display
 
-``Text`` renders a string with an optional ``Style``:
+``Text`` renders a string with an optional ``Style``. Text wraps at word
+boundaries when proposed less width than its content (matching SwiftUI).
+Use ``View/lineLimit(_:)`` to cap visible lines,
+``View/truncationMode(_:)`` to control ellipsis placement, and
+``View/multilineTextAlignment(_:)`` to align wrapped lines:
 
 ```swift
 Text("Hello, world!")
 Text("Error!", style: Style(fg: .red).bolded())
+Text("A long paragraph that will wrap at word boundaries.")
+    .lineLimit(3)
+    .multilineTextAlignment(.center)
 ```
 
 ``AttributedText`` renders pre-styled spans built with `@SpanBuilder`:
