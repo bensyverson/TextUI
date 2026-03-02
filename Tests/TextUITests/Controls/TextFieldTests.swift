@@ -196,6 +196,35 @@ struct TextFieldTests {
         #expect(received.value == "abcx")
     }
 
+    @Test("Multiple characters in one frame do not crash")
+    func multipleCharsOneFrame() {
+        let store = FocusStore()
+        var ctx = RenderContext()
+        ctx.focusStore = store
+
+        let received = Box("")
+
+        var buffer = Buffer(width: 20, height: 1)
+        let region = Region(row: 0, col: 0, width: 20, height: 1)
+
+        // Render with "hi" (len 2), cursor at 2
+        let field1 = testField(text: "hi") { received.value = $0 }
+        render(field1, into: &buffer, region: region, context: ctx)
+        store.applyDefaultFocus()
+
+        store.beginFrame()
+        let field2 = testField(text: "hi") { received.value = $0 }
+        render(field2, into: &buffer, region: region, context: ctx)
+
+        // Type two characters without re-rendering in between.
+        // The first updates cursor to 3 (past captured text length 2).
+        // The second must not crash when reading cursor=3 against "hi".
+        store.routeKeyEvent(.character("a"))
+        #expect(received.value == "hia")
+        store.routeKeyEvent(.character("b"))
+        #expect(received.value == "hiab")
+    }
+
     @Test("Cursor position renders with inverse style when focused")
     func cursorRendering() {
         let store = FocusStore()

@@ -38,7 +38,17 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
         autoKey = "\(fileID):\(line)"
     }
 
-    /// The effective key for storing cursor state.
+    /// Persistent editing state stored in the `FocusStore`.
+    ///
+    /// Stores both cursor position and working text so that multiple
+    /// key events in a single frame can build on each other's changes
+    /// without waiting for a re-render.
+    struct EditState: Sendable {
+        var cursor: Int
+        var text: String
+    }
+
+    /// The effective key for storing editing state.
     private var stateKey: String {
         autoKey
     }
@@ -81,60 +91,65 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
             isFocused = focusID.flatMap { store?.isFocused($0) } ?? false
         }
 
-        // Get or initialize cursor position
-        let cursorPos: Int = if let stored = store?.controlState(forKey: AnyHashable(stateKey), as: Int.self) {
-            min(stored, text.count)
-        } else {
-            text.count
-        }
+        // Get or initialize editing state.
+        // If the stored text matches the current text, use the stored cursor.
+        // Otherwise, the external text has changed — reset to end of new text.
+        let editState: EditState = {
+            if let stored = store?.controlState(forKey: AnyHashable(stateKey), as: EditState.self),
+               stored.text == text
+            {
+                return EditState(cursor: min(stored.cursor, text.count), text: text)
+            }
+            return EditState(cursor: text.count, text: text)
+        }()
+        let cursorPos = editState.cursor
 
         // Register inline handler when focused
         if isFocused, let id = effectiveFocusID {
             let capturedStateKey = AnyHashable(stateKey)
             nonisolated(unsafe) let sendableKey = capturedStateKey
-            let initialCursor = cursorPos
-            store?.registerInlineHandler(for: id) { [text, onChange, store] key in
-                var newText = text
-                // Read current cursor from store (may have been updated by earlier events)
-                var newCursor = store?.controlState(forKey: sendableKey, as: Int.self) ?? initialCursor
+            store?.registerInlineHandler(for: id) { [onChange, store] key in
+                // Read working state from store — this picks up changes from
+                // earlier key events in the same frame.
+                guard let store else { return .ignored }
+                var state = store.controlState(forKey: sendableKey, as: EditState.self)
+                    ?? editState
 
                 switch key {
                 case let .character(ch):
-                    let idx = newText.index(newText.startIndex, offsetBy: newCursor)
-                    newText.insert(ch, at: idx)
-                    newCursor += 1
+                    let idx = state.text.index(state.text.startIndex, offsetBy: state.cursor)
+                    state.text.insert(ch, at: idx)
+                    state.cursor += 1
 
                 case .backspace:
-                    guard newCursor > 0 else { return .handled }
-                    let idx = newText.index(newText.startIndex, offsetBy: newCursor - 1)
-                    newText.remove(at: idx)
-                    newCursor -= 1
+                    guard state.cursor > 0 else { return .handled }
+                    let idx = state.text.index(state.text.startIndex, offsetBy: state.cursor - 1)
+                    state.text.remove(at: idx)
+                    state.cursor -= 1
 
                 case .delete:
-                    guard newCursor < newText.count else { return .handled }
-                    let idx = newText.index(newText.startIndex, offsetBy: newCursor)
-                    newText.remove(at: idx)
+                    guard state.cursor < state.text.count else { return .handled }
+                    let idx = state.text.index(state.text.startIndex, offsetBy: state.cursor)
+                    state.text.remove(at: idx)
 
                 case .left:
-                    newCursor = max(0, newCursor - 1)
+                    state.cursor = max(0, state.cursor - 1)
 
                 case .right:
-                    newCursor = min(newText.count, newCursor + 1)
+                    state.cursor = min(state.text.count, state.cursor + 1)
 
                 case .home:
-                    newCursor = 0
+                    state.cursor = 0
 
                 case .end:
-                    newCursor = newText.count
+                    state.cursor = state.text.count
 
                 default:
                     return .ignored
                 }
 
-                store?.setControlState(newCursor, forKey: sendableKey)
-                if newText != text {
-                    onChange(newText)
-                }
+                store.setControlState(state, forKey: sendableKey)
+                onChange(state.text)
                 return .handled
             }
         }
