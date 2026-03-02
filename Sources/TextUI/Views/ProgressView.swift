@@ -94,8 +94,10 @@ public struct ProgressView: View, @unchecked Sendable {
                 Text(label)
                 indicator
             }
+            .animating()
         } else {
             indicator
+                .animating()
         }
     }
 

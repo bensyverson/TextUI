@@ -57,6 +57,12 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
         var lastMaxOffset: Int?
     }
 
+    /// Cached child sizes from `sizeThatFits()`, reused by `render()` within the same frame.
+    struct SizeCache: Friendly {
+        var sizes: [Size2D]
+        var proposal: SizeProposal
+    }
+
     // MARK: - Sizing
 
     public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
@@ -68,13 +74,35 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
             width: proposal.width.map { max(0, $0 - indicatorWidth) },
             height: nil,
         )
+
+        // Check for tick-only render with valid cache
+        let cacheKey: AnyHashable = "\(autoKey):sizeCache"
+        if context.isTickOnlyRender,
+           let cache = context.focusStore?.controlState(forKey: cacheKey, as: SizeCache.self),
+           cache.proposal == childProposal,
+           cache.sizes.count == children.count
+        {
+            let totalHeight = cache.sizes.reduce(0) { $0 + $1.height }
+            let maxWidth = cache.sizes.reduce(0) { max($0, $1.width) }
+            let height: Int = if let proposed = proposal.height { proposed } else { totalHeight }
+            let width: Int = if let proposed = proposal.width { min(maxWidth, proposed) } else { maxWidth }
+            return Size2D(width: width, height: height)
+        }
+
         var totalHeight = 0
         var maxWidth = 0
+        var sizes: [Size2D] = []
+        sizes.reserveCapacity(children.count)
         for child in children {
             let size = TextUI.sizeThatFits(child, proposal: childProposal, context: context)
+            sizes.append(size)
             totalHeight += size.height
             maxWidth = max(maxWidth, size.width)
         }
+
+        // Cache sizes for reuse in render()
+        let cache = SizeCache(sizes: sizes, proposal: childProposal)
+        context.focusStore?.setControlState(cache, forKey: cacheKey)
 
         // Greedy on height: take what's offered (or ideal sum if nil)
         let height: Int = if let proposed = proposal.height {
@@ -99,12 +127,23 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
         guard !region.isEmpty else { return }
         let store = context.focusStore
 
-        // Measure all children to get their ideal heights
+        // Use cached sizes from sizeThatFits() if available, otherwise measure
         let contentWidth = showsIndicator ? max(0, region.width - 1) : region.width
         let childProposal = SizeProposal(width: contentWidth, height: nil)
-        var childSizes: [Size2D] = []
-        for child in children {
-            childSizes.append(TextUI.sizeThatFits(child, proposal: childProposal, context: context))
+        let cacheKey: AnyHashable = "\(autoKey):sizeCache"
+        let childSizes: [Size2D]
+        if let cache = store?.controlState(forKey: cacheKey, as: SizeCache.self),
+           cache.proposal == childProposal,
+           cache.sizes.count == children.count
+        {
+            childSizes = cache.sizes
+        } else {
+            var measured: [Size2D] = []
+            measured.reserveCapacity(children.count)
+            for child in children {
+                measured.append(TextUI.sizeThatFits(child, proposal: childProposal, context: context))
+            }
+            childSizes = measured
         }
 
         // Build cumulative offset array

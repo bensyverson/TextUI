@@ -54,6 +54,19 @@ final class RunLoop {
     /// The command registry for shortcut matching.
     private let commandRegistry: CommandRegistry
 
+    /// The timestamp of the last completed render, used for deduplication.
+    private var lastRenderTime: ContinuousClock.Instant = .now
+
+    /// The number of frames rendered, exposed for testing.
+    private(set) var renderCount: Int = 0
+
+    /// Whether the next render should be a full (non-tick-only) render.
+    ///
+    /// Set to `true` by event handlers that change state or layout (key events,
+    /// state changes, resize). The animation timer leaves this `false`, causing
+    /// the render to be flagged as tick-only.
+    private var pendingFullRender: Bool = true
+
     /// The overlay store for deferred overlay rendering (e.g. Picker dropdowns).
     private let overlayStore = OverlayStore()
 
@@ -129,11 +142,13 @@ final class RunLoop {
             case let .key(keyEvent):
                 handleKey(keyEvent)
             case .stateChanged:
+                pendingFullRender = true
                 renderFrame()
             case let .resize(newSize):
+                pendingFullRender = true
                 screen.resize(width: newSize.width, height: newSize.height)
                 Terminal.clearScreen()
-                renderFrame()
+                renderFrame(force: true)
             case .shutdown:
                 isRunning = false
             }
@@ -214,6 +229,7 @@ final class RunLoop {
         // Command shortcuts (before focus routing)
         if let entry = commandRegistry.matchShortcut(key) {
             entry.action()
+            pendingFullRender = true
             renderFrame()
             return
         }
@@ -222,6 +238,7 @@ final class RunLoop {
         if key == .ctrlShiftRight || key == .ctrlShiftLeft || key == .altRight || key == .altLeft {
             let direction = (key == .ctrlShiftRight || key == .altRight) ? 1 : -1
             switchTab(direction: direction)
+            pendingFullRender = true
             renderFrame()
             return
         }
@@ -230,6 +247,7 @@ final class RunLoop {
         if key == .ctrl("p") {
             commandRegistry.resetPaletteState()
             commandRegistry.isPaletteVisible = true
+            pendingFullRender = true
             renderFrame()
             return
         }
@@ -260,6 +278,7 @@ final class RunLoop {
         }
 
         if handled {
+            pendingFullRender = true
             renderFrame()
         }
     }
@@ -313,6 +332,7 @@ final class RunLoop {
             break // Swallow all other keys
         }
 
+        pendingFullRender = true
         renderFrame()
     }
 
@@ -332,12 +352,25 @@ final class RunLoop {
 
     /// Renders a single frame: sizes the root view, renders into the
     /// back buffer, and flushes changed cells to the terminal.
-    private func renderFrame() {
+    ///
+    /// - Parameter force: When `true`, bypasses the deduplication guard.
+    ///   Used for resize events that must always re-render.
+    private func renderFrame(force: Bool = false) {
+        // Deduplication: two renders within <1ms cannot reflect different state
+        // since everything is @MainActor.
+        let now = ContinuousClock.now
+        guard force || now - lastRenderTime >= .milliseconds(1) else { return }
+        lastRenderTime = now
+        renderCount += 1
         // Prepare stores for this frame
         focusStore.beginFrame()
         animationTracker.beginFrame()
         overlayStore.beginFrame()
         taskStore.beginFrame()
+
+        // Determine if this is a tick-only render (animation tick, no state/key/resize)
+        let isTickOnly = !pendingFullRender && !force
+        pendingFullRender = false
 
         // Thread stores into the render context
         var ctx = context
@@ -346,6 +379,7 @@ final class RunLoop {
         ctx.commandRegistry = commandRegistry
         ctx.overlayStore = overlayStore
         ctx.taskStore = taskStore
+        ctx.isTickOnlyRender = isTickOnly
 
         screen.clear()
 
@@ -369,8 +403,37 @@ final class RunLoop {
         // Cancel tasks for views that are no longer in the tree
         taskStore.endFrame()
 
-        // Apply default focus on first frame
-        focusStore.applyDefaultFocus()
+        // Reconcile focus: find the previously focused control in the new
+        // ring, or reset to the first control if it's gone.  On the first
+        // frame this also applies the default focus target.
+        if focusStore.reconcileFocus() {
+            // Focus changed after render (e.g. first frame, or the focused
+            // control was removed). Re-render so the correct control draws
+            // with focused styling / registers its inline handler.
+            focusStore.beginFrame()
+            animationTracker.beginFrame()
+            overlayStore.beginFrame()
+            taskStore.beginFrame()
+
+            ctx.focusStore = focusStore
+            ctx.animationTracker = animationTracker
+            ctx.overlayStore = overlayStore
+            ctx.taskStore = taskStore
+            ctx.isTickOnlyRender = false
+
+            screen.clear()
+            _ = TextUI.sizeThatFits(rootView, proposal: proposal, context: ctx)
+            TextUI.render(rootView, into: &screen.back, region: region, context: ctx)
+
+            for overlay in overlayStore.overlays {
+                overlay.render(&screen.back, region)
+            }
+            if commandRegistry.isPaletteVisible {
+                let palette = CommandPalette()
+                palette.render(into: &screen.back, region: region, context: ctx)
+            }
+            taskStore.endFrame()
+        }
 
         let output = screen.flush()
         if !output.isEmpty {

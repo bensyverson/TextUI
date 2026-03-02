@@ -99,6 +99,13 @@ public struct RenderContext: Sendable {
     /// and become non-interactive. `nil` means not disabled.
     var isDisabled: Bool?
 
+    /// Whether this render pass is tick-only (no state change, no key event, no resize).
+    ///
+    /// Set by ``RunLoop`` when the only trigger is an animation tick. Views like
+    /// ``ScrollView`` use this to skip expensive re-measurement when layout
+    /// hasn't changed.
+    var isTickOnlyRender: Bool = false
+
     /// Creates an empty render context.
     public init() {}
 

@@ -368,6 +368,29 @@ public extension View {
         ButtonStyleView(content: self, style: style)
     }
 
+    // MARK: - Animating
+
+    /// Marks this view as animating, keeping the animation timer alive.
+    ///
+    /// Views that read ``AnimationTick`` should apply this modifier to
+    /// signal the run loop that the animation timer should run while
+    /// this view is visible. Reading the tick alone does not start the
+    /// timer — this modifier provides explicit lifecycle control.
+    ///
+    /// ```swift
+    /// Text(frames[tick % frames.count])
+    ///     .animating()
+    /// ```
+    ///
+    /// Pass `false` to conditionally disable animation:
+    /// ```swift
+    /// Text(frames[tick % frames.count])
+    ///     .animating(shouldAnimate)
+    /// ```
+    func animating(_ isActive: Bool = true) -> some View {
+        AnimatingView(content: self, isActive: isActive)
+    }
+
     // MARK: - Disabled
 
     /// Disables interactive controls in this view's subtree.

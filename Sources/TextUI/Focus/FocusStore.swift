@@ -98,6 +98,12 @@ final class FocusStore: @unchecked Sendable {
     /// Whether the first frame has been processed (default focus applied).
     private var hasAppliedDefaultFocus: Bool = false
 
+    // MARK: - Focus Identity Tracking
+
+    /// The identity (autoKey or bindingKey) of the currently focused control,
+    /// used to reconcile focus across frames when the ring is rebuilt.
+    private var focusedIdentity: AnyHashable?
+
     // MARK: - TabView Keys
 
     /// Auto keys of TabViews registered during the current frame (innermost last).
@@ -131,10 +137,68 @@ final class FocusStore: @unchecked Sendable {
         if let target = defaultFocusTarget {
             if let idx = ring.firstIndex(where: { $0.bindingKey == target }) {
                 focusedIndex = idx
+                focusedIdentity = identityOf(ring[idx])
             }
         } else if !ring.isEmpty, focusedIndex == nil {
             focusedIndex = 0
+            focusedIdentity = identityOf(ring[0])
         }
+    }
+
+    /// Reconciles focus after the ring has been rebuilt by a render pass.
+    ///
+    /// Handles three cases:
+    /// 1. **First frame**: delegates to ``applyDefaultFocus()``
+    /// 2. **Ring composition changed**: if the previously focused control
+    ///    (identified by autoKey/bindingKey) is still in the ring, moves
+    ///    `focusedIndex` to its new position. If it's gone (e.g. a control
+    ///    was disabled or the view hierarchy changed), resets to index 0.
+    /// 3. **Index out of bounds**: clamps to the valid range.
+    ///
+    /// - Returns: `true` if focus changed (callers should re-render so
+    ///   the focused control draws with the correct visual state).
+    @discardableResult
+    func reconcileFocus() -> Bool {
+        // First frame: apply default focus
+        if !hasAppliedDefaultFocus {
+            let before = focusedIndex
+            applyDefaultFocus()
+            return focusedIndex != before
+        }
+
+        guard !ring.isEmpty else {
+            let changed = focusedIndex != nil
+            focusedIndex = nil
+            focusedIdentity = nil
+            return changed
+        }
+
+        let oldIndex = focusedIndex
+
+        // If we have a tracked identity, try to find it in the new ring
+        if let identity = focusedIdentity {
+            if let idx = focusedIndex, idx < ring.count,
+               identityOf(ring[idx]) == identity
+            {
+                // Same control at same index — no change needed
+                return false
+            }
+            // Try to find the control at a different index
+            if let newIdx = ring.firstIndex(where: { identityOf($0) == identity }) {
+                focusedIndex = newIdx
+                return focusedIndex != oldIndex
+            }
+        }
+
+        // Focused control is gone or index is stale — reset to first control
+        focusedIndex = 0
+        focusedIdentity = identityOf(ring[0])
+        return focusedIndex != oldIndex
+    }
+
+    /// The effective identity key for a focus entry (prefers autoKey over bindingKey).
+    private func identityOf(_ entry: FocusEntry) -> AnyHashable? {
+        entry.autoKey ?? entry.bindingKey
     }
 
     // MARK: - Registration
@@ -207,10 +271,12 @@ final class FocusStore: @unchecked Sendable {
     func setFocusByBindingKey(_ key: AnyHashable?) {
         guard let key else {
             focusedIndex = nil
+            focusedIdentity = nil
             return
         }
         if let idx = ring.firstIndex(where: { $0.bindingKey == key }) {
             focusedIndex = idx
+            focusedIdentity = identityOf(ring[idx])
         }
     }
 
@@ -296,6 +362,7 @@ final class FocusStore: @unchecked Sendable {
         } else {
             focusedIndex = 0
         }
+        focusedIdentity = ring[focusedIndex!].autoKey ?? ring[focusedIndex!].bindingKey
     }
 
     /// Moves focus to the previous entry in the ring (wraps around).
@@ -306,6 +373,7 @@ final class FocusStore: @unchecked Sendable {
         } else {
             focusedIndex = ring.count - 1
         }
+        focusedIdentity = ring[focusedIndex!].autoKey ?? ring[focusedIndex!].bindingKey
     }
 
     /// Moves focus in a direction within the current focus section.
@@ -338,10 +406,12 @@ final class FocusStore: @unchecked Sendable {
         case .up, .left:
             let newPos = (posInSection - 1 + sectionEntries.count) % sectionEntries.count
             focusedIndex = sectionEntries[newPos].offset
+            focusedIdentity = identityOf(ring[focusedIndex!])
             return .handled
         case .down, .right:
             let newPos = (posInSection + 1) % sectionEntries.count
             focusedIndex = sectionEntries[newPos].offset
+            focusedIdentity = identityOf(ring[focusedIndex!])
             return .handled
         default:
             return .ignored
