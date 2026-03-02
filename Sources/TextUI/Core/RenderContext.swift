@@ -86,6 +86,12 @@ public struct RenderContext: Sendable {
     /// `nil` defaults to ``HorizontalAlignment/leading``.
     var multilineTextAlignment: HorizontalAlignment?
 
+    /// The button style override, if any.
+    ///
+    /// Set by ``ButtonStyleView`` and read by ``Button``
+    /// to determine its rendering style.
+    var buttonStyle: ButtonStyle?
+
     /// Whether interactive controls in this subtree are disabled.
     ///
     /// Set by ``DisabledView`` and read by interactive controls (``Button``,

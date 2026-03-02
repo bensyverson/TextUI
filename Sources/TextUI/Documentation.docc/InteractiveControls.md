@@ -28,6 +28,35 @@ Button {
 Buttons use ``FocusInteraction/activate`` and render with inverse styling
 when focused. They hug their label content.
 
+#### Button Styles
+
+Use `.buttonStyle(_:)` to control the visual treatment of buttons:
+
+```swift
+// Plain (default) — label text only
+Button("Cancel") { cancel() }
+    .buttonStyle(.plain)
+
+// Bordered — label inside a rounded border
+Button("Submit") { submit() }
+    .buttonStyle(.bordered)
+
+// Bordered prominent — bold label inside a rounded border
+Button("Delete") { delete() }
+    .buttonStyle(.borderedProminent)
+```
+
+The style propagates through the view hierarchy, so you can set it on a
+parent to affect all descendant buttons:
+
+```swift
+VStack {
+    Button("Save") { save() }
+    Button("Reset") { reset() }
+}
+.buttonStyle(.bordered)
+```
+
 ### TextField
 
 A single-line text input field:
@@ -129,6 +158,7 @@ Button("Quit") { Application.quit() }
 ### Controls
 
 - ``Button``
+- ``ButtonStyle``
 - ``TextField``
 - ``Toggle``
 - ``Picker``

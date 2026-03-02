@@ -356,6 +356,18 @@ public extension View {
         MultilineTextAlignmentView(content: self, alignment: alignment)
     }
 
+    // MARK: - Button Style
+
+    /// Sets the style for descendant ``Button`` instances.
+    ///
+    /// ```swift
+    /// Button("Submit") { send() }
+    ///     .buttonStyle(.bordered)
+    /// ```
+    func buttonStyle(_ style: ButtonStyle) -> some View {
+        ButtonStyleView(content: self, style: style)
+    }
+
     // MARK: - Disabled
 
     /// Disables interactive controls in this view's subtree.
