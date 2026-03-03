@@ -59,8 +59,6 @@ public extension App {
     /// 4. Renders frames in response to state changes, key events, and resizes
     /// 5. Cleans up the terminal on exit (Ctrl+C or shutdown signal)
     static func main() async {
-        let app = Self()
-        let runLoop = RunLoop(rootView: app.body, commands: app.commands)
-        await runLoop.run()
+        await RunLoop.launch(Self())
     }
 }

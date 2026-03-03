@@ -21,8 +21,8 @@ final class RunLoop {
     /// The keyboard input reader.
     private let keyReader: KeyReader
 
-    /// The root view to render each frame.
-    private let rootView: any View
+    /// A closure that produces the root view, re-evaluated each frame.
+    private let rootViewBuilder: @MainActor () -> any View
 
     /// The render context (carries environment objects).
     private var context: RenderContext
@@ -92,13 +92,29 @@ final class RunLoop {
         case shutdown
     }
 
-    /// Creates a run loop for the given root view and optional commands.
-    init(rootView: any View, commands: [CommandGroup] = []) {
+    /// Creates and runs a run loop for the given `App` instance.
+    ///
+    /// The app's `body` is re-evaluated each frame, so `@State` and
+    /// other property wrappers on the `App` struct work as expected.
+    static func launch(_ app: some App) async {
+        let runLoop = RunLoop(
+            rootViewBuilder: { app.body },
+            commands: app.commands,
+        )
+        await runLoop.run()
+    }
+
+    /// Creates a run loop with a root view builder and optional commands.
+    ///
+    /// The `rootViewBuilder` closure is called on every render frame,
+    /// so `@State` and other property wrappers on the `App` struct
+    /// are re-read each frame — matching SwiftUI's behavior.
+    init(rootViewBuilder: @escaping @MainActor () -> any View, commands: [CommandGroup] = []) {
         let size = Terminal.size()
         screen = Screen(width: size.width, height: size.height)
         screen.colorCapability = ColorCapability.detect()
         keyReader = KeyReader()
-        self.rootView = rootView
+        self.rootViewBuilder = rootViewBuilder
         context = RenderContext()
         focusStore = FocusStore()
         animationTracker = AnimationTracker()
@@ -395,7 +411,7 @@ final class RunLoop {
         // The root view is wrapped in a ModalView so the command palette
         // appears as a centered overlay with dim scrim and focus suppression.
         let rootWithPalette = ModalView(
-            background: rootView,
+            background: rootViewBuilder(),
             isPresented: commandRegistry.isPaletteVisible,
             onDismiss: nil,
             body: CommandPalette(),
@@ -431,7 +447,7 @@ final class RunLoop {
 
             screen.clear()
             let reconciledRoot = ModalView(
-                background: rootView,
+                background: rootViewBuilder(),
                 isPresented: commandRegistry.isPaletteVisible,
                 onDismiss: nil,
                 body: CommandPalette(),

@@ -9,6 +9,9 @@ struct HelloApp: App {
             TextField("Enter your name", text: name) { newValue in
                 name = newValue
             }
+
+            Text(name)
+
             Button("Quit") { Application.quit() }
                 .keyboardShortcut("q", modifiers: .control)
 
