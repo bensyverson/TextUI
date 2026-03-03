@@ -20,7 +20,7 @@ public struct TextField: PrimitiveView {
     /// Creates a text field with a placeholder and current text value.
     ///
     /// - Parameters:
-    ///   - placeholder: Dim text shown when the field is empty and unfocused.
+    ///   - placeholder: Dim text shown when the field is empty.
     ///   - text: The current text content.
     ///   - fileID: The source file identifier (used for automatic focus keys).
     ///   - line: The source line number (used for automatic focus keys).
@@ -161,9 +161,14 @@ public struct TextField: PrimitiveView {
         }
 
         // Render content
-        if text.isEmpty, !isFocused {
-            // Show placeholder when empty and unfocused
+        if text.isEmpty {
+            // Show placeholder when empty (dim; cursor on first char when focused)
             _ = buffer.write(placeholder, row: region.row, col: region.col, style: Style(dim: true))
+            if isFocused, !placeholder.isEmpty, region.col < buffer.width {
+                buffer[region.row, region.col].style = Style(dim: true, inverse: true)
+            } else if isFocused, placeholder.isEmpty, region.col < buffer.width {
+                buffer[region.row, region.col].style = Style(inverse: true)
+            }
         } else {
             // Calculate visible window (scroll if cursor would be off-screen)
             let visibleWidth = region.width

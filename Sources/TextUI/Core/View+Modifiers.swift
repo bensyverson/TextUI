@@ -12,6 +12,11 @@
 public extension View {
     // MARK: - Padding
 
+    /// Adds 1 cell of padding on all four sides.
+    func padding() -> some View {
+        PaddedView(content: self, top: 1, leading: 1, bottom: 1, trailing: 1)
+    }
+
     /// Adds equal padding on all four sides.
     func padding(_ amount: Int) -> some View {
         PaddedView(content: self, top: amount, leading: amount, bottom: amount, trailing: amount)

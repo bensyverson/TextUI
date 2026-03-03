@@ -36,15 +36,39 @@ struct MyApp: App {
 }
 ```
 
+### Inline Keyboard Shortcuts
+
+You can also attach `.keyboardShortcut()` directly to any `Button` in your
+view body. The shortcut is automatically discovered during rendering and
+registered with the command system:
+
+```swift
+var body: some View {
+    VStack {
+        Button("Quit") { quit() }
+            .keyboardShortcut("q", modifiers: .control)
+        Text("Press Ctrl+Q to quit")
+    }
+}
+```
+
+Inline shortcuts follow the same lifecycle as the view tree — if a button is
+conditionally hidden or disabled, its shortcut is automatically removed.
+Static ``CommandGroup`` shortcuts take priority when there is a conflict.
+
 ### Key Routing Order
 
-When a key is pressed, the run loop checks shortcuts in this order:
+When a key is pressed, the run loop checks in this order:
 
 1. **Ctrl+C** — always exits the application
-2. **Command shortcuts** — matched against registered ``KeyboardShortcut`` values
-3. **Focus system** — inline handlers, `onKeyPress`, `onSubmit`
-4. **Tab / Shift-Tab** — focus ring navigation
-5. **Arrow keys** — directional focus navigation
+2. **Focus system** — inline handlers, `onKeyPress`, `onSubmit`
+3. **Tab / Shift-Tab** — focus ring navigation
+4. **Arrow keys** — directional focus navigation
+5. **Command shortcuts** — matched against registered ``KeyboardShortcut`` values
+
+Focus routing happens before shortcuts so that focused controls (like
+`TextField`) consume their input keys first. Modifier shortcuts like Ctrl+S
+still work because `TextField` returns `.ignored` for unrecognized keys.
 
 ### Keyboard Shortcuts
 

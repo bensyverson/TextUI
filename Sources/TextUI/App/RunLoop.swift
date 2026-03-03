@@ -4,12 +4,13 @@
 /// cycle. It collects events from multiple sources (keyboard, state
 /// changes, resize signals, shutdown) and dispatches them sequentially.
 ///
-/// Key events are routed through the ``FocusStore``:
+/// Key events are routed through the ``FocusStore``, then ``CommandRegistry``:
 /// 1. Ctrl+C always exits
 /// 2. ``FocusStore/routeKeyEvent(_:)`` — inline handler → onKeyPress chain → onSubmit
 /// 3. If `.ignored`: Tab/Shift-Tab → ``FocusStore/focusNext()``/``FocusStore/focusPrevious()``
 /// 4. If `.ignored`: arrows → ``FocusStore/focusInDirection(_:)``
-/// 5. If anything was handled: ``renderFrame()``
+/// 5. If `.ignored`: command shortcuts → execute action
+/// 6. If anything was handled: ``renderFrame()``
 @MainActor
 final class RunLoop {
     /// The currently running run loop instance, if any.
@@ -220,16 +221,17 @@ final class RunLoop {
 
     // MARK: - Key Handling
 
-    /// Handles a key event by routing through commands, then focus.
+    /// Handles a key event by routing through focus, then commands.
     ///
     /// Key routing order:
     /// 1. Ctrl+C always exits
     /// 2. If palette visible: route to ``handlePaletteKey(_:)``
-    /// 3. Command shortcuts → execute action
+    /// 3. Global tab switching (Ctrl+Shift+Arrow, Alt+Arrow)
     /// 4. Ctrl+P → open palette
     /// 5. Focus system (inline → onKeyPress → onSubmit)
     /// 6. Tab/Shift-Tab → focus navigation
     /// 7. Arrows → directional navigation
+    /// 8. Command shortcuts → execute action (only if focus didn't handle it)
     private func handleKey(_ key: KeyEvent) {
         // Ctrl+C always exits
         if key == .ctrl("c") {
@@ -240,14 +242,6 @@ final class RunLoop {
         // When palette is visible, route all keys through palette handler
         if commandRegistry.isPaletteVisible {
             handlePaletteKey(key)
-            return
-        }
-
-        // Command shortcuts (before focus routing)
-        if let entry = commandRegistry.matchShortcut(key) {
-            entry.action()
-            pendingFullRender = true
-            renderFrame()
             return
         }
 
@@ -292,6 +286,13 @@ final class RunLoop {
             default:
                 break
             }
+        }
+
+        // Command shortcuts (after focus routing — so focused controls
+        // like TextField consume their keys before shortcuts fire)
+        if !handled, let entry = commandRegistry.matchShortcut(key) {
+            entry.action()
+            handled = true
         }
 
         if handled {
@@ -384,6 +385,7 @@ final class RunLoop {
         animationTracker.beginFrame()
         overlayStore.beginFrame()
         taskStore.beginFrame()
+        commandRegistry.beginDiscovery()
 
         // Determine if this is a tick-only render (animation tick, no state/key/resize)
         let isTickOnly = !pendingFullRender && !force
@@ -437,6 +439,7 @@ final class RunLoop {
             animationTracker.beginFrame()
             overlayStore.beginFrame()
             taskStore.beginFrame()
+            commandRegistry.beginDiscovery()
 
             ctx.focusStore = focusStore
             ctx.animationTracker = animationTracker

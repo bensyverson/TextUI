@@ -8,6 +8,12 @@ final class CommandRegistry {
     /// The registered command groups with their entries.
     private(set) var groups: [(name: String, entries: [CommandEntry])] = []
 
+    /// Shortcuts discovered during the current render frame.
+    ///
+    /// Populated by ``KeyboardShortcutView`` when it wraps a `Button`.
+    /// Cleared each frame via ``beginDiscovery()``.
+    private(set) var discoveredEntries: [CommandEntry] = []
+
     /// Whether the command palette overlay is currently visible.
     var isPaletteVisible: Bool = false
 
@@ -33,9 +39,9 @@ final class CommandRegistry {
         selectedIndex = 0
     }
 
-    /// All command entries across all groups.
+    /// All command entries across all groups, plus discovered shortcuts.
     var allEntries: [CommandEntry] {
-        groups.flatMap(\.entries)
+        groups.flatMap(\.entries) + discoveredEntries
     }
 
     /// Registers command groups, replacing any existing groups.
@@ -45,8 +51,8 @@ final class CommandRegistry {
 
     /// Returns the first command entry whose shortcut matches the given key event.
     ///
-    /// Groups are searched in registration order. Within a group, entries
-    /// are searched in declaration order. The first match wins.
+    /// Static command groups are searched first (in registration order),
+    /// then discovered shortcuts from the current frame. The first match wins.
     func matchShortcut(_ event: KeyEvent) -> CommandEntry? {
         for group in groups {
             for entry in group.entries {
@@ -55,6 +61,36 @@ final class CommandRegistry {
                 }
             }
         }
+        for entry in discoveredEntries {
+            if let shortcut = entry.shortcut, shortcut.matches(event) {
+                return entry
+            }
+        }
         return nil
+    }
+
+    /// Clears discovered shortcuts in preparation for the next render frame.
+    ///
+    /// Called at the start of each frame so that shortcuts stay in sync
+    /// with the currently rendered view tree.
+    func beginDiscovery() {
+        discoveredEntries.removeAll()
+    }
+
+    /// Registers a shortcut discovered during the render pass.
+    ///
+    /// Called by ``KeyboardShortcutView`` when its content is a `Button`.
+    func registerDiscoveredShortcut(
+        name: String,
+        group: String,
+        shortcut: KeyboardShortcut,
+        action: @escaping () -> Void,
+    ) {
+        discoveredEntries.append(CommandEntry(
+            name: name,
+            group: group,
+            shortcut: shortcut,
+            action: action,
+        ))
     }
 }

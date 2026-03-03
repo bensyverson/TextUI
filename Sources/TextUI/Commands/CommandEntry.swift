@@ -1,4 +1,5 @@
-/// A single command extracted from a ``CommandGroup``.
+/// A single command entry, either from a ``CommandGroup`` or discovered
+/// from a `.keyboardShortcut()` modifier on a ``Button`` in the view tree.
 ///
 /// Each entry represents a named action with an optional keyboard shortcut,
 /// suitable for display in a ``CommandBar`` or command palette.

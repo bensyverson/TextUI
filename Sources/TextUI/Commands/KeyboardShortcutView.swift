@@ -1,8 +1,13 @@
 /// A modifier view that attaches a keyboard shortcut to its content.
 ///
-/// This is used internally by ``CommandGroup`` to extract shortcut
-/// information from `Button(...).keyboardShortcut(...)` declarations.
-/// It delegates all sizing and rendering to its wrapped content.
+/// When the content is a ``Button``, the shortcut is automatically
+/// registered with the ``CommandRegistry`` during each render frame.
+/// This means `.keyboardShortcut()` works on any Button in the view
+/// tree, not just inside ``CommandGroup`` declarations.
+///
+/// Shortcuts registered this way are cleared and re-accumulated each
+/// frame, so they stay in sync with the rendered view tree. Static
+/// ``CommandGroup`` shortcuts take priority over discovered ones.
 struct KeyboardShortcutView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
@@ -16,5 +21,16 @@ struct KeyboardShortcutView: PrimitiveView {
 
     func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         TextUI.render(content, into: &buffer, region: region, context: context)
+
+        // Auto-register shortcut when wrapping a Button (skip if disabled)
+        if let button = content as? Button, context.isDisabled != true {
+            let name = (button.label as? Text)?.content ?? "Command"
+            context.commandRegistry?.registerDiscoveredShortcut(
+                name: name,
+                group: "Shortcuts",
+                shortcut: shortcut,
+                action: button.action,
+            )
+        }
     }
 }
