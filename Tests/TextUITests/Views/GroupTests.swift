@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Group")
 struct GroupTests {
     @Test("Group is layout-transparent in VStack")

@@ -9,6 +9,7 @@
 ///    to each child in sorted order; unused portions cascade forward
 /// 6. If total space < total minimums, fall back to equal-share squeeze
 /// 7. Place children sequentially in original order
+@MainActor
 enum StackLayout {
     /// The result of laying out a single child within a stack.
     struct ChildLayout {

@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("ButtonStyle")
 struct ButtonStyleTests {
     // MARK: - Sizing

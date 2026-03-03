@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Layout Priority Modifier")
 struct PriorityTests {
     @Test("Higher priority gets space first")

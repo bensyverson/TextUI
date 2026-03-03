@@ -37,8 +37,9 @@
 ///   so the visual update follows automatically. If you set focus from
 ///   an `@Observed` property's `didSet`, the state change signal already
 ///   triggers a re-render.
+@MainActor
 @propertyWrapper
-public struct FocusState<Value: Hashable & Sendable>: Sendable {
+public struct FocusState<Value: Hashable & Sendable> {
     private var storage: Value
 
     /// The current focus value.
@@ -85,7 +86,7 @@ public struct FocusState<Value: Hashable & Sendable>: Sendable {
     /// This is a marker type — the actual read/write happens through
     /// the `FocusStore`. The binding key is provided at the call site
     /// via `.focused($focus, equals: .name)`.
-    public struct Binding: Sendable {
+    public struct Binding {
         let focusState: FocusState<Value>
 
         init(focusState: FocusState<Value>) {

@@ -12,7 +12,8 @@
 ///         .keyboardShortcut("o", modifiers: .control)
 /// }
 /// ```
-public struct CommandGroup: Sendable {
+@MainActor
+public struct CommandGroup {
     /// The display name of this command group.
     public let name: String
 

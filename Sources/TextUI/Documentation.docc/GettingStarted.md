@@ -54,6 +54,11 @@ struct MyApp: App {
 Run with `swift run` — this enters the alternate screen buffer, renders
 your view, and waits for Ctrl+C to exit.
 
+All custom views are implicitly `@MainActor` because the ``View``
+protocol is `@MainActor`-isolated. This means closures in controls
+(button actions, text field callbacks) can mutate `@MainActor` state
+directly without any `@Sendable` annotation.
+
 ### Building a View Hierarchy
 
 Compose views using ``VStack``, ``HStack``, and ``ZStack``:

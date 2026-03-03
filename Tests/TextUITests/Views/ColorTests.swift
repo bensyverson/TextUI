@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Color View")
 struct ColorTests {
     @Test("Greedy sizing fills proposal")

@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Spacer")
 struct SpacerTests {
     // MARK: - Default Axis (.both)

@@ -2,11 +2,11 @@ import Testing
 @testable import TextUI
 
 /// A view that counts how many times `sizeThatFits` is called, for verifying cache behavior.
-private final class SizeCounter: @unchecked Sendable {
+private final class SizeCounter {
     var count = 0
 }
 
-private struct CountingText: PrimitiveView, @unchecked Sendable {
+private struct CountingText: PrimitiveView {
     let text: String
     let counter: SizeCounter
 
@@ -20,6 +20,7 @@ private struct CountingText: PrimitiveView, @unchecked Sendable {
     }
 }
 
+@MainActor
 @Suite("ScrollView Size Caching")
 struct ScrollViewCacheTests {
     @Test("Cache is populated after sizeThatFits")

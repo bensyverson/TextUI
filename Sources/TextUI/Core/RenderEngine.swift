@@ -4,6 +4,7 @@
 /// 1. **Primitive views** — calls ``PrimitiveView/sizeThatFits(_:context:)`` directly
 /// 2. **View groups** — sizes to the first child (bare group outside a stack)
 /// 3. **Composite views** — recurses into the view's `body`
+@MainActor
 public func sizeThatFits(
     _ view: any View,
     proposal: SizeProposal,
@@ -21,6 +22,7 @@ public func sizeThatFits(
 /// 1. **Primitive views** — calls ``PrimitiveView/render(into:region:context:)`` directly
 /// 2. **View groups** — renders the first child (bare group outside a stack)
 /// 3. **Composite views** — recurses into the view's `body`
+@MainActor
 public func render(
     _ view: any View,
     into buffer: inout Buffer,
@@ -39,6 +41,7 @@ public func render(
 ///
 /// Wraps the body evaluation in `RenderEnvironment.$current.withValue(context)`
 /// so that `@EnvironmentObject` property wrappers can read from it.
+@MainActor
 private func sizeThatFitsBody(
     _ view: some View,
     proposal: SizeProposal,
@@ -53,6 +56,7 @@ private func sizeThatFitsBody(
 ///
 /// Wraps the body evaluation in `RenderEnvironment.$current.withValue(context)`
 /// so that `@EnvironmentObject` property wrappers can read from it.
+@MainActor
 private func renderBody(
     _ view: some View,
     into buffer: inout Buffer,

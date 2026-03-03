@@ -7,7 +7,7 @@
 ///
 /// This view is not used directly — apply it via the `.task {}` modifier
 /// on ``View``.
-struct TaskView: PrimitiveView, Sendable {
+struct TaskView: PrimitiveView {
     let content: any View
     let action: @MainActor @Sendable () async -> Void
     let key: String

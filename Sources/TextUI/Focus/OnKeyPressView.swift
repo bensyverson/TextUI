@@ -18,9 +18,9 @@
 ///     return .ignored
 /// }
 /// ```
-struct OnKeyPressView: PrimitiveView, Sendable {
+struct OnKeyPressView: PrimitiveView {
     let content: any View
-    let handler: @Sendable (KeyEvent) -> KeyEventResult
+    let handler: (KeyEvent) -> KeyEventResult
 
     func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         TextUI.sizeThatFits(content, proposal: proposal, context: context)

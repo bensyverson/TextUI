@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Screen")
 struct ScreenTests {
     @Test("Initial flush emits all non-blank cells")

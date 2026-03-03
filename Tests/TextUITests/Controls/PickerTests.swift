@@ -1,14 +1,15 @@
 import Testing
 @testable import TextUI
 
-/// Thread-safe mutable value for use in `@Sendable` test closures.
-private final class Box<T: Sendable>: @unchecked Sendable {
+/// Mutable value for use in test closures.
+private final class Box<T: Sendable> {
     var value: T
     init(_ value: T) {
         self.value = value
     }
 }
 
+@MainActor
 @Suite("Picker")
 struct PickerTests {
     let options = ["Red", "Green", "Blue"]
@@ -180,12 +181,14 @@ struct PickerTests {
             overlay.render(&buffer, region)
         }
 
-        // Row 1 should have dropdown content (first option "Red" highlighted)
-        // "▸ Red" starts at col 0, row 1
-        #expect(buffer[1, 0].char == "▸")
-        #expect(buffer[1, 2].char == "R")
-        #expect(buffer[1, 3].char == "e")
-        #expect(buffer[1, 4].char == "d")
+        // Row 1 is the border top, row 2 is the first content row
+        // Border draws a rounded box: ╭─...─╮ at row 1
+        #expect(buffer[1, 0].char == "╭")
+        // Content inside border: "▸ Red" starts at col 1, row 2
+        #expect(buffer[2, 1].char == "▸")
+        #expect(buffer[2, 3].char == "R")
+        #expect(buffer[2, 4].char == "e")
+        #expect(buffer[2, 5].char == "d")
     }
 
     @Test("Dropdown flips above when near bottom edge")
@@ -198,11 +201,12 @@ struct PickerTests {
 
         let picker = Picker("Color", selection: 0, options: options) { _ in }
 
-        // Place picker at bottom of a small buffer (row 4 of 6 rows)
-        // Only 1 row below, 4 rows above — should flip above
-        var buffer = Buffer(width: 30, height: 6)
-        let pickerRegion = Region(row: 4, col: 0, width: 30, height: 1)
-        let fullRegion = Region(row: 0, col: 0, width: 30, height: 6)
+        // Place picker at row 5 of an 8-row buffer.
+        // spaceBelow = 0, spaceAbove = 3 (after subtracting 2 for border).
+        // Should flip above with border at rows 0-4.
+        var buffer = Buffer(width: 30, height: 8)
+        let pickerRegion = Region(row: 5, col: 0, width: 30, height: 1)
+        let fullRegion = Region(row: 0, col: 0, width: 30, height: 8)
 
         render(picker, into: &buffer, region: pickerRegion, context: ctx)
         store.applyDefaultFocus()
@@ -223,11 +227,13 @@ struct PickerTests {
             overlay.render(&buffer, fullRegion)
         }
 
-        // With 3 options and picker at row 4, only 1 row below (row 5).
-        // 4 rows above (rows 0-3). Should flip above: rows 1, 2, 3.
-        #expect(buffer[1, 2].char == "R") // Red
-        #expect(buffer[2, 2].char == "G") // Green
-        #expect(buffer[3, 2].char == "B") // Blue
+        // Border at row 0 (top) and row 4 (bottom).
+        // Content rows 1, 2, 3 inside the border, starting at col 1.
+        // "▸ Red" → col 1 = ▸, col 3 = R
+        #expect(buffer[0, 0].char == "╭") // top-left border corner
+        #expect(buffer[1, 3].char == "R") // Red
+        #expect(buffer[2, 3].char == "G") // Green
+        #expect(buffer[3, 3].char == "B") // Blue
     }
 
     @Test("Enter cycles to next option in normal mode")

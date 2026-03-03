@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Visual Modifiers")
 struct VisualModifierTests {
     // MARK: - StyledView

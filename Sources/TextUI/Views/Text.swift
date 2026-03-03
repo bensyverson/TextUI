@@ -14,7 +14,7 @@
 /// Text("Line 1\nLine 2")
 /// Text("Bold text", style: .bold)
 /// ```
-public struct Text: PrimitiveView, Sendable {
+public struct Text: PrimitiveView {
     /// How text is truncated when it exceeds the available space.
     public enum TruncationMode: Friendly {
         /// Truncate at the beginning: `…llo World`

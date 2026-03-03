@@ -3,7 +3,7 @@
 ///
 /// Created by the ``View/frame(width:height:alignment:)`` modifier.
 /// `nil` dimensions pass through to the child unchanged.
-struct FrameView: PrimitiveView, Sendable {
+struct FrameView: PrimitiveView {
     let content: any View
     let width: Int?
     let height: Int?

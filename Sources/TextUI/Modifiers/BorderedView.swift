@@ -2,7 +2,7 @@
 ///
 /// The border adds 2 columns (left + right edges) and 2 rows
 /// (top + bottom edges) to the child's size.
-public struct BorderedView: PrimitiveView, Sendable {
+public struct BorderedView: PrimitiveView {
     let content: any View
     let borderStyle: BorderStyle
 

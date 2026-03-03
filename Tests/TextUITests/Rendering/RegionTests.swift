@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Region")
 struct RegionTests {
     @Test("Basic region properties")

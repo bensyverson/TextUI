@@ -8,7 +8,8 @@
 /// Views like ``ScrollView`` use this to avoid redundant child measurements
 /// when the same view is probed multiple times within a single frame
 /// (e.g. by ``StackLayout/layoutGreedy`` flexibility probes).
-final class LayoutCache: @unchecked Sendable {
+@MainActor
+final class LayoutCache {
     private var entries: [AnyHashable: any Sendable] = [:]
 
     /// Returns the cached value for the given key, if it exists and matches the expected type.

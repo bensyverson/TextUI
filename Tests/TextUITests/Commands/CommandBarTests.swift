@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("CommandBar")
 struct CommandBarTests {
     @Test("Sizing: height 1, greedy width")

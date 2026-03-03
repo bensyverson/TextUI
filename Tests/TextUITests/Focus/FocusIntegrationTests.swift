@@ -1,19 +1,20 @@
 import Testing
 @testable import TextUI
 
-/// Thread-safe mutable value for use in `@Sendable` test closures.
-private final class Box<T: Sendable>: @unchecked Sendable {
+/// Mutable value for use in test closures.
+private final class Box<T: Sendable> {
     var value: T
     init(_ value: T) {
         self.value = value
     }
 }
 
-/// Thread-safe mutable flag for use in `@Sendable` test closures.
-private final class Flag: @unchecked Sendable {
+/// Mutable flag for use in test closures.
+private final class Flag {
     var value: Bool = false
 }
 
+@MainActor
 @Suite("Focus Integration")
 struct FocusIntegrationTests {
     // MARK: - Multi-Button Tab Navigation

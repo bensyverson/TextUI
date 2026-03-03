@@ -20,7 +20,7 @@
 ///     .focusSection()
 /// }
 /// ```
-struct FocusSectionView: PrimitiveView, Sendable {
+struct FocusSectionView: PrimitiveView {
     let content: any View
 
     func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {

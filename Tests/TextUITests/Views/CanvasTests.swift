@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Canvas")
 struct CanvasTests {
     @Test("Greedy sizing fills proposal")

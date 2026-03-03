@@ -17,8 +17,9 @@
 ///     }
 /// }
 /// ```
+@MainActor
 @propertyWrapper
-public struct AnimationTick: Sendable {
+public struct AnimationTick {
     /// Creates an animation tick property.
     public init() {}
 

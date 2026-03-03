@@ -3,7 +3,7 @@
 /// Higher-priority children receive their space allocation before
 /// lower-priority children in the stack's greedy algorithm.
 /// The default priority is `0`.
-struct PrioritizedView: PrimitiveView, Sendable {
+struct PrioritizedView: PrimitiveView {
     let content: any View
     let priority: Double
 

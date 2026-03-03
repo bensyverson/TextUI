@@ -11,11 +11,8 @@
 /// - Kept alive while the view remains in the tree
 /// - Automatically cancelled when the view is removed
 ///
-/// - Note: Although not `@MainActor`-isolated, `TaskStore` is only ever
-///   accessed from ``RunLoop`` (which is `@MainActor`) and from
-///   `PrimitiveView.render()` calls that occur synchronously within the
-///   render pass. The `@unchecked Sendable` conformance reflects this.
-final class TaskStore: @unchecked Sendable {
+@MainActor
+final class TaskStore {
     /// Running tasks keyed by view identity.
     private var tasks: [String: Task<Void, Never>] = [:]
 

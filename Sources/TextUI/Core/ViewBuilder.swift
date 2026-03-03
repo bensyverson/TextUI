@@ -11,7 +11,7 @@
 ///     }
 /// }
 /// ```
-@resultBuilder
+@MainActor @resultBuilder
 public enum ViewBuilder {
     /// Builds a ``ViewGroup`` from multiple view expressions.
     public static func buildBlock(_ components: any View...) -> ViewGroup {

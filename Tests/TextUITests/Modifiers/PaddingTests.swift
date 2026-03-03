@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Padding Modifier")
 struct PaddingTests {
     @Test("Uniform padding adds to all sides")

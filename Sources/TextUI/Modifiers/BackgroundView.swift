@@ -3,7 +3,7 @@
 /// Renders the child first, then sets the background color on all cells
 /// where `bg` is still `nil`. This fills gaps (padding, empty space) while
 /// preserving explicitly-set backgrounds from child views.
-struct BackgroundView: PrimitiveView, Sendable {
+struct BackgroundView: PrimitiveView {
     let content: any View
     let color: Style.Color
 

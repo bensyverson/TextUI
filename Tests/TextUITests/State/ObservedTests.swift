@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Observed Property Wrapper")
 struct ObservedTests {
     @MainActor

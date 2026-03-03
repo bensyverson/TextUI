@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("AttributedText")
 struct AttributedTextTests {
     @Test("Multi-span sizing")

@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("SizeProposal")
 struct SizeProposalTests {
     // MARK: - Static Constants

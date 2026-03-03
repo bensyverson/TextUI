@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("View Protocols")
 struct ViewProtocolTests {
     // MARK: - PrimitiveView Dispatch

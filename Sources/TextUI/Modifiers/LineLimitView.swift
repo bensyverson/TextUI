@@ -2,7 +2,7 @@
 ///
 /// Applied via ``View/lineLimit(_:)``. Descendant ``Text`` views read
 /// the limit from ``RenderContext/lineLimit`` to cap visible lines.
-struct LineLimitView: PrimitiveView, Sendable {
+struct LineLimitView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

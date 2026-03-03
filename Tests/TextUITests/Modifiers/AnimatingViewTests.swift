@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("AnimatingView")
 struct AnimatingViewTests {
     @Test(".animating(true) sets needsAnimation after render")

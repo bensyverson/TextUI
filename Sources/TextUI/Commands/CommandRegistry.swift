@@ -3,7 +3,8 @@
 /// Created by ``RunLoop`` and threaded through ``RenderContext``.
 /// The registry enables shortcut matching during key event handling
 /// and provides command data for ``CommandBar`` and command palettes.
-final class CommandRegistry: @unchecked Sendable {
+@MainActor
+final class CommandRegistry {
     /// The registered command groups with their entries.
     private(set) var groups: [(name: String, entries: [CommandEntry])] = []
 

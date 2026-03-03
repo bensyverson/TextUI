@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("FocusState")
 struct FocusStateTests {
     @Test("FocusState reads focused binding key from store")

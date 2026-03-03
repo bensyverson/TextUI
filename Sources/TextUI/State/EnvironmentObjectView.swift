@@ -3,7 +3,7 @@
 /// Created by the ``View/environmentObject(_:)`` modifier. When the render
 /// engine encounters this view, it inserts the object into the context
 /// before recursing into the child.
-struct EnvironmentObjectView<T: AnyObject & Sendable>: PrimitiveView, Sendable {
+struct EnvironmentObjectView<T: AnyObject & Sendable>: PrimitiveView {
     let content: any View
     let object: T
 

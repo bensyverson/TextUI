@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("ColorCapability")
 struct ColorCapabilityTests {
     // MARK: - Detection

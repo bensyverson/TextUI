@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("AnimationTracker")
 struct AnimationTrackerTests {
     @Test("beginFrame resets needsAnimation and animatedRegions")
@@ -49,6 +50,7 @@ struct AnimationTrackerTests {
     }
 }
 
+@MainActor
 @Suite("AnimationTick")
 struct AnimationTickTests {
     @Test("Reads tickCount from context")

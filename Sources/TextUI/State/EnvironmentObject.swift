@@ -20,8 +20,9 @@
 ///
 /// Accessing the property before the object has been injected is a
 /// fatal error — always ensure an ancestor provides the object.
+@MainActor
 @propertyWrapper
-public struct EnvironmentObject<T: AnyObject & Sendable>: Sendable {
+public struct EnvironmentObject<T: AnyObject & Sendable> {
     /// Creates an environment object property wrapper.
     public init() {}
 

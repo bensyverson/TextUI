@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("ScrollView")
 struct ScrollViewTests {
     // MARK: - Sizing

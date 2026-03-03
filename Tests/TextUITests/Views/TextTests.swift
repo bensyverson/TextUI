@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Text")
 struct TextTests {
     // MARK: - Ideal Sizing (nil proposal)

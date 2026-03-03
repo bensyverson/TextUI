@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("ForEach")
 struct ForEachTests {
     @Test("ForEach in VStack renders all items")

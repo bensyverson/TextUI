@@ -13,13 +13,10 @@
 /// tree via ``RenderContext/focusStore``. During each render pass, focusable
 /// controls call ``register(interaction:region:sectionID:bindingKey:autoKey:)``
 /// to join the ring.
-/// - Note: Although not `@MainActor`-isolated, `FocusStore` is only ever
-///   accessed from ``RunLoop`` (which is `@MainActor`) and from
-///   `PrimitiveView.render()` calls that occur synchronously within the
-///   render pass. The `@unchecked Sendable` conformance reflects this.
-final class FocusStore: @unchecked Sendable {
+@MainActor
+final class FocusStore {
     /// An entry in the focus ring, representing one focusable control.
-    struct FocusEntry: @unchecked Sendable {
+    struct FocusEntry {
         /// Sequential ID assigned during the current render pass.
         let id: Int
 
@@ -46,13 +43,13 @@ final class FocusStore: @unchecked Sendable {
     }
 
     /// A key event handler captured from an `onKeyPress` modifier.
-    struct KeyHandler: @unchecked Sendable {
-        let handler: @Sendable (KeyEvent) -> KeyEventResult
+    struct KeyHandler {
+        let handler: (KeyEvent) -> KeyEventResult
     }
 
     /// A submit handler captured from an `onSubmit` modifier.
-    struct SubmitHandler: @unchecked Sendable {
-        let handler: @Sendable () -> Void
+    struct SubmitHandler {
+        let handler: () -> Void
     }
 
     // MARK: - Focus Ring
@@ -74,7 +71,7 @@ final class FocusStore: @unchecked Sendable {
     // MARK: - Inline Handlers
 
     /// Per-control inline key handlers, keyed by focus entry ID.
-    private var inlineHandlers: [Int: @Sendable (KeyEvent) -> KeyEventResult] = [:]
+    private var inlineHandlers: [Int: (KeyEvent) -> KeyEventResult] = [:]
 
     // MARK: - Control State
 
@@ -240,7 +237,7 @@ final class FocusStore: @unchecked Sendable {
     /// avoid unnecessary closure overhead.
     func registerInlineHandler(
         for entryID: Int,
-        handler: @escaping @Sendable (KeyEvent) -> KeyEventResult,
+        handler: @escaping (KeyEvent) -> KeyEventResult,
     ) {
         inlineHandlers[entryID] = handler
     }

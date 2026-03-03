@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Line Limit, Truncation Mode, and Multiline Text Alignment Modifiers")
 struct LineLimitTests {
     @Test("lineLimit flows through RenderContext")

@@ -17,15 +17,15 @@
 ///     Text("Cancel").foregroundColor(.red)
 /// }
 /// ```
-public struct Button: PrimitiveView, @unchecked Sendable {
+public struct Button: PrimitiveView {
     let label: any View
-    let action: @Sendable () -> Void
+    let action: () -> Void
     let autoKey: AnyHashable
 
     /// Creates a button with a text label.
     public init(
         _ title: String,
-        action: @escaping @Sendable () -> Void,
+        action: @escaping () -> Void,
         fileID: String = #fileID,
         line: Int = #line,
     ) {
@@ -36,7 +36,7 @@ public struct Button: PrimitiveView, @unchecked Sendable {
 
     /// Creates a button with a custom label view.
     public init(
-        action: @escaping @Sendable () -> Void,
+        action: @escaping () -> Void,
         fileID: String = #fileID,
         line: Int = #line,
         @ViewBuilder label: () -> ViewGroup,

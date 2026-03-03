@@ -17,7 +17,7 @@
 ///
 /// The selected tab is highlighted with inverse styling. The tab bar and
 /// content area are in separate focus sections.
-public struct TabView: PrimitiveView, @unchecked Sendable {
+public struct TabView: PrimitiveView {
     /// The tab definitions (label + content).
     let tabs: [Tab]
 
@@ -25,7 +25,7 @@ public struct TabView: PrimitiveView, @unchecked Sendable {
     let autoKey: String
 
     /// A single tab within a ``TabView``.
-    public struct Tab: Sendable {
+    public struct Tab {
         /// The display label for this tab.
         let label: String
 

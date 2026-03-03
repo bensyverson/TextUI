@@ -207,7 +207,7 @@ public extension View {
     /// Return `.handled` to consume the event or `.ignored` to
     /// let it propagate.
     func onKeyPress(
-        _ handler: @escaping @Sendable (KeyEvent) -> KeyEventResult,
+        _ handler: @escaping (KeyEvent) -> KeyEventResult,
     ) -> some View {
         OnKeyPressView(content: self, handler: handler)
     }
@@ -217,7 +217,7 @@ public extension View {
     /// Fires when a focused ``TextField`` receives Enter and no
     /// inline handler consumes it.
     func onSubmit(
-        _ handler: @escaping @Sendable () -> Void,
+        _ handler: @escaping () -> Void,
     ) -> some View {
         OnSubmitView(content: self, handler: handler)
     }
@@ -438,7 +438,7 @@ public extension View {
     ///   - content: The modal body.
     func modal(
         isPresented: Bool,
-        onDismiss: (@Sendable () -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil,
         @ViewBuilder content: () -> ViewGroup,
     ) -> some View {
         ModalView(background: self, isPresented: isPresented, onDismiss: onDismiss, body: content())

@@ -21,7 +21,7 @@
 ///         .padding(1)
 ///     }
 /// ```
-struct ModalView: PrimitiveView, @unchecked Sendable {
+struct ModalView: PrimitiveView {
     /// The content rendered behind the modal.
     let background: any View
 
@@ -30,7 +30,7 @@ struct ModalView: PrimitiveView, @unchecked Sendable {
 
     /// Called when Escape is pressed while the modal is shown. If `nil`,
     /// Escape is not intercepted.
-    let onDismiss: (@Sendable () -> Void)?
+    let onDismiss: (() -> Void)?
 
     /// The modal body content.
     let body: any View

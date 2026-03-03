@@ -7,7 +7,7 @@
 /// When set to ``VerticalAlignment/bottom``, a ScrollView will start at the
 /// bottom and automatically follow new content — unless the user has scrolled
 /// away from the bottom.
-struct DefaultScrollAnchorView: PrimitiveView, Sendable {
+struct DefaultScrollAnchorView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

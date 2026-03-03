@@ -2,7 +2,7 @@
 ///
 /// The overlay receives the same region as the base content.
 /// Sizing is driven entirely by the base content.
-struct OverlayView: PrimitiveView, Sendable {
+struct OverlayView: PrimitiveView {
     let content: any View
     let overlay: any View
 

@@ -19,7 +19,7 @@
 ///
 /// An optional scroll indicator (a proportional thumb on a track) appears
 /// on the right edge when content overflows the viewport.
-public struct ScrollView: PrimitiveView, @unchecked Sendable {
+public struct ScrollView: PrimitiveView {
     /// Whether to show the scroll indicator when content overflows.
     let showsIndicator: Bool
 
@@ -211,7 +211,7 @@ public struct ScrollView: PrimitiveView, @unchecked Sendable {
         }
 
         // Build scroll handler
-        let scrollHandler: @Sendable (KeyEvent) -> KeyEventResult = { [autoKey] key in
+        let scrollHandler: (KeyEvent) -> KeyEventResult = { [autoKey] key in
             guard let store else { return .ignored }
             var state = store.controlState(forKey: autoKey, as: ScrollState.self) ?? ScrollState()
             switch key {

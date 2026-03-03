@@ -17,7 +17,7 @@
 /// │   Copy                       ^C  │
 /// ╰───────────────────────────────────╯
 /// ```
-struct CommandPalette: PrimitiveView, Sendable {
+struct CommandPalette: PrimitiveView {
     func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         let proposalWidth = proposal.width ?? 0
         let proposalHeight = proposal.height ?? 0

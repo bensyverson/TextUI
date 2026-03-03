@@ -16,7 +16,7 @@
 /// ```swift
 /// CommandBar(groups: ["File", "Edit"])
 /// ```
-public struct CommandBar: PrimitiveView, Sendable {
+public struct CommandBar: PrimitiveView {
     /// The groups to display, or `nil` for all groups.
     let groups: [String]?
 

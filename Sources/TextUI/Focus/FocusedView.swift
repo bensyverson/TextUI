@@ -10,7 +10,7 @@
 /// TextField("Name", text: $name)
 ///     .focused($focus, equals: .name)
 /// ```
-struct FocusedView: PrimitiveView, @unchecked Sendable {
+struct FocusedView: PrimitiveView {
     let content: any View
     let bindingKey: AnyHashable
     let interaction: FocusInteraction

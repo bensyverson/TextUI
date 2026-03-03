@@ -25,8 +25,9 @@
 ///   single view. For shared state across multiple views, use
 ///   ``Observed`` on a `@MainActor` class and inject it with
 ///   `.environmentObject()`.
+@MainActor
 @propertyWrapper
-public struct State<Value: Sendable>: Sendable {
+public struct State<Value: Sendable> {
     private let key: String
     private let defaultValue: Value
 
@@ -43,14 +44,12 @@ public struct State<Value: Sendable>: Sendable {
     ///
     /// During the render pass, the store comes from the `@TaskLocal`
     /// render context. Outside the render pass (e.g. in `.task {}`
-    /// closures), it falls back to the run loop's store. Both paths
-    /// execute on `@MainActor`; the `nonisolated(unsafe)` access is
-    /// safe because `@State` is only used from MainActor contexts.
+    /// closures), it falls back to the run loop's store.
     private var resolvedStore: FocusStore? {
         if let store = RenderEnvironment.current.focusStore {
             return store
         }
-        return MainActor.assumeIsolated { RunLoop.current?.stateStore }
+        return RunLoop.current?.stateStore
     }
 
     public var wrappedValue: Value {
@@ -60,7 +59,7 @@ public struct State<Value: Sendable>: Sendable {
         }
         nonmutating set {
             resolvedStore?.setControlState(newValue, forKey: AnyHashable(key))
-            MainActor.assumeIsolated { StateSignal.send() }
+            StateSignal.send()
         }
     }
 }

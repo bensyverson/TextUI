@@ -1,14 +1,15 @@
 import Testing
 @testable import TextUI
 
-/// Thread-safe mutable value for use in `@Sendable` test closures.
-private final class Box<T: Sendable>: @unchecked Sendable {
+/// Mutable value for use in test closures.
+private final class Box<T: Sendable> {
     var value: T
     init(_ value: T) {
         self.value = value
     }
 }
 
+@MainActor
 @Suite("Focus Double-Registration Prevention")
 struct FocusDoubleRegistrationTests {
     @Test("TextField wrapped in .focused() creates only one ring entry")

@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("FlexFrame Modifier")
 struct FlexFrameTests {
     @Test("Both min and max clamp size")

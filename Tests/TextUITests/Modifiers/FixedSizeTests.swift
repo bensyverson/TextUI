@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("FixedSize Modifier")
 struct FixedSizeTests {
     @Test("fixedSize replaces proposal with nil on both axes")

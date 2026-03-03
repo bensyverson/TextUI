@@ -4,6 +4,11 @@
 /// property that composes other views. Primitive views (those conforming
 /// to ``PrimitiveView``) handle sizing and rendering directly.
 ///
+/// All views are `@MainActor`-isolated, matching SwiftUI in Swift 6.
+/// This means control closures (e.g. ``Button`` actions, ``TextField``
+/// onChange) inherit main-actor isolation and can mutate `@MainActor`
+/// state directly without `@Sendable` friction.
+///
 /// ```swift
 /// struct Greeting: View {
 ///     var body: some View {
@@ -11,7 +16,7 @@
 ///     }
 /// }
 /// ```
-public protocol View: Sendable {
+@MainActor public protocol View {
     /// The type of view representing the body of this view.
     associatedtype Body: View
 

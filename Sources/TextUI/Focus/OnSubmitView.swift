@@ -11,9 +11,9 @@
 ///         performSearch(query)
 ///     }
 /// ```
-struct OnSubmitView: PrimitiveView, Sendable {
+struct OnSubmitView: PrimitiveView {
     let content: any View
-    let handler: @Sendable () -> Void
+    let handler: () -> Void
 
     func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         TextUI.sizeThatFits(content, proposal: proposal, context: context)

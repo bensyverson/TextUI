@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("TabView")
 struct TabViewTests {
     // MARK: - Sizing

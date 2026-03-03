@@ -3,7 +3,7 @@
 /// This is used internally by ``CommandGroup`` to extract shortcut
 /// information from `Button(...).keyboardShortcut(...)` declarations.
 /// It delegates all sizing and rendering to its wrapped content.
-struct KeyboardShortcutView: PrimitiveView, Sendable {
+struct KeyboardShortcutView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

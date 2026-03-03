@@ -7,7 +7,7 @@
 ///
 /// Views using ``AnimationTick`` should apply `.animating()` to ensure the
 /// timer runs while they are visible.
-struct AnimatingView: PrimitiveView, Sendable {
+struct AnimatingView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

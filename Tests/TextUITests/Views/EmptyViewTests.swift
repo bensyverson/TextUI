@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("EmptyView")
 struct EmptyViewTests {
     @Test("Always returns zero size")

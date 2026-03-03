@@ -1,11 +1,12 @@
 import Testing
 @testable import TextUI
 
-/// Thread-safe mutable flag for use in `@Sendable` test closures.
-private final class Flag: @unchecked Sendable {
+/// Mutable flag for use in test closures.
+private final class Flag {
     var value: Bool = false
 }
 
+@MainActor
 @Suite("ModalView")
 struct ModalViewTests {
     @Test("Not presented passes through to background unchanged")

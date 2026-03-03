@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Layout Integration")
 struct LayoutIntegrationTests {
     // MARK: - Status Bar

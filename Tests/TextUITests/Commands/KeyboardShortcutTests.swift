@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("KeyEquivalent")
 struct KeyEquivalentTests {
     @Test("Character init stores character")
@@ -41,6 +42,7 @@ struct KeyEquivalentTests {
     }
 }
 
+@MainActor
 @Suite("KeyboardShortcut")
 struct KeyboardShortcutTests {
     @Test("Ctrl+S matches .ctrl(s)")

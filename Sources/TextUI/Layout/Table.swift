@@ -15,7 +15,7 @@
 ///
 /// The table is focusable and supports keyboard scrolling of its body rows
 /// using Up/Down/PageUp/PageDown/Home/End keys.
-public struct Table: PrimitiveView, @unchecked Sendable {
+public struct Table: PrimitiveView {
     /// The row data — each row is an array of views matching the columns.
     let rows: [[any View]]
 
@@ -182,7 +182,7 @@ public struct Table: PrimitiveView, @unchecked Sendable {
         store?.setControlState(state, forKey: autoKey)
 
         // Scroll handler
-        let scrollHandler: @Sendable (KeyEvent) -> KeyEventResult = { [autoKey] key in
+        let scrollHandler: (KeyEvent) -> KeyEventResult = { [autoKey] key in
             guard let store else { return .ignored }
             var state = store.controlState(forKey: autoKey, as: ScrollState.self) ?? ScrollState()
             switch key {

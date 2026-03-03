@@ -9,7 +9,7 @@
 ///     Text("Hello")
 /// }
 /// ```
-public struct Color: PrimitiveView, Sendable {
+public struct Color: PrimitiveView {
     /// The color to fill with.
     let color: Style.Color
 

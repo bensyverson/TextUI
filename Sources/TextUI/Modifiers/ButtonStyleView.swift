@@ -2,7 +2,7 @@
 ///
 /// Applied via ``View/buttonStyle(_:)``. Descendant ``Button``
 /// instances read the style from ``RenderContext/buttonStyle``.
-struct ButtonStyleView: PrimitiveView, Sendable {
+struct ButtonStyleView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

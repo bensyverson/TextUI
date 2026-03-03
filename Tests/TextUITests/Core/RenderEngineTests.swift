@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("RenderEngine")
 struct RenderEngineTests {
     // MARK: - Primitive Dispatch

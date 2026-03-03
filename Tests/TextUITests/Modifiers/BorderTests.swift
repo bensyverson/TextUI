@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Border Modifier")
 struct BorderTests {
     @Test("Rounded border draws correct corners")

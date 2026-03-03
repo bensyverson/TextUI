@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("ProgressView")
 struct ProgressViewTests {
     // MARK: - Compact Indeterminate

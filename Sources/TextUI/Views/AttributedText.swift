@@ -10,7 +10,7 @@
 ///     TextSpan("file not found", style: .plain)
 /// }
 /// ```
-public struct AttributedText: PrimitiveView, Sendable {
+public struct AttributedText: PrimitiveView {
     /// The styled text segments.
     let spans: [TextSpan]
 

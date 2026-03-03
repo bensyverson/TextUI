@@ -1,8 +1,8 @@
 import Testing
 @testable import TextUI
 
-/// Thread-safe mutable value for use in `@Sendable` test closures.
-private final class Box<T: Sendable>: @unchecked Sendable {
+/// Mutable value for use in test closures.
+private final class Box<T: Sendable> {
     var value: T
     init(_ value: T) {
         self.value = value
@@ -10,14 +10,16 @@ private final class Box<T: Sendable>: @unchecked Sendable {
 }
 
 /// Creates a TextField with a fixed identity for testing cursor state persistence.
+@MainActor
 private func testField(
     _ placeholder: String = "",
     text: String,
-    onChange: @escaping @Sendable (String) -> Void,
+    onChange: @escaping (String) -> Void,
 ) -> TextField {
     TextField(placeholder, text: text, fileID: "test", line: 1, onChange: onChange)
 }
 
+@MainActor
 @Suite("TextField")
 struct TextFieldTests {
     @Test("Greedy width sizing")

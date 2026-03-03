@@ -3,7 +3,7 @@
 /// Applied via ``View/multilineTextAlignment(_:)``. Descendant ``Text``
 /// views read the alignment from ``RenderContext/multilineTextAlignment``
 /// to position wrapped lines within the available width.
-struct MultilineTextAlignmentView: PrimitiveView, Sendable {
+struct MultilineTextAlignmentView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

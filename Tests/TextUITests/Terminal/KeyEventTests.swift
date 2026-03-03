@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("KeyEvent Parsing")
 struct KeyEventTests {
     // MARK: - Printable Characters

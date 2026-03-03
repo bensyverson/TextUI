@@ -25,6 +25,12 @@ struct CounterView: View {
 
 `@State` stores its value in the same per-control state dictionary used by built-in controls like ``TextField`` and ``ScrollView``. The storage key is derived from the declaration site (`#fileID:#line`), so each `@State` property gets its own slot automatically. Mutations trigger ``StateSignal/send()`` to schedule a re-render.
 
+Because ``View`` is `@MainActor`, `@State` mutations work directly inside control closures — no `@Sendable` annotation is needed:
+
+```swift
+Button("+1") { count += 1 }  // count is @State — just works
+```
+
 ### Observed Properties
 
 The ``Observed`` property wrapper signals the run loop when a value changes. Use it on `@MainActor` state classes for **shared** state:

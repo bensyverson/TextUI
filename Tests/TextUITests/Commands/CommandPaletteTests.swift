@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("CommandPalette")
 struct CommandPaletteTests {
     /// Creates a registry with common test commands.

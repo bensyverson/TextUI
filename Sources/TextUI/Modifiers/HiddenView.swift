@@ -2,7 +2,7 @@
 ///
 /// Created by the ``View/hidden()`` modifier. The view occupies the
 /// same space as its content but produces no visible output.
-struct HiddenView: PrimitiveView, Sendable {
+struct HiddenView: PrimitiveView {
     let content: any View
 
     func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {

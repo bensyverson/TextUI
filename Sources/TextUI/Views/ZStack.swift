@@ -10,7 +10,7 @@
 ///     Text("Overlay")
 /// }
 /// ```
-public struct ZStack: PrimitiveView, Sendable {
+public struct ZStack: PrimitiveView {
     /// The alignment used to position children within the stack.
     public let alignment: Alignment
 

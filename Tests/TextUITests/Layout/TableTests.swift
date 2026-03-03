@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Table")
 struct TableTests {
     // MARK: - Column Width Calculation

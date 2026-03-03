@@ -3,7 +3,7 @@
 /// Applied via ``View/truncationMode(_:)``. Descendant ``Text`` views read
 /// the mode from ``RenderContext/truncationMode`` to determine where the
 /// ellipsis appears when content is truncated.
-struct TruncationModeView: PrimitiveView, Sendable {
+struct TruncationModeView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

@@ -21,7 +21,7 @@
 /// // With label and total
 /// ProgressView("Uploading", value: bytesWritten, total: totalBytes)
 /// ```
-public struct ProgressView: View, @unchecked Sendable {
+public struct ProgressView: View {
     /// The optional label displayed alongside the progress indicator.
     let label: String?
 

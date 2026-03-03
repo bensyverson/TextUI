@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("HStack")
 struct HStackTests {
     // MARK: - Basic Sizing

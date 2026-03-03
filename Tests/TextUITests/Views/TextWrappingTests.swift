@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Text Wrapping")
 struct TextWrappingTests {
     // MARK: - Word Wrapping

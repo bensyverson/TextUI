@@ -21,12 +21,12 @@
 /// Common use cases include custom decorative elements, sparkline charts,
 /// progress indicators with non-standard visuals, and box-drawing art that
 /// goes beyond what ``Text`` and ``Divider`` provide.
-public struct Canvas: PrimitiveView, Sendable {
+public struct Canvas: PrimitiveView {
     /// The custom drawing closure.
-    let draw: @Sendable (inout Buffer, Region) -> Void
+    let draw: (inout Buffer, Region) -> Void
 
     /// Creates a canvas with the given drawing closure.
-    public init(draw: @escaping @Sendable (inout Buffer, Region) -> Void) {
+    public init(draw: @escaping (inout Buffer, Region) -> Void) {
         self.draw = draw
     }
 

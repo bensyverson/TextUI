@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Hidden Modifier")
 struct HiddenTests {
     @Test("Hidden view has same size as content")

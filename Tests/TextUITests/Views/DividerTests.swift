@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Divider")
 struct DividerTests {
     // MARK: - Horizontal Sizing

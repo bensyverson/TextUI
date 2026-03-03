@@ -3,7 +3,7 @@
 /// The style is merged additively using ``Style/merging(_:)``:
 /// `.bold()` adds bold without clearing existing foreground color,
 /// `.foregroundColor(.red)` sets foreground without touching background.
-struct StyledView: PrimitiveView, Sendable {
+struct StyledView: PrimitiveView {
     let content: any View
     let styleOverride: Style
 

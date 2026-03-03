@@ -12,7 +12,7 @@
 ///     Text("Below")
 /// }
 /// ```
-public struct Divider: PrimitiveView, Sendable {
+public struct Divider: PrimitiveView {
     /// The orientation of this divider.
     let orientation: Orientation
 

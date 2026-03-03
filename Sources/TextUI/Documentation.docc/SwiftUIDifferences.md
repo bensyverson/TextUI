@@ -75,6 +75,18 @@ events. Navigation uses:
 ``FocusState`` works like SwiftUI's `@FocusState`, and `.focused(_:equals:)`
 binds views to focus values. See <doc:FocusSystem> for the full model.
 
+### Concurrency
+
+Like SwiftUI in Swift 6, the ``View`` protocol is `@MainActor`-isolated.
+All view `body` evaluations, control closures (``Button`` actions,
+``TextField`` onChange, etc.), and modifier closures (`.onKeyPress()`,
+`.onSubmit()`, `.modal(onDismiss:)`) inherit main-actor isolation. This
+means you can mutate `@MainActor` state directly in closures — no
+`@Sendable` annotation is needed.
+
+The `.task {}` modifier remains `@MainActor @Sendable` since it spawns
+an `async` closure that may suspend and resume on any executor.
+
 ### Familiar Views
 
 Most SwiftUI primitives have a direct TextUI counterpart:

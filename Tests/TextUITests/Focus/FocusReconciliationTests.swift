@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("FocusStore Reconciliation")
 struct FocusReconciliationTests {
     private let region = Region(row: 0, col: 0, width: 10, height: 1)

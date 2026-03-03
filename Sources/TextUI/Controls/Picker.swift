@@ -13,11 +13,11 @@
 ///
 /// The `options` array provides display strings. The `selection` is an
 /// index into this array.
-public struct Picker: PrimitiveView, @unchecked Sendable {
+public struct Picker: PrimitiveView {
     let label: String
     let selection: Int
     let options: [String]
-    let onChange: @Sendable (Int) -> Void
+    let onChange: (Int) -> Void
     let autoKey: AnyHashable
 
     /// Persistent dropdown state for the picker.
@@ -41,7 +41,7 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
         options: [String],
         fileID: String = #fileID,
         line: Int = #line,
-        onChange: @escaping @Sendable (Int) -> Void,
+        onChange: @escaping (Int) -> Void,
     ) {
         self.label = label
         self.selection = selection
@@ -106,10 +106,9 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
         // Register inline handler when focused
         if isFocused, let id = effectiveFocusID {
             let capturedKey = autoKey
-            nonisolated(unsafe) let sendableKey = capturedKey
             store?.registerInlineHandler(for: id) { [selection, options, onChange] key in
                 guard let store else { return .ignored }
-                var state = store.controlState(forKey: sendableKey, as: PickerState.self)
+                var state = store.controlState(forKey: capturedKey, as: PickerState.self)
                     ?? PickerState()
 
                 if state.isDropdownOpen {
@@ -117,20 +116,20 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
                     switch key {
                     case .up:
                         state.highlightedIndex = (state.highlightedIndex - 1 + options.count) % options.count
-                        store.setControlState(state, forKey: sendableKey)
+                        store.setControlState(state, forKey: capturedKey)
                         return .handled
                     case .down:
                         state.highlightedIndex = (state.highlightedIndex + 1) % options.count
-                        store.setControlState(state, forKey: sendableKey)
+                        store.setControlState(state, forKey: capturedKey)
                         return .handled
                     case .enter:
                         onChange(state.highlightedIndex)
                         state.isDropdownOpen = false
-                        store.setControlState(state, forKey: sendableKey)
+                        store.setControlState(state, forKey: capturedKey)
                         return .handled
                     case .escape:
                         state.isDropdownOpen = false
-                        store.setControlState(state, forKey: sendableKey)
+                        store.setControlState(state, forKey: capturedKey)
                         return .handled
                     default:
                         return .handled // Swallow all other keys while dropdown is open
@@ -149,7 +148,7 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
                     case .enter, .character(" "):
                         state.isDropdownOpen = true
                         state.highlightedIndex = selection
-                        store.setControlState(state, forKey: sendableKey)
+                        store.setControlState(state, forKey: capturedKey)
                         return .handled
                     default:
                         return .ignored
@@ -205,8 +204,10 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
             let dropdownWidth = label.displayWidth + 2 + 2 + maxOptionWidth + 2
 
             context.overlayStore?.addOverlay(OverlayStore.Overlay { buffer, fullRegion in
-                let spaceBelow = fullRegion.row + fullRegion.height - (pickerRow + 1)
-                let spaceAbove = pickerRow - fullRegion.row
+                let border = BorderedView.BorderStyle.rounded
+                // Account for top + bottom border rows in available space
+                let spaceBelow = fullRegion.row + fullRegion.height - (pickerRow + 1) - 2
+                let spaceAbove = pickerRow - fullRegion.row - 2
                 let optionCount = capturedOptions.count
 
                 // Choose direction: prefer below, flip above if needed
@@ -220,10 +221,10 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
                     visibleCount = optionCount
                 } else if spaceBelow >= spaceAbove {
                     renderBelow = true
-                    visibleCount = spaceBelow
+                    visibleCount = max(spaceBelow, 0)
                 } else {
                     renderBelow = false
-                    visibleCount = spaceAbove
+                    visibleCount = max(spaceAbove, 0)
                 }
 
                 guard visibleCount > 0 else { return }
@@ -239,31 +240,67 @@ public struct Picker: PrimitiveView, @unchecked Sendable {
                     highlightedIndex - visibleCount / 2
                 }
 
-                // Compute starting row
-                let startRow: Int = if renderBelow {
+                // Border box dimensions (content + 2 for border)
+                let boxWidth = dropdownWidth + 2
+                let boxHeight = visibleCount + 2
+
+                // Compute starting row for the border box
+                let boxRow: Int = if renderBelow {
                     pickerRow + 1
                 } else {
-                    pickerRow - visibleCount
+                    pickerRow - boxHeight
                 }
+
+                let boxCol = pickerCol
+
+                // Draw rounded border
+                guard boxRow >= 0,
+                      boxRow + boxHeight <= buffer.height,
+                      boxCol + boxWidth <= buffer.width
+                else { return }
+
+                buffer[boxRow, boxCol] = Cell(char: border.topLeft)
+                buffer[boxRow, boxCol + boxWidth - 1] = Cell(char: border.topRight)
+                buffer[boxRow + boxHeight - 1, boxCol] = Cell(char: border.bottomLeft)
+                buffer[boxRow + boxHeight - 1, boxCol + boxWidth - 1] = Cell(char: border.bottomRight)
+                buffer.horizontalLine(
+                    row: boxRow, col: boxCol + 1,
+                    length: boxWidth - 2, char: border.horizontal,
+                )
+                buffer.horizontalLine(
+                    row: boxRow + boxHeight - 1, col: boxCol + 1,
+                    length: boxWidth - 2, char: border.horizontal,
+                )
+                buffer.verticalLine(
+                    row: boxRow + 1, col: boxCol,
+                    length: boxHeight - 2, char: border.vertical,
+                )
+                buffer.verticalLine(
+                    row: boxRow + 1, col: boxCol + boxWidth - 1,
+                    length: boxHeight - 2, char: border.vertical,
+                )
+
+                // Render option rows inside the border
+                let contentCol = boxCol + 1
+                let contentStartRow = boxRow + 1
 
                 for i in 0 ..< visibleCount {
                     let optionIndex = scrollOffset + i
                     guard optionIndex < capturedOptions.count else { break }
-                    let row = startRow + i
-                    guard row >= 0, row < buffer.height else { continue }
+                    let row = contentStartRow + i
 
                     let option = capturedOptions[optionIndex]
                     let optionStyle: Style = optionIndex == highlightedIndex
                         ? Style(inverse: true)
-                        : Style(fg: .black, bg: .white)
+                        : .plain
 
-                    var optCol = pickerCol
+                    var optCol = contentCol
                     let prefix = optionIndex == highlightedIndex ? "▸ " : "  "
                     optCol += buffer.write(prefix, row: row, col: optCol, style: optionStyle)
                     optCol += buffer.write(option, row: row, col: optCol, style: optionStyle)
 
-                    // Pad to consistent width
-                    while optCol < pickerCol + dropdownWidth, optCol < buffer.width {
+                    // Pad to consistent width (within the border)
+                    while optCol < contentCol + dropdownWidth, optCol < buffer.width {
                         buffer[row, optCol] = Cell(char: " ", style: optionStyle)
                         optCol += 1
                     }

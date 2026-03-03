@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("ZStack")
 struct ZStackTests {
     @Test("Same proposal to all children")

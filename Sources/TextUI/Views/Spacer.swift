@@ -10,7 +10,7 @@
 ///     Text("right")
 /// }
 /// ```
-public struct Spacer: PrimitiveView, Sendable {
+public struct Spacer: PrimitiveView {
     /// The minimum length the spacer occupies along its axis.
     public let minLength: Int
 

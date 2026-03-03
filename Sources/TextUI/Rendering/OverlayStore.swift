@@ -6,9 +6,10 @@
 /// `OverlayStore` is a reference type so all copies of ``RenderContext``
 /// share the same overlay list — the same pattern used by ``FocusStore``
 /// and ``AnimationTracker``.
-final class OverlayStore: @unchecked Sendable {
+@MainActor
+final class OverlayStore {
     /// A deferred overlay that renders into a buffer after the main pass.
-    struct Overlay: @unchecked Sendable {
+    struct Overlay {
         /// Renders the overlay into the given buffer within the full screen region.
         let render: (inout Buffer, Region) -> Void
     }

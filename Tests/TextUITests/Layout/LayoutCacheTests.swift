@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("LayoutCache")
 struct LayoutCacheTests {
     @Test("get returns nil for missing key")

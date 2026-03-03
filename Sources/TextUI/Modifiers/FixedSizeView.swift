@@ -3,7 +3,7 @@
 /// `FixedSizeView` replaces the parent's proposal with `nil` on the
 /// specified axes, causing the child to report its ideal size instead
 /// of truncating to fit the proposal.
-struct FixedSizeView: PrimitiveView, Sendable {
+struct FixedSizeView: PrimitiveView {
     let content: any View
     let horizontal: Bool
     let vertical: Bool

@@ -2,7 +2,7 @@
 ///
 /// `EmptyView` is used as a placeholder when no content is needed,
 /// such as when a conditional view evaluates to `nil`.
-public struct EmptyView: PrimitiveView, Sendable {
+public struct EmptyView: PrimitiveView {
     /// Creates an empty view.
     public init() {}
 

@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Cell")
 struct CellTests {
     @Test("Default cell is blank space with plain style")

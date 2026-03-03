@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Modifier Chain Integration")
 struct ModifierChainTests {
     @Test("Text.padding.border.background sizes and renders correctly")

@@ -4,7 +4,8 @@
 /// Views that use the ``View/animating(_:)`` modifier call
 /// ``registerAnimatedRegion(_:)`` during rendering, signaling that the
 /// run loop should start or continue the animation timer.
-final class AnimationTracker: @unchecked Sendable {
+@MainActor
+final class AnimationTracker {
     /// Whether any view requested animation this frame.
     private(set) var needsAnimation: Bool = false
 

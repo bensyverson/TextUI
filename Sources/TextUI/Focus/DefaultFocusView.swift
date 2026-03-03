@@ -14,7 +14,7 @@
 /// }
 /// .defaultFocus($focus, .email)  // Email field focused on launch
 /// ```
-struct DefaultFocusView: PrimitiveView, @unchecked Sendable {
+struct DefaultFocusView: PrimitiveView {
     let content: any View
     let targetKey: AnyHashable
 

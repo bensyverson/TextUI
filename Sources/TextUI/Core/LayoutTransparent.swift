@@ -4,6 +4,7 @@
 /// ``ViewGroup``, ``ForEach``, and ``Group`` conform to this protocol.
 /// Stacks flatten layout-transparent children rather than treating
 /// them as single views.
+@MainActor
 protocol LayoutTransparent {
     /// The children to flatten into the parent layout.
     var layoutChildren: [any View] { get }

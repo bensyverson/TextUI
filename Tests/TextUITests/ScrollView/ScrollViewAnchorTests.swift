@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("ScrollView — defaultScrollAnchor")
 struct ScrollViewAnchorTests {
     /// Builds a ScrollView with the given number of lines, all sharing

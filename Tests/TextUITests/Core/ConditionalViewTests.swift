@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Conditional Views")
 struct ConditionalViewTests {
     // MARK: - if/else with different types

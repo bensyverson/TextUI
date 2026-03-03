@@ -12,7 +12,7 @@
 /// `StackLayout`. Children are sorted by `.layoutPriority()` then
 /// flexibility; each child is guaranteed its minimum width before
 /// surplus space is distributed equally among remaining children.
-public struct HStack: PrimitiveView, Sendable {
+public struct HStack: PrimitiveView {
     /// Vertical alignment for children within the stack.
     public let alignment: VerticalAlignment
 

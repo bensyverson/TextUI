@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Style")
 struct StyleTests {
     @Test("Plain style has no attributes")

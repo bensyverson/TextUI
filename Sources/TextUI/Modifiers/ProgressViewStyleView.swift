@@ -2,7 +2,7 @@
 ///
 /// Applied via ``View/progressViewStyle(_:)``. Descendant ``ProgressView``
 /// instances read the style from ``RenderContext/progressViewStyle``.
-struct ProgressViewStyleView: PrimitiveView, Sendable {
+struct ProgressViewStyleView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

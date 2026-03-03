@@ -4,7 +4,7 @@
 /// controls (``Button``, ``TextField``, ``Toggle``, ``Picker``) skip focus
 /// registration and become non-interactive. Disabled content is rendered
 /// with dim styling to visually indicate the inactive state.
-struct DisabledView: PrimitiveView, Sendable {
+struct DisabledView: PrimitiveView {
     /// The wrapped content view.
     let content: any View
 

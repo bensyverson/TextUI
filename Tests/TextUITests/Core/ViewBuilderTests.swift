@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("ViewBuilder")
 struct ViewBuilderTests {
     @Test("buildBlock with zero components produces empty ViewGroup")

@@ -11,10 +11,10 @@
 /// }
 ///     .onSubmit { performSearch() }
 /// ```
-public struct TextField: PrimitiveView, @unchecked Sendable {
+public struct TextField: PrimitiveView {
     let placeholder: String
     let text: String
-    let onChange: @Sendable (String) -> Void
+    let onChange: (String) -> Void
     let autoKey: String
 
     /// Creates a text field with a placeholder and current text value.
@@ -30,7 +30,7 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
         text: String,
         fileID: String = #fileID,
         line: Int = #line,
-        onChange: @escaping @Sendable (String) -> Void,
+        onChange: @escaping (String) -> Void,
     ) {
         self.placeholder = placeholder
         self.text = text
@@ -111,12 +111,11 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
         // Register inline handler when focused
         if isFocused, let id = effectiveFocusID {
             let capturedStateKey = AnyHashable(stateKey)
-            nonisolated(unsafe) let sendableKey = capturedStateKey
             store?.registerInlineHandler(for: id) { [onChange, store] key in
                 // Read working state from store — this picks up changes from
                 // earlier key events in the same frame.
                 guard let store else { return .ignored }
-                var state = store.controlState(forKey: sendableKey, as: EditState.self)
+                var state = store.controlState(forKey: capturedStateKey, as: EditState.self)
                     ?? editState
 
                 switch key {
@@ -153,7 +152,7 @@ public struct TextField: PrimitiveView, @unchecked Sendable {
                 }
 
                 let textChanged = state.text != editState.text
-                store.setControlState(state, forKey: sendableKey)
+                store.setControlState(state, forKey: capturedStateKey)
                 if textChanged {
                     onChange(state.text)
                 }

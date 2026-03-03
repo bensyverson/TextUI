@@ -5,7 +5,7 @@
 /// - Both min and max set: clamp proposal, propose to child, clamp response
 /// - Only min set: propose as-is, clamp response to min
 /// - Only max set: cap proposal at max, response as-is
-struct FlexFrameView: PrimitiveView, Sendable {
+struct FlexFrameView: PrimitiveView {
     let content: any View
     let minWidth: Int?
     let maxWidth: Int?

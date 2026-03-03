@@ -1,6 +1,7 @@
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Frame Modifier")
 struct FrameTests {
     @Test("Exact width overrides child")

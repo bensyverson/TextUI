@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import TextUI
 
+@MainActor
 @Suite("Size2D")
 struct Size2DTests {
     @Test("Initializes with width and height")

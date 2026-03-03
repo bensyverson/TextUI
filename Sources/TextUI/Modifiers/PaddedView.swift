@@ -3,7 +3,7 @@
 /// Created by the ``View/padding(_:)`` and related modifier methods.
 /// Padding reduces the size proposal passed to the child and adds
 /// space around the child's rendered output.
-struct PaddedView: PrimitiveView, Sendable {
+struct PaddedView: PrimitiveView {
     let content: any View
     let top: Int
     let leading: Int

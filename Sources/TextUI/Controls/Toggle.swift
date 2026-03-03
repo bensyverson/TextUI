@@ -9,10 +9,10 @@
 ///     settings.darkMode = newValue
 /// }
 /// ```
-public struct Toggle: PrimitiveView, @unchecked Sendable {
+public struct Toggle: PrimitiveView {
     let label: String
     let isOn: Bool
-    let onChange: @Sendable (Bool) -> Void
+    let onChange: (Bool) -> Void
     let autoKey: AnyHashable
 
     /// Creates a toggle with a text label.
@@ -28,7 +28,7 @@ public struct Toggle: PrimitiveView, @unchecked Sendable {
         isOn: Bool,
         fileID: String = #fileID,
         line: Int = #line,
-        onChange: @escaping @Sendable (Bool) -> Void,
+        onChange: @escaping (Bool) -> Void,
     ) {
         self.label = label
         self.isOn = isOn
