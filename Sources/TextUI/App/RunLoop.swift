@@ -391,17 +391,20 @@ final class RunLoop {
         // internal sizing (VStack calls StackLayout.layout, ScrollView
         // measures children, etc.), so a separate top-level sizeThatFits
         // pass is redundant.
-        TextUI.render(rootView, into: &screen.back, region: region, context: ctx)
+        //
+        // The root view is wrapped in a ModalView so the command palette
+        // appears as a centered overlay with dim scrim and focus suppression.
+        let rootWithPalette = ModalView(
+            background: rootView,
+            isPresented: commandRegistry.isPaletteVisible,
+            onDismiss: nil,
+            body: CommandPalette(),
+        )
+        TextUI.render(rootWithPalette, into: &screen.back, region: region, context: ctx)
 
         // Execute deferred overlays (e.g. Picker dropdowns)
         for overlay in overlayStore.overlays {
             overlay.render(&screen.back, region)
-        }
-
-        // Render command palette overlay if visible
-        if commandRegistry.isPaletteVisible {
-            let palette = CommandPalette()
-            palette.render(into: &screen.back, region: region, context: ctx)
         }
 
         // Cancel tasks for views that are no longer in the tree
@@ -427,14 +430,16 @@ final class RunLoop {
             ctx.layoutCache = LayoutCache()
 
             screen.clear()
-            TextUI.render(rootView, into: &screen.back, region: region, context: ctx)
+            let reconciledRoot = ModalView(
+                background: rootView,
+                isPresented: commandRegistry.isPaletteVisible,
+                onDismiss: nil,
+                body: CommandPalette(),
+            )
+            TextUI.render(reconciledRoot, into: &screen.back, region: region, context: ctx)
 
             for overlay in overlayStore.overlays {
                 overlay.render(&screen.back, region)
-            }
-            if commandRegistry.isPaletteVisible {
-                let palette = CommandPalette()
-                palette.render(into: &screen.back, region: region, context: ctx)
             }
             taskStore.endFrame()
         }

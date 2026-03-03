@@ -4,8 +4,9 @@
 /// existing content. It shows a filter text input and a scrollable list
 /// of matching commands with their keyboard shortcuts.
 ///
-/// This view is not placed in the user's view tree — it is rendered
-/// directly by ``RunLoop`` after the root view when the palette is visible.
+/// This view is rendered as the body of a ``ModalView`` by ``RunLoop``
+/// when the palette is visible. Modal handles dim scrim, centering,
+/// focus suppression, and surface clearing.
 ///
 /// ```
 /// ╭──── Command Palette ──────────────╮
@@ -17,40 +18,41 @@
 /// ╰───────────────────────────────────╯
 /// ```
 struct CommandPalette: PrimitiveView, Sendable {
-    func sizeThatFits(_ proposal: SizeProposal, context _: RenderContext) -> Size2D {
-        let w = proposal.width ?? 0
-        let h = proposal.height ?? 0
-        return Size2D(width: w, height: h)
+    func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
+        let proposalWidth = proposal.width ?? 0
+        let proposalHeight = proposal.height ?? 0
+        guard proposalWidth >= 20, proposalHeight >= 5 else {
+            return Size2D(width: 0, height: 0)
+        }
+
+        let entries = context.commandRegistry?.filteredEntries ?? []
+        let paletteWidth = min(50, proposalWidth - 4)
+        let maxVisibleEntries = min(10, proposalHeight - 6)
+        let visibleCount = min(entries.count, maxVisibleEntries)
+        let paletteHeight = 3 + max(visibleCount, 1) + 1
+
+        return Size2D(width: paletteWidth, height: paletteHeight)
     }
 
     func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         guard let registry = context.commandRegistry else { return }
-        guard region.width >= 20, region.height >= 5 else { return }
+        guard region.width >= 4, region.height >= 5 else { return }
 
         let entries = registry.filteredEntries
-        let paletteWidth = min(50, region.width - 4)
-        let maxVisibleEntries = min(10, region.height - 6)
+
+        // Use region dimensions directly — sizeThatFits already computed the
+        // correct palette size and Modal provides that as the region.
+        let paletteWidth = region.width
+        let paletteHeight = region.height
+        let maxVisibleEntries = paletteHeight - 4 // top border + filter + separator + bottom border
         let visibleCount = min(entries.count, maxVisibleEntries)
 
-        // Height: top border + filter + separator + entries + bottom border
-        let paletteHeight = 3 + max(visibleCount, 1) + 1
-
-        // Center the palette
-        let startCol = region.col + (region.width - paletteWidth) / 2
-        let startRow = region.row + (region.height - paletteHeight) / 2
+        let startCol = region.col
+        let startRow = region.row
 
         let innerWidth = paletteWidth - 2 // Excluding left/right borders
 
         let style = BorderedView.BorderStyle.rounded
-
-        // Fill background
-        let bgRegion = Region(
-            row: startRow,
-            col: startCol,
-            width: paletteWidth,
-            height: paletteHeight,
-        )
-        buffer.fill(bgRegion, char: " ")
 
         // Top border with centered title
         let title = " Command Palette "
