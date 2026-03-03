@@ -407,6 +407,43 @@ public extension View {
         DisabledView(content: self, isDisabled: isDisabled)
     }
 
+    // MARK: - Modal
+
+    /// Presents a modal overlay centered on this view with a dimmed background.
+    ///
+    /// When `isPresented` is `true`, the receiver's controls are disabled
+    /// and dimmed, and `content` is rendered centered on top with full
+    /// focus registration. The user adds their own chrome (border, padding,
+    /// background) to the modal body.
+    ///
+    /// ```swift
+    /// ContentView()
+    ///     .modal(isPresented: state.showConfirm, onDismiss: { state.showConfirm = false }) {
+    ///         VStack {
+    ///             Text("Are you sure?")
+    ///             HStack {
+    ///                 Button("Cancel") { state.showConfirm = false }
+    ///                 Button("Confirm") { confirm() }
+    ///             }
+    ///         }
+    ///         .border(.rounded)
+    ///         .padding(1)
+    ///     }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - isPresented: Controls whether the modal is visible.
+    ///   - onDismiss: Called when Escape is pressed; pass `nil` to not
+    ///     intercept Escape.
+    ///   - content: The modal body.
+    func modal(
+        isPresented: Bool,
+        onDismiss: (@Sendable () -> Void)? = nil,
+        @ViewBuilder content: () -> ViewGroup,
+    ) -> some View {
+        ModalView(background: self, isPresented: isPresented, onDismiss: onDismiss, body: content())
+    }
+
     // MARK: - Environment
 
     /// Injects an environment object into the view hierarchy.

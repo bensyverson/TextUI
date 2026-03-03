@@ -144,6 +144,34 @@ VStack {
 .disabled(!isFormValid)
 ```
 
+### Modal
+
+Use `.modal(isPresented:onDismiss:content:)` to present focused overlay
+content on a dimmed background. Background controls are removed from the
+focus ring while the modal is visible:
+
+```swift
+ContentView()
+    .modal(isPresented: state.showConfirm, onDismiss: { state.showConfirm = false }) {
+        VStack {
+            Text("Are you sure?")
+            HStack {
+                Button("Cancel") { state.showConfirm = false }
+                Button("Confirm") { confirm() }
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+        .border(.rounded)
+        .padding(1)
+    }
+```
+
+The modal body is centered within the background region. Add your own
+chrome — border, padding, background color — to the modal content.
+
+When `onDismiss` is provided, pressing Escape calls the closure. Pass
+`nil` (the default) to leave Escape unhandled.
+
 ### Quitting the Application
 
 Use ``Application/quit()`` to stop the run loop programmatically:
