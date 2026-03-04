@@ -523,9 +523,10 @@ public struct TabView: PrimitiveView {
                     row: row1, col: region.col + 1,
                     length: region.width - 2, char: borderStyle.horizontal,
                 )
-                // Place ┴ joins where tab box edges meet divider
-                buffer[row1, boxStart] = Cell(char: borderStyle.teeUp)
-                buffer[row1, boxEnd - 1] = Cell(char: borderStyle.teeUp)
+                // Place ┴ joins where tab box edges meet divider.
+                // When a tab edge coincides with a border edge, use ├/┤ instead.
+                buffer[row1, boxStart] = Cell(char: boxStart == region.col ? "├" : "┴")
+                buffer[row1, boxEnd - 1] = Cell(char: boxEnd - 1 == lastCol ? "┤" : "┴")
             } else {
                 // No border — just a line with ┴ at tab box edges
                 buffer.horizontalLine(
@@ -579,116 +580,209 @@ public struct TabView: PrimitiveView {
 
         col += buffer.write(String(tabBoxStyle.topRight), row: row0, col: col)
 
-        // Row 1: Labels — │ Tab 1 │ Tab 2 │
-        col = tabStart
-        col += buffer.write("│", row: row1, col: col)
+        // Row 1 and Row 2 depend on divider style.
+        //
+        // For .none and .bottom:
+        //   Row 1 = labels:  │ Tab 1 │ Tab 2 │
+        //   Row 2 = .none closes boxes, .bottom draws divider
+        //
+        // For .middle:
+        //   Row 1 = horizontal rule through labels:  ────┤ Tab 1 │ Tab 2 ├────
+        //   Row 2 = close boxes:  ╰───────┴───────╯
+
+        if dividerStyle == .middle {
+            // Row 1: Horizontal rule with labels embedded
+            renderLargeMiddleRow(
+                into: &buffer, row: row1,
+                region: region, tabStart: tabStart, groupWidth: groupWidth,
+                selectedIndex: selectedIndex, isFocused: isFocused,
+                hasBorder: hasBorder, borderStyle: borderStyle,
+            )
+
+            // Row 2: Close tab boxes + optional border verticals
+            renderLargeTabBoxBottom(
+                into: &buffer, row: row2,
+                region: region, tabStart: tabStart,
+                tabBoxStyle: tabBoxStyle, hasBorder: hasBorder, borderStyle: borderStyle,
+            )
+        } else {
+            // Row 1: Labels — │ Tab 1 │ Tab 2 │
+            col = tabStart
+            col += buffer.write("│", row: row1, col: col)
+
+            for (i, tab) in tabs.enumerated() {
+                let style = tabLabelStyle(isSelected: i == selectedIndex, isFocused: isFocused)
+                col += buffer.write(" ", row: row1, col: col, style: style)
+                col += buffer.write(tab.label, row: row1, col: col, style: style)
+                col += buffer.write(" ", row: row1, col: col, style: style)
+                if i < tabs.count - 1 {
+                    col += buffer.write("│", row: row1, col: col)
+                }
+            }
+
+            col += buffer.write("│", row: row1, col: col)
+
+            // Row 2
+            if dividerStyle == .none {
+                // Close boxes — ╰───────┴───────╯
+                renderLargeTabBoxBottom(
+                    into: &buffer, row: row2,
+                    region: region, tabStart: tabStart,
+                    tabBoxStyle: tabBoxStyle, hasBorder: false, borderStyle: borderStyle,
+                )
+            } else {
+                // .bottom divider — horizontal line with ┴ at tab verticals
+                renderLargeBottomDivider(
+                    into: &buffer, row: row2,
+                    region: region, tabStart: tabStart, groupWidth: groupWidth,
+                    hasBorder: hasBorder, borderStyle: borderStyle,
+                )
+            }
+        }
+    }
+
+    // MARK: - Large Tab Bar Helpers
+
+    /// Draws the `.bottom` divider row for large tab bars.
+    ///
+    /// Produces a horizontal line with `┴` at each tab vertical position.
+    /// When a border is active, the line becomes the border top row with
+    /// `├` where the tab left edge overlaps the border left edge.
+    private func renderLargeBottomDivider(
+        into buffer: inout Buffer,
+        row: Int,
+        region: Region,
+        tabStart: Int,
+        groupWidth: Int,
+        hasBorder: Bool,
+        borderStyle: BorderedView.BorderStyle,
+    ) {
+        let lastCol = region.col + region.width - 1
+
+        // Fill with horizontal line
+        buffer.horizontalLine(
+            row: row, col: region.col,
+            length: region.width, char: "─",
+        )
+
+        if hasBorder {
+            buffer[row, region.col] = Cell(char: borderStyle.topLeft)
+            buffer[row, lastCol] = Cell(char: borderStyle.topRight)
+        }
+
+        // Place ┴ at each tab vertical position
+        var col = tabStart
+        buffer[row, col] = Cell(char: "┴")
+        col += 1
+        for (i, tab) in tabs.enumerated() {
+            col += tab.label.displayWidth + 2
+            if i < tabs.count - 1 {
+                buffer[row, col] = Cell(char: "┴")
+                col += 1
+            }
+        }
+        buffer[row, col] = Cell(char: "┴")
+
+        // Fix overlaps: when tab edge coincides with border edge,
+        // use ├/┤ (vertical continues both up and down, horizontal extends inward)
+        if hasBorder, tabStart == region.col {
+            buffer[row, region.col] = Cell(char: "├")
+        }
+        if hasBorder, tabStart + groupWidth - 1 == lastCol {
+            buffer[row, lastCol] = Cell(char: "┤")
+        }
+    }
+
+    /// Draws the `.middle` divider on the label row for large tab bars.
+    ///
+    /// The horizontal rule extends left and right of the tab group. Tab
+    /// labels are written over it. `┤` marks the left tab edge and `├`
+    /// marks the right tab edge (where the rule meets the tab box vertical).
+    private func renderLargeMiddleRow(
+        into buffer: inout Buffer,
+        row: Int,
+        region: Region,
+        tabStart: Int,
+        groupWidth: Int,
+        selectedIndex: Int,
+        isFocused: Bool,
+        hasBorder: Bool,
+        borderStyle: BorderedView.BorderStyle,
+    ) {
+        let lastCol = region.col + region.width - 1
+        let tabEnd = tabStart + groupWidth
+
+        // Fill the entire row with horizontal line
+        buffer.horizontalLine(
+            row: row, col: region.col,
+            length: region.width, char: "─",
+        )
+
+        if hasBorder {
+            buffer[row, region.col] = Cell(char: borderStyle.topLeft)
+            buffer[row, lastCol] = Cell(char: borderStyle.topRight)
+        }
+
+        // Write tab labels over the line
+        var col = tabStart
+
+        // Left edge join: ┤ if there's horizontal line to the left, otherwise │
+        if tabStart > region.col {
+            col += buffer.write("┤", row: row, col: col)
+        } else {
+            col += buffer.write("│", row: row, col: col)
+        }
 
         for (i, tab) in tabs.enumerated() {
             let style = tabLabelStyle(isSelected: i == selectedIndex, isFocused: isFocused)
-            col += buffer.write(" ", row: row1, col: col, style: style)
-            col += buffer.write(tab.label, row: row1, col: col, style: style)
-            col += buffer.write(" ", row: row1, col: col, style: style)
+            col += buffer.write(" ", row: row, col: col, style: style)
+            col += buffer.write(tab.label, row: row, col: col, style: style)
+            col += buffer.write(" ", row: row, col: col, style: style)
             if i < tabs.count - 1 {
-                col += buffer.write("│", row: row1, col: col)
+                col += buffer.write("│", row: row, col: col)
             }
         }
 
-        col += buffer.write("│", row: row1, col: col)
+        // Right edge join: ├ if there's horizontal line to the right, otherwise │
+        if tabEnd - 1 < lastCol {
+            col += buffer.write("├", row: row, col: col)
+        } else {
+            col += buffer.write("│", row: row, col: col)
+        }
+    }
 
-        // Row 2: Bottom/divider row — depends on divider style
-        switch dividerStyle {
-        case .none:
-            // Just close the boxes — ╰───────┴───────╯
-            col = tabStart
-            col += buffer.write(String(tabBoxStyle.bottomLeft), row: row2, col: col)
+    /// Draws the closed bottom of tab boxes (╰───┴───╯).
+    ///
+    /// Used by `.none` divider and as row 2 for `.middle` divider.
+    /// When `hasBorder` is true, also draws border verticals at the region edges.
+    private func renderLargeTabBoxBottom(
+        into buffer: inout Buffer,
+        row: Int,
+        region: Region,
+        tabStart: Int,
+        tabBoxStyle: BorderedView.BorderStyle,
+        hasBorder: Bool,
+        borderStyle: BorderedView.BorderStyle,
+    ) {
+        var col = tabStart
+        col += buffer.write(String(tabBoxStyle.bottomLeft), row: row, col: col)
 
-            for (i, tab) in tabs.enumerated() {
-                let cellWidth = tab.label.displayWidth + 2
-                buffer.horizontalLine(row: row2, col: col, length: cellWidth, char: tabBoxStyle.horizontal)
-                col += cellWidth
-                if i < tabs.count - 1 {
-                    col += buffer.write(String(tabBoxStyle.teeUp), row: row2, col: col)
-                }
+        for (i, tab) in tabs.enumerated() {
+            let cellWidth = tab.label.displayWidth + 2
+            buffer.horizontalLine(row: row, col: col, length: cellWidth, char: tabBoxStyle.horizontal)
+            col += cellWidth
+            if i < tabs.count - 1 {
+                col += buffer.write(String(tabBoxStyle.teeUp), row: row, col: col)
             }
+        }
 
-            col += buffer.write(String(tabBoxStyle.bottomRight), row: row2, col: col)
+        col += buffer.write(String(tabBoxStyle.bottomRight), row: row, col: col)
 
-        case .bottom:
-            // Bottom divider — tab box bottom merges with horizontal line
-            let tabEnd = tabStart + groupWidth
-
-            if hasBorder {
-                // ╭───────────┴───────┴───────┴──────────╮
-                let lastCol = region.col + region.width - 1
-                buffer[row2, region.col] = Cell(char: borderStyle.topLeft)
-                buffer[row2, lastCol] = Cell(char: borderStyle.topRight)
-                buffer.horizontalLine(
-                    row: row2, col: region.col + 1,
-                    length: region.width - 2, char: borderStyle.horizontal,
-                )
-            } else {
-                // ┴───────┴───────┴───────┴──────────────
-                buffer.horizontalLine(
-                    row: row2, col: region.col,
-                    length: region.width, char: "─",
-                )
-            }
-
-            // Place ┴ joins at each tab box vertical position
-            col = tabStart
-            buffer[row2, col] = Cell(char: "┴")
-            col += 1 // advance past left edge
-            for (i, tab) in tabs.enumerated() {
-                let cellWidth = tab.label.displayWidth + 2
-                col += cellWidth
-                if i < tabs.count - 1 {
-                    buffer[row2, col] = Cell(char: "┴")
-                    col += 1
-                }
-            }
-            buffer[row2, col] = Cell(char: "┴")
-
-        case .middle:
-            // Middle divider — ┤ and ├ at tab edges
-            let tabEnd = tabStart + groupWidth
-
-            if hasBorder {
-                // ╭───────────┤ Tab 1 │ Tab 2 ├──────────╮
-                let lastCol = region.col + region.width - 1
-                buffer[row2, region.col] = Cell(char: borderStyle.topLeft)
-                buffer[row2, lastCol] = Cell(char: borderStyle.topRight)
-                buffer.horizontalLine(
-                    row: row2, col: region.col + 1,
-                    length: region.width - 2, char: borderStyle.horizontal,
-                )
-            } else {
-                // ────────────┤ Tab 1 │ Tab 2 ├──────────
-                buffer.horizontalLine(
-                    row: row2, col: region.col,
-                    length: region.width, char: "─",
-                )
-            }
-
-            // Place ┤ at left edge and ├ at right edge of tab group
-            buffer[row2, tabStart] = Cell(char: "┤")
-            buffer[row2, tabEnd - 1] = Cell(char: "├")
-
-            // Close tab boxes below — ╰───────┴───────╯
-            // Actually for .middle, the tab boxes continue below too
-            // The bottom of tab boxes goes on row 2 as well, but only the
-            // inner separators and corners, not the horizontal line
-            col = tabStart
-            col += 1 // skip the ┤
-            for (i, tab) in tabs.enumerated() {
-                let cellWidth = tab.label.displayWidth + 2
-                buffer.horizontalLine(row: row2, col: col, length: cellWidth, char: tabBoxStyle.horizontal)
-                col += cellWidth
-                if i < tabs.count - 1 {
-                    buffer[row2, col] = Cell(char: tabBoxStyle.teeUp)
-                    col += 1
-                }
-            }
-            // Don't overwrite the ├ at the end
+        // Border verticals on the sides
+        if hasBorder {
+            let lastCol = region.col + region.width - 1
+            buffer[row, region.col] = Cell(char: borderStyle.vertical)
+            buffer[row, lastCol] = Cell(char: borderStyle.vertical)
         }
     }
 }

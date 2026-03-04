@@ -184,15 +184,18 @@ struct TabViewBorderTests {
             tabBorderStyle: .rounded,
         )
 
-        // Row 2: border top with ┤ and ├ at tab edges
-        #expect(buffer[2, 0].char == "╭")
-        #expect(buffer[2, 39].char == "╮")
-        let row2 = rowString(buffer, row: 2)
-        #expect(row2.contains("┤"))
-        #expect(row2.contains("├"))
+        // Row 1: border top with ┤ and ├ at tab edges (middle divider)
+        #expect(buffer[1, 0].char == "╭")
+        #expect(buffer[1, 39].char == "╮")
+        let row1 = rowString(buffer, row: 1)
+        #expect(row1.contains("┤"))
+        #expect(row1.contains("├"))
 
-        // Content inside border — tab boxes continue as internal decoration
-        // Row 3 has │ at edges for border
+        // Row 2: tab box bottom with border verticals
+        #expect(buffer[2, 0].char == "│")
+        #expect(buffer[2, 39].char == "│")
+
+        // Content inside border
         #expect(buffer[3, 0].char == "│")
         #expect(buffer[3, 39].char == "│")
     }

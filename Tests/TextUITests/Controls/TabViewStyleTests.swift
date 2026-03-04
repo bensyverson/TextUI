@@ -247,23 +247,52 @@ struct TabViewStyleTests {
         #expect(buffer[3, 0].char == "T")
     }
 
-    @Test("Large size with .middle divider has ┤ and ├ at tab edges")
+    @Test("Large size with .middle divider has horizontal rule on row 1")
     func largeMiddleDivider() {
         let buffer = renderTabView(
             controlSize: .large,
             dividerStyle: .middle,
         )
 
-        // Row 2 should have ┤ at left tab edge and ├ at right tab edge
-        // Tab group starts at col 0 for leading alignment
-        #expect(buffer[2, 0].char == "┤")
+        // Row 1: horizontal rule through labels
+        // With leading alignment, left tab edge has no line to the left → │
+        #expect(buffer[1, 0].char == "│")
 
-        // Find ├ at the end of the tab group
+        // Right tab edge has line to the right → ├
         let groupWidth = 15 // "│ Tab1 │ Tab2 │" = 15
-        #expect(buffer[2, groupWidth - 1].char == "├")
+        #expect(buffer[1, groupWidth - 1].char == "├")
+
+        // Horizontal line continues after tabs
+        #expect(buffer[1, groupWidth].char == "─")
+
+        // Row 2: closed tab box bottom
+        #expect(buffer[2, 0].char == "╰")
 
         // Content on row 3
         #expect(buffer[3, 0].char == "T")
+    }
+
+    @Test("Large size with .middle divider + center alignment has ┤ and ├")
+    func largeMiddleDividerCenter() {
+        let buffer = renderTabView(
+            alignment: .center,
+            controlSize: .large,
+            dividerStyle: .middle,
+        )
+
+        // Tab group is centered; horizontal line extends on both sides
+        let groupWidth = 15
+        let tabStart = (40 - groupWidth) / 2
+
+        // ┤ at left tab edge (horizontal line to the left)
+        #expect(buffer[1, tabStart].char == "┤")
+
+        // ├ at right tab edge (horizontal line to the right)
+        #expect(buffer[1, tabStart + groupWidth - 1].char == "├")
+
+        // Horizontal line on both sides
+        #expect(buffer[1, 0].char == "─")
+        #expect(buffer[1, 39].char == "─")
     }
 
     @Test("Large size with center alignment offsets all three rows")
