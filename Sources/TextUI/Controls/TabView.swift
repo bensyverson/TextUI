@@ -343,17 +343,6 @@ public struct TabView: PrimitiveView {
         }
     }
 
-    /// Returns the style for tab chrome (borders/corners) around a tab.
-    private func tabChromeStyle(isSelected: Bool, isFocused: Bool) -> Style {
-        if isSelected, isFocused {
-            Style(inverse: true)
-        } else if isSelected {
-            Style(bold: true)
-        } else {
-            Style(dim: true)
-        }
-    }
-
     // MARK: - Small Tab Bar (1-line)
 
     /// Renders a 1-line compact tab bar.
@@ -393,8 +382,7 @@ public struct TabView: PrimitiveView {
                 col += buffer.write(tab.label, row: row, col: col, style: style)
                 col += buffer.write(" ", row: row, col: col, style: style)
                 if i < tabs.count - 1 {
-                    let sepStyle = tabChromeStyle(isSelected: false, isFocused: false)
-                    col += buffer.write("│", row: row, col: col, style: sepStyle)
+                    col += buffer.write("│", row: row, col: col)
                 }
             }
         } else {
@@ -422,8 +410,7 @@ public struct TabView: PrimitiveView {
                     col += buffer.write(tab.label, row: row, col: col, style: style)
                     col += buffer.write(" ", row: row, col: col, style: style)
                     if i < tabs.count - 1 {
-                        let sepStyle = tabChromeStyle(isSelected: false, isFocused: false)
-                        col += buffer.write("│", row: row, col: col, style: sepStyle)
+                        col += buffer.write("│", row: row, col: col)
                     }
                 }
             } else {
@@ -447,8 +434,7 @@ public struct TabView: PrimitiveView {
                     col += buffer.write(tab.label, row: row, col: col, style: style)
                     col += buffer.write(" ", row: row, col: col, style: style)
                     if i < tabs.count - 1 {
-                        let sepStyle = tabChromeStyle(isSelected: false, isFocused: false)
-                        col += buffer.write("│", row: row, col: col, style: sepStyle)
+                        col += buffer.write("│", row: row, col: col)
                     }
                 }
 
@@ -499,8 +485,7 @@ public struct TabView: PrimitiveView {
             col += buffer.write(tab.label, row: row0, col: col, style: style)
             col += buffer.write(" ", row: row0, col: col, style: style)
             if i < tabs.count - 1 {
-                let sepStyle = tabChromeStyle(isSelected: false, isFocused: false)
-                col += buffer.write("│", row: row0, col: col, style: sepStyle)
+                col += buffer.write("│", row: row0, col: col)
             }
         }
 
@@ -604,8 +589,7 @@ public struct TabView: PrimitiveView {
             col += buffer.write(tab.label, row: row1, col: col, style: style)
             col += buffer.write(" ", row: row1, col: col, style: style)
             if i < tabs.count - 1 {
-                let sepStyle = tabChromeStyle(isSelected: false, isFocused: false)
-                col += buffer.write("│", row: row1, col: col, style: sepStyle)
+                col += buffer.write("│", row: row1, col: col)
             }
         }
 
@@ -653,6 +637,7 @@ public struct TabView: PrimitiveView {
             // Place ┴ joins at each tab box vertical position
             col = tabStart
             buffer[row2, col] = Cell(char: "┴")
+            col += 1 // advance past left edge
             for (i, tab) in tabs.enumerated() {
                 let cellWidth = tab.label.displayWidth + 2
                 col += cellWidth
@@ -661,7 +646,7 @@ public struct TabView: PrimitiveView {
                     col += 1
                 }
             }
-            buffer[row2, tabEnd - 1] = Cell(char: "┴")
+            buffer[row2, col] = Cell(char: "┴")
 
         case .middle:
             // Middle divider — ┤ and ├ at tab edges
