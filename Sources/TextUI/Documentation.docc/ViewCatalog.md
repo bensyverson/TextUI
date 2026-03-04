@@ -133,10 +133,14 @@ Table(rows: data.map { row in
 }
 ```
 
-``TabView`` organizes content into switchable tabs:
+``TabView`` organizes content into switchable tabs. Use
+``View/controlSize(_:)`` to choose between compact (`.small`), standard
+(`.regular`), and spacious (`.large`) chrome. Add a divider with
+``View/tabDividerStyle(_:)`` and a content border with
+``View/tabBorderStyle(_:)``:
 
 ```swift
-TabView {
+TabView(alignment: .center) {
     TabView.Tab("Settings") {
         SettingsView()
     }
@@ -144,6 +148,9 @@ TabView {
         AboutView()
     }
 }
+.controlSize(.large)
+.tabDividerStyle(.bottom)
+.tabBorderStyle(.rounded)
 ```
 
 ### Interactive Controls

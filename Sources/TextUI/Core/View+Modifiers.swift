@@ -396,6 +396,51 @@ public extension View {
         AnimatingView(content: self, isActive: isActive)
     }
 
+    // MARK: - Control Size
+
+    /// Sets the control size for descendant controls.
+    ///
+    /// Controls like ``TabView`` use control size to choose between
+    /// compact, regular, or spacious chrome:
+    ///
+    /// ```swift
+    /// TabView { ... }
+    ///     .controlSize(.large)
+    /// ```
+    func controlSize(_ size: ControlSize) -> some View {
+        ControlSizeView(content: self, size: size)
+    }
+
+    // MARK: - Tab Divider Style
+
+    /// Sets the divider style for descendant ``TabView`` instances.
+    ///
+    /// The divider is the horizontal rule between the tab bar and content:
+    ///
+    /// ```swift
+    /// TabView { ... }
+    ///     .tabDividerStyle(.bottom)
+    /// ```
+    func tabDividerStyle(_ style: TabDividerStyle) -> some View {
+        TabDividerStyleView(content: self, style: style)
+    }
+
+    // MARK: - Tab Border Style
+
+    /// Draws a box-drawing border around the content area of descendant
+    /// ``TabView`` instances, merged with the divider.
+    ///
+    /// Ignored when ``TabDividerStyle/none`` is active. Use
+    /// ``View/border(_:)`` for a plain border around the entire TabView.
+    ///
+    /// ```swift
+    /// TabView { ... }
+    ///     .tabBorderStyle(.rounded)
+    /// ```
+    func tabBorderStyle(_ style: BorderedView.BorderStyle) -> some View {
+        TabBorderStyleView(content: self, borderStyle: style)
+    }
+
     // MARK: - Disabled
 
     /// Disables interactive controls in this view's subtree.

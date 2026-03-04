@@ -92,6 +92,25 @@ public struct RenderContext: Sendable {
     /// to determine its rendering style.
     var buttonStyle: ButtonStyle?
 
+    /// The control size for descendant controls.
+    ///
+    /// Set by ``ControlSizeView`` and read by controls like ``TabView``
+    /// to choose between compact, regular, or spacious chrome.
+    var controlSize: ControlSize?
+
+    /// The tab divider style for descendant ``TabView`` instances.
+    ///
+    /// Set by ``TabDividerStyleView`` and read by ``TabView`` to
+    /// determine the horizontal rule between tabs and content.
+    var tabDividerStyle: TabDividerStyle?
+
+    /// The tab content border style for descendant ``TabView`` instances.
+    ///
+    /// Set by ``TabBorderStyleView`` and read by ``TabView`` to draw a
+    /// box-drawing border around the content area, merged with the divider.
+    /// Ignored when ``tabDividerStyle`` is ``TabDividerStyle/none``.
+    var tabBorderStyle: BorderedView.BorderStyle?
+
     /// Whether interactive controls in this subtree are disabled.
     ///
     /// Set by ``DisabledView`` and read by interactive controls (``Button``,

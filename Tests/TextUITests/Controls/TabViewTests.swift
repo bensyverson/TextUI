@@ -16,9 +16,9 @@ struct TabViewTests {
         #expect(size.height == 20)
     }
 
-    // MARK: - Tab Bar Rendering
+    // MARK: - Tab Bar Rendering (default: .regular + .bottom divider)
 
-    @Test("Tab bar renders with bracket delimiters and labels")
+    @Test("Tab bar renders with box-drawing border and labels")
     func tabBarRendering() {
         let view = TabView {
             TabView.Tab("One") { Text("A") }
@@ -28,11 +28,15 @@ struct TabViewTests {
         let region = Region(row: 0, col: 0, width: 30, height: 5)
         render(view, into: &buffer, region: region)
 
-        // Tab bar on row 0: "[ One │ Two ]"
-        #expect(buffer[0, 0].char == "[")
-        #expect(buffer[0, 2].char == "O")
-        #expect(buffer[0, 3].char == "n")
-        #expect(buffer[0, 4].char == "e")
+        // Row 0: "╭─ One │ Two ─╮"
+        #expect(buffer[0, 0].char == "╭")
+        #expect(buffer[0, 1].char == "─")
+        #expect(buffer[0, 3].char == "O")
+        #expect(buffer[0, 4].char == "n")
+        #expect(buffer[0, 5].char == "e")
+
+        // Row 1: divider row with ┴ at tab box edges
+        #expect(buffer[1, 0].char == "┴")
     }
 
     @Test("Selected tab has bold styling when unfocused")
@@ -46,8 +50,8 @@ struct TabViewTests {
         render(view, into: &buffer, region: region)
 
         // First tab "Home" should be bold (selected, unfocused)
-        // " Home " starts at col 1
-        #expect(buffer[0, 2].style.bold)
+        // "╭─ Home │ Other ─╮" — " Home " starts at col 2, label "H" at col 3
+        #expect(buffer[0, 3].style.bold)
     }
 
     @Test("Selected tab has inverse styling when focused")
@@ -68,8 +72,25 @@ struct TabViewTests {
         buffer = Buffer(width: 30, height: 5)
         render(view, into: &buffer, region: region, context: ctx)
 
-        // "Home" label characters should be inverse
-        #expect(buffer[0, 2].style.inverse)
+        // "Home" label character should be inverse
+        #expect(buffer[0, 3].style.inverse)
+    }
+
+    @Test("Inactive tabs have dim styling")
+    func inactiveTabsDim() {
+        let view = TabView {
+            TabView.Tab("Home") { Text("Content") }
+            TabView.Tab("Other") { Text("Other") }
+        }
+        var buffer = Buffer(width: 30, height: 5)
+        let region = Region(row: 0, col: 0, width: 30, height: 5)
+        render(view, into: &buffer, region: region)
+
+        // Second tab "Other" should be dim (inactive)
+        // "╭─ Home │ Other ─╮" — find "O" of "Other"
+        // " Home " = 6 chars, "│" = 1, " Other " at col 10
+        // Col 0=╭ 1=─ 2=space 3=H 4=o 5=m 6=e 7=space 8=│ 9=space 10=O
+        #expect(buffer[0, 10].style.dim)
     }
 
     // MARK: - Content Rendering
@@ -84,10 +105,10 @@ struct TabViewTests {
         let region = Region(row: 0, col: 0, width: 30, height: 5)
         render(view, into: &buffer, region: region)
 
-        // First tab content "AAA" renders on row 1
-        #expect(buffer[1, 0].char == "A")
-        #expect(buffer[1, 1].char == "A")
-        #expect(buffer[1, 2].char == "A")
+        // Content renders on row 2 (after 2-line tab chrome)
+        #expect(buffer[2, 0].char == "A")
+        #expect(buffer[2, 1].char == "A")
+        #expect(buffer[2, 2].char == "A")
     }
 
     // MARK: - Tab Switching
@@ -119,8 +140,8 @@ struct TabViewTests {
         buffer = Buffer(width: 30, height: 5)
         render(view, into: &buffer, region: region, context: ctx)
 
-        // Content should now be "BBB"
-        #expect(buffer[1, 0].char == "B")
+        // Content should now be "BBB" on row 2
+        #expect(buffer[2, 0].char == "B")
     }
 
     @Test("Left key wraps around to last tab")
@@ -149,7 +170,7 @@ struct TabViewTests {
         buffer = Buffer(width: 30, height: 5)
         render(view, into: &buffer, region: region, context: ctx)
 
-        #expect(buffer[1, 0].char == "B")
+        #expect(buffer[2, 0].char == "B")
     }
 
     // MARK: - Focus
@@ -222,8 +243,8 @@ struct TabViewTests {
             render(view, into: &buffer, region: region, context: ctx)
         }
 
-        // Still on second tab
-        #expect(buffer[1, 0].char == "B")
+        // Still on second tab (content on row 2)
+        #expect(buffer[2, 0].char == "B")
     }
 
     // MARK: - Edge Cases
@@ -237,10 +258,10 @@ struct TabViewTests {
         let region = Region(row: 0, col: 0, width: 20, height: 5)
         render(view, into: &buffer, region: region)
 
-        // Tab bar: "[ Only ]"
-        #expect(buffer[0, 0].char == "[")
-        #expect(buffer[0, 2].char == "O")
-        // Content: "Solo"
-        #expect(buffer[1, 0].char == "S")
+        // Row 0: "╭─ Only ─╮"
+        #expect(buffer[0, 0].char == "╭")
+        #expect(buffer[0, 3].char == "O")
+        // Content on row 2: "Solo"
+        #expect(buffer[2, 0].char == "S")
     }
 }

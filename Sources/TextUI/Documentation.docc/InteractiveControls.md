@@ -104,6 +104,45 @@ keys when focused. Pressing Space or Enter opens a dropdown overlay
 where Up/Down navigates options, Enter confirms, and Escape cancels.
 They use ``FocusInteraction/activate``.
 
+### TabView
+
+A tab container that switches between content panes:
+
+```swift
+TabView {
+    TabView.Tab("Home") { HomeView() }
+    TabView.Tab("Settings") { SettingsView() }
+}
+```
+
+TabView supports three density levels via `.controlSize(_:)`:
+- **`.small`** — 1-line compact tab bar
+- **`.regular`** (default) — 2-line with labels in a border row
+- **`.large`** — 3-line with full tab boxes
+
+Control the horizontal rule with `.tabDividerStyle(_:)`:
+- **`.none`** — tabs float above content
+- **`.bottom`** (default) — rule below tabs
+- **`.middle`** — rule through center of labels (`.large` only)
+
+Add a content border with `.tabBorderStyle(.rounded)` or `.tabBorderStyle(.square)`,
+which merges with the divider. This is ignored when the divider is `.none`.
+
+Position tabs with the `alignment:` parameter:
+
+```swift
+TabView(alignment: .center) {
+    TabView.Tab("Home") { HomeView() }
+    TabView.Tab("Settings") { SettingsView() }
+}
+.controlSize(.large)
+.tabDividerStyle(.bottom)
+.tabBorderStyle(.rounded)
+```
+
+Inactive tabs render dim, the selected tab renders bold (unfocused) or
+inverse (focused). The tab bar responds to Left/Right arrow keys.
+
 ### Building a Form
 
 Combine controls with layout views to build forms:
@@ -190,6 +229,9 @@ Button("Quit") { Application.quit() }
 - ``TextField``
 - ``Toggle``
 - ``Picker``
+- ``TabView``
+- ``ControlSize``
+- ``TabDividerStyle``
 
 ### Lifecycle
 

@@ -48,6 +48,28 @@ public struct BorderedView: PrimitiveView {
         var vertical: Character {
             "│"
         }
+
+        // MARK: - Join Characters
+
+        /// Horizontal line with a separator going down (┬).
+        var teeDown: Character {
+            "┬"
+        }
+
+        /// Horizontal line with a separator going up (┴).
+        var teeUp: Character {
+            "┴"
+        }
+
+        /// Vertical line with a branch going right (├).
+        var teeRight: Character {
+            "├"
+        }
+
+        /// Vertical line with a branch going left (┤).
+        var teeLeft: Character {
+            "┤"
+        }
     }
 
     public func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {

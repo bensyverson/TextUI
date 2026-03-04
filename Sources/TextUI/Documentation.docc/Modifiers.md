@@ -66,6 +66,17 @@ through the render context so all descendant `Text` views inherit the setting.
 - **`.multilineTextAlignment(_:)`** — Aligns wrapped lines within the available
   width: `.leading` (default), `.center`, or `.trailing`.
 
+### Control Appearance Modifiers
+
+- **`.controlSize(_:)`** — Sets the density level for descendant controls.
+  ``TabView`` supports `.small` (1-line), `.regular` (2-line, default), and
+  `.large` (3-line) chrome.
+- **`.tabDividerStyle(_:)`** — Controls the horizontal rule between the tab
+  bar and content: `.none`, `.bottom` (default), or `.middle` (`.large` only).
+- **`.tabBorderStyle(_:)`** — Draws a box-drawing border around the tab
+  content area, merged with the divider. Supports `.rounded` and `.square`.
+  Ignored when the divider is `.none`.
+
 ### Interaction Modifiers
 
 - **`.disabled(_:)`** — Disables interactive controls in the view's subtree.
