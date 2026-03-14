@@ -87,6 +87,60 @@ struct BorderTests {
         #expect(buffer[0, 0].char == "╭")
     }
 
+    @Test("Border with color applies fg style to corners")
+    func coloredCorners() {
+        let view = Text("AB").border(.rounded, color: .blue)
+        var buffer = Buffer(width: 4, height: 3)
+        let region = Region(row: 0, col: 0, width: 4, height: 3)
+        render(view, into: &buffer, region: region)
+        let blue: Style.Color = .blue
+        #expect(buffer[0, 0].style.fg == blue)
+        #expect(buffer[0, 3].style.fg == blue)
+        #expect(buffer[2, 0].style.fg == blue)
+        #expect(buffer[2, 3].style.fg == blue)
+    }
+
+    @Test("Border with color applies fg style to edges")
+    func coloredEdges() {
+        let view = Text("ABCD").border(.rounded, color: .red)
+        let size = sizeThatFits(view, proposal: SizeProposal(width: 20, height: 10))
+        var buffer = Buffer(width: size.width, height: size.height)
+        let region = Region(row: 0, col: 0, width: size.width, height: size.height)
+        render(view, into: &buffer, region: region)
+        let red: Style.Color = .red
+        // Top horizontal edge
+        #expect(buffer[0, 1].style.fg == red)
+        // Bottom horizontal edge
+        #expect(buffer[2, 1].style.fg == red)
+        // Left vertical edge
+        #expect(buffer[1, 0].style.fg == red)
+        // Right vertical edge
+        #expect(buffer[1, 5].style.fg == red)
+    }
+
+    @Test("Border without color keeps plain style")
+    func noColorPlainStyle() {
+        let view = Text("AB").border(.rounded)
+        var buffer = Buffer(width: 4, height: 3)
+        let region = Region(row: 0, col: 0, width: 4, height: 3)
+        render(view, into: &buffer, region: region)
+        #expect(buffer[0, 0].style.fg == nil)
+        #expect(buffer[0, 1].style.fg == nil)
+        #expect(buffer[1, 0].style.fg == nil)
+    }
+
+    @Test("Border color does not leak into content")
+    func colorDoesNotLeakIntoContent() {
+        let view = Text("AB").border(.rounded, color: .green)
+        var buffer = Buffer(width: 4, height: 3)
+        let region = Region(row: 0, col: 0, width: 4, height: 3)
+        render(view, into: &buffer, region: region)
+        let green: Style.Color = .green
+        // Content cells should not have the border color
+        #expect(buffer[1, 1].style.fg != green)
+        #expect(buffer[1, 2].style.fg != green)
+    }
+
     @Test("Border with padding inside")
     func borderWithPadding() {
         let view = Text("A").padding(1).border(.rounded)

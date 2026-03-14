@@ -1,10 +1,12 @@
 /// A view that draws a box-drawing border around its content.
 ///
 /// The border adds 2 columns (left + right edges) and 2 rows
-/// (top + bottom edges) to the child's size.
+/// (top + bottom edges) to the child's size. An optional
+/// ``Style/Color`` can be applied to the border characters.
 public struct BorderedView: PrimitiveView {
     let content: any View
     let borderStyle: BorderStyle
+    let borderColor: Style.Color?
 
     /// The style of box-drawing characters used for the border.
     public enum BorderStyle: Friendly {
@@ -86,31 +88,32 @@ public struct BorderedView: PrimitiveView {
 
         let lastCol = region.col + region.width - 1
         let lastRow = region.row + region.height - 1
+        let style = Style(fg: borderColor)
 
         // Draw corners
-        buffer[region.row, region.col] = Cell(char: borderStyle.topLeft)
-        buffer[region.row, lastCol] = Cell(char: borderStyle.topRight)
-        buffer[lastRow, region.col] = Cell(char: borderStyle.bottomLeft)
-        buffer[lastRow, lastCol] = Cell(char: borderStyle.bottomRight)
+        buffer[region.row, region.col] = Cell(char: borderStyle.topLeft, style: style)
+        buffer[region.row, lastCol] = Cell(char: borderStyle.topRight, style: style)
+        buffer[lastRow, region.col] = Cell(char: borderStyle.bottomLeft, style: style)
+        buffer[lastRow, lastCol] = Cell(char: borderStyle.bottomRight, style: style)
 
         // Draw horizontal edges
         buffer.horizontalLine(
             row: region.row, col: region.col + 1,
-            length: region.width - 2, char: borderStyle.horizontal,
+            length: region.width - 2, char: borderStyle.horizontal, style: style,
         )
         buffer.horizontalLine(
             row: lastRow, col: region.col + 1,
-            length: region.width - 2, char: borderStyle.horizontal,
+            length: region.width - 2, char: borderStyle.horizontal, style: style,
         )
 
         // Draw vertical edges
         buffer.verticalLine(
             row: region.row + 1, col: region.col,
-            length: region.height - 2, char: borderStyle.vertical,
+            length: region.height - 2, char: borderStyle.vertical, style: style,
         )
         buffer.verticalLine(
             row: region.row + 1, col: lastCol,
-            length: region.height - 2, char: borderStyle.vertical,
+            length: region.height - 2, char: borderStyle.vertical, style: style,
         )
 
         // Render content inside

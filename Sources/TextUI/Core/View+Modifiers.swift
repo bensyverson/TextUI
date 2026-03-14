@@ -154,8 +154,11 @@ public extension View {
     /// Draws a box-drawing border around the view.
     ///
     /// Adds 2 to both width and height (1 cell per side).
-    func border(_ style: BorderedView.BorderStyle = .rounded) -> some View {
-        BorderedView(content: self, borderStyle: style)
+    /// - Parameters:
+    ///   - style: The border style (`.rounded` or `.square`).
+    ///   - color: An optional foreground color for the border characters.
+    func border(_ style: BorderedView.BorderStyle = .rounded, color: Style.Color? = nil) -> some View {
+        BorderedView(content: self, borderStyle: style, borderColor: color)
     }
 
     // MARK: - Layout Priority
