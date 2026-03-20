@@ -32,7 +32,7 @@ public final class KeyReader: Sendable {
     /// Creates a new key reader.
     public init() {
         let (stream, continuation) = AsyncStream<KeyEvent>.makeStream(
-            bufferingPolicy: .bufferingNewest(64),
+            bufferingPolicy: .unbounded,
         )
         self.stream = stream
         self.continuation = continuation
