@@ -862,13 +862,33 @@ public struct TabView: PrimitiveView {
 /// Result builder for constructing arrays of ``TabView/Tab``.
 @resultBuilder
 public enum TabBuilder {
-    /// Builds a block of tabs.
-    public static func buildBlock(_ components: TabView.Tab...) -> [TabView.Tab] {
-        Array(components)
+    /// The component type used throughout the builder.
+    public static func buildExpression(_ expression: TabView.Tab) -> [TabView.Tab] {
+        [expression]
+    }
+
+    /// Combines components from a builder block.
+    public static func buildBlock(_ components: [TabView.Tab]...) -> [TabView.Tab] {
+        components.flatMap(\.self)
     }
 
     /// Builds a tab array from a `for` loop.
     public static func buildArray(_ components: [[TabView.Tab]]) -> [TabView.Tab] {
         components.flatMap(\.self)
+    }
+
+    /// Supports `if` conditions.
+    public static func buildOptional(_ component: [TabView.Tab]?) -> [TabView.Tab] {
+        component ?? []
+    }
+
+    /// Supports `if/else` — first branch.
+    public static func buildEither(first component: [TabView.Tab]) -> [TabView.Tab] {
+        component
+    }
+
+    /// Supports `if/else` — second branch.
+    public static func buildEither(second component: [TabView.Tab]) -> [TabView.Tab] {
+        component
     }
 }
