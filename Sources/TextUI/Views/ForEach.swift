@@ -25,6 +25,32 @@ public struct ForEach<Data: RandomAccessCollection & Sendable>: PrimitiveView, L
         }
     }
 
+    /// Creates views from a collection using a key path for identity.
+    ///
+    /// This matches SwiftUI's `ForEach(_:id:content:)` API. Because TextUI
+    /// evaluates eagerly (no diffing), the `id` key path is not used at
+    /// runtime — but it satisfies the same call-site ergonomics, allowing
+    /// non-`Identifiable` elements like `String`, `Int`, or enumerated tuples.
+    ///
+    /// ```swift
+    /// ForEach(lines, id: \.self) { line in
+    ///     Text(line)
+    /// }
+    ///
+    /// ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+    ///     Text("\(index): \(item)")
+    /// }
+    /// ```
+    public init(
+        _ data: Data,
+        id _: KeyPath<Data.Element, some Hashable & Sendable>,
+        @ViewBuilder content: (Data.Element) -> ViewGroup,
+    ) {
+        children = data.flatMap { element in
+            content(element).children
+        }
+    }
+
     // MARK: - LayoutTransparent
 
     var layoutChildren: [any View] {

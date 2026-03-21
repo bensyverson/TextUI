@@ -98,6 +98,18 @@ ForEach(items) { item in
 }
 ```
 
+For non-`Identifiable` elements, use the `id:` key path variant:
+
+```swift
+ForEach(lines, id: \.self) { line in
+    Text(line)
+}
+
+ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+    Text("\(index): \(item.name)")
+}
+```
+
 ``Group`` collects views without adding layout behavior:
 
 ```swift
