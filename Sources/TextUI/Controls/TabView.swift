@@ -53,6 +53,13 @@ public struct TabView: PrimitiveView {
     /// Auto-generated key for focus registration and state persistence.
     let autoKey: String
 
+    /// Parent-driven selected tab index, or `nil` for internal management.
+    ///
+    /// When non-nil, the TabView uses this value as the selected tab index
+    /// each frame. Pair with ``View/onSelectionChange(_:)`` for two-way
+    /// synchronisation.
+    let selection: Int?
+
     /// A single tab within a ``TabView``.
     public struct Tab {
         /// The display label for this tab.
@@ -115,6 +122,8 @@ public struct TabView: PrimitiveView {
 
     /// Creates a tab view with the given tabs.
     ///
+    /// The TabView manages its own selected tab internally.
+    ///
     /// - Parameters:
     ///   - alignment: Horizontal alignment of the tab group (default: `.leading`).
     ///   - fileID: Auto-captured file ID for stable identity.
@@ -128,6 +137,40 @@ public struct TabView: PrimitiveView {
     ) {
         tabs = content()
         self.alignment = alignment
+        selection = nil
+        autoKey = "\(fileID):\(line)"
+    }
+
+    /// Creates a tab view whose selected tab is driven by the parent.
+    ///
+    /// The `selection` value determines which tab is displayed each frame.
+    /// Pair with ``View/onSelectionChange(_:)`` to be notified when the
+    /// user switches tabs, so you can update your state:
+    ///
+    /// ```swift
+    /// TabView(selection: state.selectedTab) {
+    ///     TabView.Tab("Home") { HomeView() }
+    ///     TabView.Tab("Settings") { SettingsView() }
+    /// }
+    /// .onSelectionChange { state.selectedTab = $0 }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - selection: The index of the tab to display.
+    ///   - alignment: Horizontal alignment of the tab group (default: `.leading`).
+    ///   - fileID: Auto-captured file ID for stable identity.
+    ///   - line: Auto-captured line number for stable identity.
+    ///   - content: A ``TabBuilder`` closure producing the tabs.
+    public init(
+        selection: Int,
+        alignment: HorizontalAlignment = .leading,
+        fileID: String = #fileID,
+        line: Int = #line,
+        @TabBuilder content: () -> [Tab],
+    ) {
+        tabs = content()
+        self.alignment = alignment
+        self.selection = selection
         autoKey = "\(fileID):\(line)"
     }
 
@@ -160,6 +203,8 @@ public struct TabView: PrimitiveView {
     struct TabState: Sendable {
         var selectedIndex: Int = 0
         var tabCount: Int = 0
+        /// Whether the parent drives the selected index via ``TabView/selection``.
+        var isParentDriven: Bool = false
     }
 
     // MARK: - Sizing
@@ -244,11 +289,21 @@ public struct TabView: PrimitiveView {
 
         // Read selected tab
         var state = store?.controlState(forKey: autoKey, as: TabState.self) ?? TabState()
+        if let selection {
+            state.selectedIndex = selection
+        }
         state.selectedIndex = max(0, min(state.selectedIndex, tabs.count - 1))
         state.tabCount = tabs.count
+        state.isParentDriven = selection != nil
         store?.setControlState(state, forKey: autoKey)
         store?.tabViewKeys.append(AnyHashable(autoKey))
         let selectedIndex = state.selectedIndex
+
+        // Store the selection change handler for this TabView (if any)
+        let selectionHandler = store?.currentTabSelectionHandler
+        if let selectionHandler {
+            store?.tabSelectionHandlers[AnyHashable(autoKey)] = selectionHandler
+        }
 
         // Register tab bar as focusable (skip if FocusedView already registered us)
         let topChrome = topChromeRows(controlSize: controlSize, dividerStyle: dividerStyle)
@@ -272,22 +327,26 @@ public struct TabView: PrimitiveView {
         }
 
         // Register inline handler for Left/Right tab switching
+        let isParentDriven = selection != nil
         if isFocused, let id = effectiveFocusID {
-            store?.registerInlineHandler(for: id) { [autoKey, tabCount = tabs.count] key in
+            store?.registerInlineHandler(for: id) { [autoKey, tabCount = tabs.count, selectionHandler] key in
                 guard let store else { return .ignored }
                 var state = store.controlState(forKey: autoKey, as: TabState.self) ?? TabState()
+                let newIndex: Int
                 switch key {
                 case .left:
-                    state.selectedIndex = (state.selectedIndex - 1 + tabCount) % tabCount
-                    store.setControlState(state, forKey: autoKey)
-                    return .handled
+                    newIndex = (state.selectedIndex - 1 + tabCount) % tabCount
                 case .right:
-                    state.selectedIndex = (state.selectedIndex + 1) % tabCount
-                    store.setControlState(state, forKey: autoKey)
-                    return .handled
+                    newIndex = (state.selectedIndex + 1) % tabCount
                 default:
                     return .ignored
                 }
+                if !isParentDriven {
+                    state.selectedIndex = newIndex
+                    store.setControlState(state, forKey: autoKey)
+                }
+                selectionHandler?(newIndex)
+                return .handled
             }
         }
 

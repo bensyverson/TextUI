@@ -106,6 +106,22 @@ final class FocusStore {
     /// Auto keys of TabViews registered during the current frame (innermost last).
     var tabViewKeys: [AnyHashable] = []
 
+    // MARK: - Tab Selection Handlers
+
+    /// Ancestor stack of tab selection change handlers, built during render.
+    ///
+    /// The `.onSelectionChange` modifier pushes a handler before rendering
+    /// its content and pops it afterward. ``TabView`` reads the top of the
+    /// stack during its own render and stores it in ``tabSelectionHandlers``.
+    private var tabSelectionHandlerStack: [(Int) -> Void] = []
+
+    /// Per-TabView selection change handlers, keyed by the TabView's auto key.
+    ///
+    /// Populated by ``TabView`` during render from the top of
+    /// ``tabSelectionHandlerStack``. Read by ``RunLoop/switchTab(direction:)``
+    /// to notify the parent when the user switches tabs globally.
+    var tabSelectionHandlers: [AnyHashable: (Int) -> Void] = [:]
+
     // MARK: - Frame Lifecycle
 
     /// Resets the focus ring for a new render pass.
@@ -119,6 +135,8 @@ final class FocusStore {
         keyHandlerStack = []
         submitHandlerStack = []
         tabViewKeys = []
+        tabSelectionHandlerStack = []
+        tabSelectionHandlers = [:]
         nextID = 0
     }
 
@@ -305,6 +323,25 @@ final class FocusStore {
     /// Called by ``OnSubmitView`` after rendering its content.
     func popSubmitHandler() {
         _ = submitHandlerStack.popLast()
+    }
+
+    /// Pushes a tab selection change handler onto the ancestor stack.
+    ///
+    /// Called by ``OnTabSelectionChangeView`` before rendering its content.
+    func pushTabSelectionHandler(_ handler: @escaping (Int) -> Void) {
+        tabSelectionHandlerStack.append(handler)
+    }
+
+    /// Pops the most recent tab selection change handler.
+    ///
+    /// Called by ``OnTabSelectionChangeView`` after rendering its content.
+    func popTabSelectionHandler() {
+        _ = tabSelectionHandlerStack.popLast()
+    }
+
+    /// Returns the current (topmost) tab selection change handler, if any.
+    var currentTabSelectionHandler: ((Int) -> Void)? {
+        tabSelectionHandlerStack.last
     }
 
     // MARK: - Section IDs

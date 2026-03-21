@@ -444,6 +444,25 @@ public extension View {
         TabBorderStyleView(content: self, borderStyle: style)
     }
 
+    // MARK: - Tab Selection Change
+
+    /// Registers a handler that fires when the descendant ``TabView``'s
+    /// selected tab changes.
+    ///
+    /// Use this alongside ``TabView/init(selection:alignment:fileID:line:content:)``
+    /// for two-way synchronisation between a parent's state and the TabView:
+    ///
+    /// ```swift
+    /// TabView(selection: state.selectedTab) {
+    ///     TabView.Tab("Home") { HomeView() }
+    ///     TabView.Tab("Settings") { SettingsView() }
+    /// }
+    /// .onSelectionChange { state.selectedTab = $0 }
+    /// ```
+    func onSelectionChange(_ handler: @escaping (Int) -> Void) -> some View {
+        OnTabSelectionChangeView(content: self, handler: handler)
+    }
+
     // MARK: - Disabled
 
     /// Disables interactive controls in this view's subtree.

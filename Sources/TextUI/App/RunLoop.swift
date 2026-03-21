@@ -362,8 +362,12 @@ final class RunLoop {
         var state = focusStore.controlState(forKey: tabKey, as: TabView.TabState.self)
             ?? TabView.TabState()
         guard state.tabCount > 0 else { return }
-        state.selectedIndex = (state.selectedIndex + direction + state.tabCount) % state.tabCount
-        focusStore.setControlState(state, forKey: tabKey)
+        let newIndex = (state.selectedIndex + direction + state.tabCount) % state.tabCount
+        if !state.isParentDriven {
+            state.selectedIndex = newIndex
+            focusStore.setControlState(state, forKey: tabKey)
+        }
+        focusStore.tabSelectionHandlers[tabKey]?(newIndex)
     }
 
     // MARK: - Rendering
