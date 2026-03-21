@@ -58,16 +58,57 @@ public struct TabView: PrimitiveView {
         /// The display label for this tab.
         let label: String
 
+        /// An optional custom view to render as the tab label.
+        ///
+        /// When provided, this view is rendered into the label region instead
+        /// of the plain `label` string. Use this for status indicators, spinners,
+        /// colored badges, or any rich content in the tab bar.
+        let customLabel: (any View)?
+
         /// The content view displayed when this tab is selected.
         let content: any View
 
-        /// Creates a tab with a label and content.
+        /// Creates a tab with a string label and content.
         ///
         /// - Parameters:
         ///   - label: The text shown in the tab bar.
         ///   - content: A ``ViewBuilder`` closure producing the tab's content.
         public init(_ label: String, @ViewBuilder content: () -> ViewGroup) {
             self.label = label
+            customLabel = nil
+            self.content = content()
+        }
+
+        /// Creates a tab with a custom label view and content.
+        ///
+        /// The custom label replaces the plain string in the tab bar, allowing
+        /// rich content like spinners, colored text, or status indicators.
+        /// The `label` string is still used for width measurement in the tab
+        /// bar layout — it should match the expected display width of the
+        /// custom view.
+        ///
+        /// ```swift
+        /// TabView.Tab("⠹ PM") {
+        ///     HStack {
+        ///         Text("⠹ ").animating()
+        ///         Text("PM")
+        ///     }
+        /// } content: {
+        ///     MyTabContent()
+        /// }
+        /// ```
+        ///
+        /// - Parameters:
+        ///   - label: A string used for width measurement in the tab bar layout.
+        ///   - customLabel: A ``ViewBuilder`` closure producing the label view.
+        ///   - content: A ``ViewBuilder`` closure producing the tab's content.
+        public init(
+            _ label: String,
+            @ViewBuilder customLabel: () -> ViewGroup,
+            @ViewBuilder content: () -> ViewGroup,
+        ) {
+            self.label = label
+            self.customLabel = customLabel()
             self.content = content()
         }
     }
@@ -88,6 +129,31 @@ public struct TabView: PrimitiveView {
         tabs = content()
         self.alignment = alignment
         autoKey = "\(fileID):\(line)"
+    }
+
+    // MARK: - Tab Label Rendering
+
+    /// Renders a tab's label into the buffer at the given position.
+    ///
+    /// For string-only labels, uses `buffer.write` with the given style.
+    /// For custom label views, renders the view into a 1-row region.
+    /// Returns the number of columns consumed.
+    @discardableResult
+    private func renderTabLabel(
+        _ tab: Tab,
+        into buffer: inout Buffer,
+        row: Int,
+        col: Int,
+        style: Style,
+        context: RenderContext,
+    ) -> Int {
+        let width = tab.label.displayWidth
+        if let view = tab.customLabel {
+            let region = Region(row: row, col: col, width: width, height: 1)
+            TextUI.render(view, into: &buffer, region: region, context: context)
+            return width
+        }
+        return buffer.write(tab.label, row: row, col: col, style: style)
     }
 
     /// Persistent tab selection state.
@@ -240,6 +306,7 @@ public struct TabView: PrimitiveView {
                 selectedIndex: selectedIndex, isFocused: isFocused,
                 dividerStyle: dividerStyle, hasBorder: hasBorder,
                 borderStyle: borderStyle, tabOffset: tabOffset,
+                context: context,
             )
         case .regular:
             renderRegularTabBar(
@@ -247,7 +314,7 @@ public struct TabView: PrimitiveView {
                 selectedIndex: selectedIndex, isFocused: isFocused,
                 dividerStyle: dividerStyle, hasBorder: hasBorder,
                 borderStyle: borderStyle, tabBoxStyle: tabBoxStyle,
-                tabOffset: tabOffset,
+                tabOffset: tabOffset, context: context,
             )
         case .large:
             renderLargeTabBar(
@@ -255,7 +322,7 @@ public struct TabView: PrimitiveView {
                 selectedIndex: selectedIndex, isFocused: isFocused,
                 dividerStyle: dividerStyle, hasBorder: hasBorder,
                 borderStyle: borderStyle, tabBoxStyle: tabBoxStyle,
-                tabOffset: tabOffset,
+                tabOffset: tabOffset, context: context,
             )
         }
 
@@ -370,6 +437,7 @@ public struct TabView: PrimitiveView {
         hasBorder: Bool,
         borderStyle: BorderedView.BorderStyle,
         tabOffset: Int,
+        context: RenderContext,
     ) {
         let row = region.row
 
@@ -379,7 +447,7 @@ public struct TabView: PrimitiveView {
             for (i, tab) in tabs.enumerated() {
                 let style = tabLabelStyle(isSelected: i == selectedIndex, isFocused: isFocused)
                 col += buffer.write(" ", row: row, col: col, style: style)
-                col += buffer.write(tab.label, row: row, col: col, style: style)
+                col += renderTabLabel(tab, into: &buffer, row: row, col: col, style: style, context: context)
                 col += buffer.write(" ", row: row, col: col, style: style)
                 if i < tabs.count - 1 {
                     col += buffer.write("│", row: row, col: col)
@@ -407,7 +475,7 @@ public struct TabView: PrimitiveView {
                 for (i, tab) in tabs.enumerated() {
                     let style = tabLabelStyle(isSelected: i == selectedIndex, isFocused: isFocused)
                     col += buffer.write(" ", row: row, col: col, style: style)
-                    col += buffer.write(tab.label, row: row, col: col, style: style)
+                    col += renderTabLabel(tab, into: &buffer, row: row, col: col, style: style, context: context)
                     col += buffer.write(" ", row: row, col: col, style: style)
                     if i < tabs.count - 1 {
                         col += buffer.write("│", row: row, col: col)
@@ -431,7 +499,7 @@ public struct TabView: PrimitiveView {
                 for (i, tab) in tabs.enumerated() {
                     let style = tabLabelStyle(isSelected: i == selectedIndex, isFocused: isFocused)
                     col += buffer.write(" ", row: row, col: col, style: style)
-                    col += buffer.write(tab.label, row: row, col: col, style: style)
+                    col += renderTabLabel(tab, into: &buffer, row: row, col: col, style: style, context: context)
                     col += buffer.write(" ", row: row, col: col, style: style)
                     if i < tabs.count - 1 {
                         col += buffer.write("│", row: row, col: col)
@@ -467,6 +535,7 @@ public struct TabView: PrimitiveView {
         borderStyle: BorderedView.BorderStyle,
         tabBoxStyle: BorderedView.BorderStyle,
         tabOffset: Int,
+        context: RenderContext,
     ) {
         let row0 = region.row
         let groupWidth = tabGroupWidth(controlSize: .regular)
@@ -482,7 +551,7 @@ public struct TabView: PrimitiveView {
         for (i, tab) in tabs.enumerated() {
             let style = tabLabelStyle(isSelected: i == selectedIndex, isFocused: isFocused)
             col += buffer.write(" ", row: row0, col: col, style: style)
-            col += buffer.write(tab.label, row: row0, col: col, style: style)
+            col += renderTabLabel(tab, into: &buffer, row: row0, col: col, style: style, context: context)
             col += buffer.write(" ", row: row0, col: col, style: style)
             if i < tabs.count - 1 {
                 col += buffer.write("│", row: row0, col: col)
@@ -556,6 +625,7 @@ public struct TabView: PrimitiveView {
         borderStyle: BorderedView.BorderStyle,
         tabBoxStyle: BorderedView.BorderStyle,
         tabOffset: Int,
+        context: RenderContext,
     ) {
         let row0 = region.row
         let row1 = row0 + 1
@@ -597,6 +667,7 @@ public struct TabView: PrimitiveView {
                 region: region, tabStart: tabStart, groupWidth: groupWidth,
                 selectedIndex: selectedIndex, isFocused: isFocused,
                 hasBorder: hasBorder, borderStyle: borderStyle,
+                context: context,
             )
 
             // Row 2: Close tab boxes + optional border verticals
@@ -613,7 +684,7 @@ public struct TabView: PrimitiveView {
             for (i, tab) in tabs.enumerated() {
                 let style = tabLabelStyle(isSelected: i == selectedIndex, isFocused: isFocused)
                 col += buffer.write(" ", row: row1, col: col, style: style)
-                col += buffer.write(tab.label, row: row1, col: col, style: style)
+                col += renderTabLabel(tab, into: &buffer, row: row1, col: col, style: style, context: context)
                 col += buffer.write(" ", row: row1, col: col, style: style)
                 if i < tabs.count - 1 {
                     col += buffer.write("│", row: row1, col: col)
@@ -708,6 +779,7 @@ public struct TabView: PrimitiveView {
         isFocused: Bool,
         hasBorder: Bool,
         borderStyle: BorderedView.BorderStyle,
+        context: RenderContext,
     ) {
         let lastCol = region.col + region.width - 1
         let tabEnd = tabStart + groupWidth
@@ -736,7 +808,7 @@ public struct TabView: PrimitiveView {
         for (i, tab) in tabs.enumerated() {
             let style = tabLabelStyle(isSelected: i == selectedIndex, isFocused: isFocused)
             col += buffer.write(" ", row: row, col: col, style: style)
-            col += buffer.write(tab.label, row: row, col: col, style: style)
+            col += renderTabLabel(tab, into: &buffer, row: row, col: col, style: style, context: context)
             col += buffer.write(" ", row: row, col: col, style: style)
             if i < tabs.count - 1 {
                 col += buffer.write("│", row: row, col: col)

@@ -27,7 +27,9 @@ struct DemoApp: App {
                 TabView.Tab("All Views") {
                     ViewsTab()
                 }
-            }
+            }.controlSize(.large)
+                .tabDividerStyle(.bottom)
+                .tabBorderStyle(.rounded)
 
             CommandBar()
                 .foregroundColor(.blue)

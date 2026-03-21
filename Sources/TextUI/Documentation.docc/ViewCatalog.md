@@ -165,6 +165,21 @@ TabView(alignment: .center) {
 .tabBorderStyle(.rounded)
 ```
 
+For custom label views (status indicators, spinners, colored text), use the
+three-argument ``TabView/Tab`` initializer. The string argument provides the
+display width for layout; the `customLabel` closure renders the view:
+
+```swift
+TabView.Tab("⠹ PM") {
+    HStack {
+        Text("⠹ ").animating()
+        Text("PM")
+    }
+} content: {
+    PMContentView()
+}
+```
+
 ### Interactive Controls
 
 ``Button`` triggers an action when activated:
