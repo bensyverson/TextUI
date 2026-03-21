@@ -193,7 +193,8 @@ public struct TabView: PrimitiveView {
         let width = tab.label.displayWidth
         if let view = tab.customLabel {
             let region = Region(row: row, col: col, width: width, height: 1)
-            TextUI.render(view, into: &buffer, region: region, context: context)
+            let styled = StyledView(content: view, styleOverride: style)
+            TextUI.render(styled, into: &buffer, region: region, context: context)
             return width
         }
         return buffer.write(tab.label, row: row, col: col, style: style)
