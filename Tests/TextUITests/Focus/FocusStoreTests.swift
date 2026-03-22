@@ -703,4 +703,67 @@ struct FocusStoreTests {
         store.fireDismissHandlers()
         #expect(!called.value)
     }
+
+    // MARK: - Context Menu Targets
+
+    @Test("registerContextMenuTarget stores target and contextMenuTarget(at:) finds it")
+    func contextMenuTargetHit() {
+        let store = FocusStore()
+        let region = Region(row: 0, col: 0, width: 20, height: 5)
+
+        store.registerContextMenuTarget(FocusStore.ContextMenuTarget(
+            region: region,
+            autoKey: "menu1",
+            menuBuilder: { [] },
+        ))
+
+        let target = store.contextMenuTarget(at: 2, column: 10)
+        #expect(target != nil)
+        #expect(target?.autoKey == AnyHashable("menu1"))
+    }
+
+    @Test("contextMenuTarget(at:) returns nil when no target contains point")
+    func contextMenuTargetMiss() {
+        let store = FocusStore()
+        store.registerContextMenuTarget(FocusStore.ContextMenuTarget(
+            region: Region(row: 0, col: 0, width: 10, height: 1),
+            autoKey: "menu1",
+            menuBuilder: { [] },
+        ))
+
+        #expect(store.contextMenuTarget(at: 5, column: 5) == nil)
+    }
+
+    @Test("contextMenuTarget(at:) returns last target for overlapping regions")
+    func contextMenuTargetOverlap() {
+        let store = FocusStore()
+        let region = Region(row: 0, col: 0, width: 20, height: 10)
+
+        store.registerContextMenuTarget(FocusStore.ContextMenuTarget(
+            region: region,
+            autoKey: "background",
+            menuBuilder: { [] },
+        ))
+        store.registerContextMenuTarget(FocusStore.ContextMenuTarget(
+            region: region,
+            autoKey: "foreground",
+            menuBuilder: { [] },
+        ))
+
+        let target = store.contextMenuTarget(at: 5, column: 10)
+        #expect(target?.autoKey == AnyHashable("foreground"))
+    }
+
+    @Test("beginFrame clears context menu targets")
+    func beginFrameClearsContextMenuTargets() {
+        let store = FocusStore()
+        store.registerContextMenuTarget(FocusStore.ContextMenuTarget(
+            region: Region(row: 0, col: 0, width: 10, height: 1),
+            autoKey: "menu1",
+            menuBuilder: { [] },
+        ))
+
+        store.beginFrame()
+        #expect(store.contextMenuTarget(at: 0, column: 0) == nil)
+    }
 }

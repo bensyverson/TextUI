@@ -516,6 +516,36 @@ public extension View {
         ModalView(background: self, isPresented: isPresented, onDismiss: onDismiss, body: content())
     }
 
+    // MARK: - Context Menu
+
+    /// Attaches a context menu to this view.
+    ///
+    /// Right-clicking within this view's region opens a bordered overlay
+    /// with the provided menu items. The menu items are typically
+    /// ``Button`` views:
+    ///
+    /// ```swift
+    /// Text("Turtle Rock")
+    ///     .contextMenu {
+    ///         Button("Add to Favorites") { addFavorite() }
+    ///         Button("Show in Maps") { showInMaps() }
+    ///     }
+    /// ```
+    ///
+    /// The menu is dismissed by clicking an item, clicking outside,
+    /// or pressing Escape.
+    func contextMenu(
+        fileID: String = #fileID,
+        line: Int = #line,
+        @ViewBuilder content: @escaping () -> ViewGroup,
+    ) -> some View {
+        ContextMenuView(
+            content: self,
+            menuBuilder: { content().children },
+            autoKey: AnyHashable("\(fileID):\(line)"),
+        )
+    }
+
     // MARK: - Environment
 
     /// Injects an environment object into the view hierarchy.

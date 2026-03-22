@@ -119,6 +119,23 @@ Mouse clicks and keyboard activation (Enter/Space) are equivalent — both
 go through the same action path. Every mouse-clickable control is also
 keyboard-accessible via the focus ring.
 
+### Context Menus
+
+Attach a context menu to any view with `.contextMenu()`. Right-clicking
+within the view's region opens a bordered overlay with menu items:
+
+```swift
+Text("Turtle Rock")
+    .contextMenu {
+        Button("Add to Favorites") { addFavorite() }
+        Button("Show in Maps") { showInMaps() }
+    }
+```
+
+The menu is dismissed by clicking an item, clicking outside, or pressing
+Escape. Context menus can be attached to any view, including non-focusable
+ones like ``Text``.
+
 ### Command Palette
 
 Press **Ctrl+P** to open the command palette overlay. The palette

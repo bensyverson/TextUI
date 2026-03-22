@@ -348,8 +348,10 @@ final class RunLoop {
             handleScroll(direction: .up)
         case .scrollDown:
             handleScroll(direction: .down)
+        case .right where event.kind == .press:
+            handleRightClick(row: event.row, column: event.column)
         default:
-            break // Ignore release, right click (Phase 4), middle click
+            break // Ignore release, middle click
         }
     }
 
@@ -364,10 +366,12 @@ final class RunLoop {
             return
         }
 
+        // Fire dismiss handlers on every left click (closes context menus,
+        // Picker dropdowns, etc. regardless of what was clicked)
+        focusStore.fireDismissHandlers()
+
         // Hit-test against focus ring (reverse order = topmost wins)
         guard let entry = focusStore.entry(at: row, column: column) else {
-            // Click on empty area — fire dismiss handlers (e.g. close Picker dropdowns)
-            focusStore.fireDismissHandlers()
             pendingFullRender = true
             renderFrame()
             return
@@ -382,6 +386,40 @@ final class RunLoop {
         }
 
         // For .edit controls (TextField), just focusing is sufficient.
+
+        pendingFullRender = true
+        renderFrame()
+    }
+
+    /// Handles a right mouse click at the given screen position.
+    ///
+    /// Checks if the click position falls within a registered context
+    /// menu target. If so, opens the context menu anchored at the
+    /// click position. If not, the click is ignored.
+    private func handleRightClick(row: Int, column: Int) {
+        // Dismiss command palette on any click
+        if commandRegistry.isPaletteVisible {
+            commandRegistry.isPaletteVisible = false
+            commandRegistry.resetPaletteState()
+            pendingFullRender = true
+            renderFrame()
+            return
+        }
+
+        // Hit-test against registered context menu targets
+        guard let target = focusStore.contextMenuTarget(at: row, column: column) else {
+            return
+        }
+
+        // Open the context menu at the click position
+        var state = focusStore.controlState(
+            forKey: target.autoKey,
+            as: FocusStore.ContextMenuState.self,
+        ) ?? FocusStore.ContextMenuState()
+        state.isOpen = true
+        state.anchorRow = row
+        state.anchorCol = column
+        focusStore.setControlState(state, forKey: target.autoKey)
 
         pendingFullRender = true
         renderFrame()

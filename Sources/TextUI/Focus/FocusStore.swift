@@ -91,6 +91,35 @@ final class FocusStore {
     /// dismiss themselves on click-outside.
     private var dismissHandlers: [() -> Void] = []
 
+    // MARK: - Context Menu Targets
+
+    /// A registered context menu target, mapping a screen region to menu content.
+    struct ContextMenuTarget {
+        /// The region this context menu covers.
+        let region: Region
+
+        /// The auto-generated key for state storage.
+        let autoKey: AnyHashable
+
+        /// A closure that returns the menu items (typically ``Button`` views).
+        let menuBuilder: @MainActor () -> [any View]
+    }
+
+    /// Persistent state for an open context menu.
+    struct ContextMenuState: Sendable {
+        /// Whether the context menu is currently open.
+        var isOpen: Bool = false
+
+        /// The row where the menu was anchored (right-click position).
+        var anchorRow: Int = 0
+
+        /// The column where the menu was anchored (right-click position).
+        var anchorCol: Int = 0
+    }
+
+    /// Registered context menu targets for the current frame.
+    private var contextMenuTargets: [ContextMenuTarget] = []
+
     // MARK: - Control State
 
     /// Per-control state storage (e.g. cursor position), keyed by the
@@ -152,6 +181,7 @@ final class FocusStore {
         inlineHandlers = [:]
         tapHandlers = [:]
         dismissHandlers = []
+        contextMenuTargets = []
         keyHandlerStack = []
         submitHandlerStack = []
         tabViewKeys = []
@@ -311,6 +341,23 @@ final class FocusStore {
         for handler in dismissHandlers {
             handler()
         }
+    }
+
+    // MARK: - Context Menu Registration
+
+    /// Registers a context menu target for the current frame.
+    ///
+    /// Called by ``ContextMenuView`` during render to associate a screen
+    /// region with menu content that appears on right-click.
+    func registerContextMenuTarget(_ target: ContextMenuTarget) {
+        contextMenuTargets.append(target)
+    }
+
+    /// Returns the context menu target at the given screen position, if any.
+    ///
+    /// Searches in reverse order so topmost views win when overlapping.
+    func contextMenuTarget(at row: Int, column: Int) -> ContextMenuTarget? {
+        contextMenuTargets.last { $0.region.contains(row: row, column: column) }
     }
 
     // MARK: - Hit Testing
