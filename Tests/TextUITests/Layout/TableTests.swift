@@ -137,7 +137,7 @@ struct TableTests {
 
     // MARK: - Scrolling
 
-    @Test("Table scrolls body rows with keyboard")
+    @Test("Table scrolls body rows with keyboard when selection passes viewport")
     func tableScrolling() {
         let store = FocusStore()
         var ctx = RenderContext()
@@ -150,7 +150,7 @@ struct TableTests {
             Table.Column.flex("Data")
         }
 
-        // Viewport: height 5 = 2 header + 3 body rows
+        // Viewport: height 5 = 2 header + 3 body rows (rows 0, 1, 2 visible)
         var buffer = Buffer(width: 20, height: 5)
         let region = Region(row: 0, col: 0, width: 20, height: 5)
 
@@ -159,14 +159,17 @@ struct TableTests {
         store.beginFrame()
         render(table, into: &buffer, region: region, context: ctx)
 
-        // Scroll down
-        _ = store.routeKeyEvent(.down)
+        // Down moves selection: 0, 1, 2 (visible), 3 triggers scroll
+        _ = store.routeKeyEvent(.down) // select 0
+        _ = store.routeKeyEvent(.down) // select 1
+        _ = store.routeKeyEvent(.down) // select 2
+        _ = store.routeKeyEvent(.down) // select 3, auto-scroll so offset = 1
 
         store.beginFrame()
         buffer = Buffer(width: 20, height: 5)
         render(table, into: &buffer, region: region, context: ctx)
 
-        // First body row should now be Row1 (at buffer row 2)
+        // First body row should now be Row1 (at buffer row 2) due to scroll
         #expect(buffer[2, 3].char == "1")
     }
 

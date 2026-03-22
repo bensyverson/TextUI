@@ -76,7 +76,7 @@ public struct Toggle: PrimitiveView {
 
         // Register tap handler for mouse click activation (always, not just when focused)
         if let id = effectiveFocusID {
-            store?.registerTapHandler(for: id) { [isOn, onChange] in
+            store?.registerTapHandler(for: id) { [isOn, onChange] _, _ in
                 onChange(!isOn)
             }
         }

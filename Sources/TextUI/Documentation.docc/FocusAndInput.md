@@ -108,10 +108,16 @@ state as the user types.
 When mouse events are enabled (the default), interactive controls respond
 to mouse clicks in addition to keyboard input:
 
-- **Click an `.activate` control** (``Button``, ``Toggle``, ``Picker``) —
-  focuses the control and fires its action immediately (click-to-activate)
-- **Click an `.edit` control** (``TextField``) — focuses the control for
-  keyboard input
+- **Click a ``Button`` or ``Toggle``** — focuses the control and fires its
+  action immediately
+- **Click a ``TextField``** — focuses the control and positions the cursor
+  at the clicked column, accounting for scroll offset
+- **Click a ``TabView`` tab title** — switches to the clicked tab
+- **Click a ``Picker``** — opens or closes the dropdown overlay
+- **Click a ``Picker`` dropdown option** — selects the option and closes
+  the dropdown
+- **Click a ``Table`` row** — selects the clicked row and fires the
+  selection change handler
 - **Click empty space** — dismisses any open overlays (e.g. Picker dropdowns)
 - **Scroll wheel** — scrolls the currently focused view (e.g. ``ScrollView``)
 

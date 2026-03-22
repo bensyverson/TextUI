@@ -59,8 +59,21 @@ Table(rows: users.map { [$0.id, $0.name, $0.email] }) {
 }
 ```
 
-Table is focusable and supports the same scroll keys as ScrollView for navigating
-its body rows.
+Table is focusable and supports keyboard navigation (Up/Down to move the
+selection cursor, PageUp/PageDown to scroll) and mouse clicks to select rows.
+Use the `selection:` parameter with `.onSelectionChange(_:)` for parent-driven
+selection:
+
+```swift
+Table(rows: users.map { [$0.id, $0.name, $0.email] }, selection: state.selectedRow) {
+    Column.fixed("ID", width: 6)
+    Column.flex("Name")
+    Column.flex("Email")
+}
+.onSelectionChange { state.selectedRow = $0 }
+```
+
+The selected row renders with inverse styling.
 
 ### TabView
 

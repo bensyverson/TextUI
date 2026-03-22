@@ -76,12 +76,48 @@ public struct Table: PrimitiveView {
         self.rows = rows
         self.columns = columns()
         self.showsIndicator = showsIndicator
+        selection = nil
         autoKey = "\(fileID):\(line)"
     }
 
-    /// Persistent scroll state for the table body.
+    /// Creates a table whose selected row is driven by the parent.
+    ///
+    /// The `selection` value determines which row is highlighted each frame.
+    /// Pair with ``View/onSelectionChange(_:)`` to be notified when the
+    /// user selects a row, so you can update your state.
+    ///
+    /// - Parameters:
+    ///   - rows: An array of rows, each containing views for each column.
+    ///   - selection: The index of the row to highlight.
+    ///   - showsIndicator: Whether to show a scroll indicator. Defaults to `true`.
+    ///   - fileID: Auto-captured file ID for stable identity.
+    ///   - line: Auto-captured line number for stable identity.
+    ///   - columns: A ``ColumnBuilder`` closure defining the columns.
+    public init(
+        rows: [[any View]],
+        selection: Int,
+        showsIndicator: Bool = true,
+        fileID: String = #fileID,
+        line: Int = #line,
+        @ColumnBuilder columns: () -> [Column],
+    ) {
+        self.rows = rows
+        self.columns = columns()
+        self.showsIndicator = showsIndicator
+        self.selection = selection
+        autoKey = "\(fileID):\(line)"
+    }
+
+    /// Parent-driven selected row index, or `nil` for internal management.
+    ///
+    /// When non-nil, the Table uses this value as the selected row each frame.
+    /// Pair with ``View/onSelectionChange(_:)`` for two-way synchronisation.
+    let selection: Int?
+
+    /// Persistent scroll and selection state for the table body.
     struct ScrollState: Sendable {
         var offset: Int = 0
+        var selectedRow: Int?
     }
 
     // MARK: - Column Width Calculation
@@ -175,24 +211,89 @@ public struct Table: PrimitiveView {
         let bodyHeight = region.height - 2
         let bodyRegion = region.subregion(row: 2, col: 0, width: region.width, height: bodyHeight)
 
-        // Scroll state
+        // Scroll and selection state
         let maxOffset = max(0, rows.count - bodyHeight)
         var state = store?.controlState(forKey: autoKey, as: ScrollState.self) ?? ScrollState()
         state.offset = max(0, min(state.offset, maxOffset))
+        if let selection {
+            state.selectedRow = selection
+        }
         store?.setControlState(state, forKey: autoKey)
 
-        // Scroll handler
-        let scrollHandler: (KeyEvent) -> KeyEventResult = { [autoKey] key in
+        // Store the selection change handler for this Table (if any)
+        let isParentDriven = selection != nil
+        let selectionHandler = store?.currentTableSelectionHandler
+        if let selectionHandler {
+            store?.tableSelectionHandlers[AnyHashable(autoKey)] = selectionHandler
+        }
+
+        // Register tap handler for click-to-select
+        if let id = effectiveFocusID {
+            let capturedKey = autoKey
+            let rowCount = rows.count
+            store?.registerTapHandler(for: id) {
+                [isParentDriven, selectionHandler] clickRow, _ in
+                guard let store else { return }
+                var state = store.controlState(forKey: capturedKey, as: ScrollState.self)
+                    ?? ScrollState()
+                let headerRows = 2
+                let dataRowIndex = (clickRow - region.row - headerRows) + state.offset
+                guard dataRowIndex >= 0, dataRowIndex < rowCount else { return }
+                if !isParentDriven {
+                    state.selectedRow = dataRowIndex
+                    store.setControlState(state, forKey: capturedKey)
+                }
+                selectionHandler?(dataRowIndex)
+            }
+        }
+
+        // Keyboard handler: Up/Down moves selection, Page/Home/End scrolls
+        let inlineHandler: (KeyEvent) -> KeyEventResult = {
+            [autoKey, rowCount = rows.count, isParentDriven, selectionHandler] key in
             guard let store else { return .ignored }
             var state = store.controlState(forKey: autoKey, as: ScrollState.self) ?? ScrollState()
+
             switch key {
-            case .up: state.offset -= 1
-            case .down: state.offset += 1
-            case .pageUp: state.offset -= bodyHeight
-            case .pageDown: state.offset += bodyHeight
-            case .home: state.offset = 0
-            case .end: state.offset = maxOffset
-            default: return .ignored
+            case .up:
+                let current = state.selectedRow ?? 0
+                let newRow = max(0, current - 1)
+                if !isParentDriven {
+                    state.selectedRow = newRow
+                    // Auto-scroll to keep selection visible
+                    if newRow < state.offset {
+                        state.offset = newRow
+                    }
+                }
+                selectionHandler?(newRow)
+            case .down:
+                let current = state.selectedRow ?? -1
+                let newRow = min(rowCount - 1, current + 1)
+                if !isParentDriven {
+                    state.selectedRow = newRow
+                    // Auto-scroll to keep selection visible
+                    if newRow >= state.offset + bodyHeight {
+                        state.offset = newRow - bodyHeight + 1
+                    }
+                }
+                selectionHandler?(newRow)
+            case .pageUp:
+                state.offset -= bodyHeight
+            case .pageDown:
+                state.offset += bodyHeight
+            case .home:
+                state.offset = 0
+                if !isParentDriven {
+                    state.selectedRow = 0
+                }
+                selectionHandler?(0)
+            case .end:
+                state.offset = maxOffset
+                if !isParentDriven {
+                    state.selectedRow = rowCount - 1
+                }
+                selectionHandler?(rowCount - 1)
+            default:
+                return .ignored
             }
             state.offset = max(0, min(state.offset, maxOffset))
             store.setControlState(state, forKey: autoKey)
@@ -200,21 +301,24 @@ public struct Table: PrimitiveView {
         }
 
         if isFocused, let id = effectiveFocusID {
-            store?.registerInlineHandler(for: id, handler: scrollHandler)
+            store?.registerInlineHandler(for: id, handler: inlineHandler)
         }
 
         // Render visible rows
         let scrollOffset = state.offset
+        let selectedRow = state.selectedRow
         for rowIdx in 0 ..< min(bodyHeight, rows.count - scrollOffset) {
             let dataIdx = scrollOffset + rowIdx
             guard dataIdx < rows.count else { break }
 
+            let isSelected = dataIdx == selectedRow
             renderDataRow(
                 row: rows[dataIdx],
                 into: &buffer,
                 rowOffset: region.row + 2 + rowIdx,
                 colStart: region.col,
                 columnWidths: columnWidths,
+                isSelected: isSelected,
                 context: context,
             )
         }
@@ -277,17 +381,24 @@ public struct Table: PrimitiveView {
         rowOffset: Int,
         colStart: Int,
         columnWidths: [Int],
+        isSelected: Bool = false,
         context: RenderContext,
     ) {
         var colOffset = colStart
         for (colIdx, width) in columnWidths.enumerated() {
             if colIdx < row.count {
                 let cellRegion = Region(row: rowOffset, col: colOffset, width: width, height: 1)
-                TextUI.render(row[colIdx], into: &buffer, region: cellRegion, context: context)
+                if isSelected {
+                    let styled = StyledView(content: row[colIdx], styleOverride: Style(inverse: true))
+                    TextUI.render(styled, into: &buffer, region: cellRegion, context: context)
+                } else {
+                    TextUI.render(row[colIdx], into: &buffer, region: cellRegion, context: context)
+                }
             }
             colOffset += width
             if colIdx < columns.count - 1 {
-                buffer.write("│", row: rowOffset, col: colOffset)
+                let sepStyle: Style = isSelected ? Style(inverse: true) : .plain
+                buffer.write("│", row: rowOffset, col: colOffset, style: sepStyle)
                 colOffset += 1
             }
         }

@@ -380,12 +380,10 @@ final class RunLoop {
         // Focus the clicked entry
         focusStore.focusByEntryID(entry.id)
 
-        // For .activate controls, fire the tap handler immediately
-        if entry.interaction == .activate, let tap = focusStore.tapHandler(for: entry.id) {
-            tap()
+        // Fire the tap handler if one is registered (works for any interaction type)
+        if let tap = focusStore.tapHandler(for: entry.id) {
+            tap(row, column)
         }
-
-        // For .edit controls (TextField), just focusing is sufficient.
 
         pendingFullRender = true
         renderFrame()

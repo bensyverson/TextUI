@@ -533,13 +533,13 @@ struct FocusStoreTests {
         )
 
         let called = Flag()
-        store.registerTapHandler(for: id) {
+        store.registerTapHandler(for: id) { _, _ in
             called.value = true
         }
 
         let handler = store.tapHandler(for: id)
         #expect(handler != nil)
-        handler?()
+        handler?(0, 0)
         #expect(called.value)
     }
 
@@ -561,7 +561,7 @@ struct FocusStoreTests {
             bindingKey: nil,
             autoKey: "btn",
         )
-        store.registerTapHandler(for: id) {}
+        store.registerTapHandler(for: id) { _, _ in }
 
         store.beginFrame()
         #expect(store.tapHandler(for: id) == nil)

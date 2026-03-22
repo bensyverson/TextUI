@@ -50,6 +50,63 @@ public struct Picker: PrimitiveView {
         autoKey = AnyHashable("\(fileID):\(line)")
     }
 
+    /// Pre-computed dropdown geometry for click handling.
+    struct DropdownGeometry: Sendable {
+        let boxRow: Int
+        let visibleCount: Int
+        let scrollOffset: Int
+    }
+
+    /// Computes dropdown geometry without rendering, for registering click targets.
+    ///
+    /// Returns `nil` if there's no space for any visible options.
+    static func computeDropdownGeometry(
+        pickerRow: Int,
+        fullHeight: Int,
+        fullOriginRow: Int,
+        optionCount: Int,
+        highlightedIndex: Int,
+    ) -> DropdownGeometry? {
+        let spaceBelow = fullOriginRow + fullHeight - (pickerRow + 1) - 2
+        let spaceAbove = pickerRow - fullOriginRow - 2
+
+        let renderBelow: Bool
+        let visibleCount: Int
+        if optionCount <= spaceBelow {
+            renderBelow = true
+            visibleCount = optionCount
+        } else if optionCount <= spaceAbove {
+            renderBelow = false
+            visibleCount = optionCount
+        } else if spaceBelow >= spaceAbove {
+            renderBelow = true
+            visibleCount = max(spaceBelow, 0)
+        } else {
+            renderBelow = false
+            visibleCount = max(spaceAbove, 0)
+        }
+
+        guard visibleCount > 0 else { return nil }
+
+        let scrollOffset: Int = if optionCount <= visibleCount {
+            0
+        } else if highlightedIndex < visibleCount / 2 {
+            0
+        } else if highlightedIndex > optionCount - visibleCount / 2 - 1 {
+            optionCount - visibleCount
+        } else {
+            highlightedIndex - visibleCount / 2
+        }
+
+        let boxRow: Int = if renderBelow {
+            pickerRow + 1
+        } else {
+            pickerRow - (visibleCount + 2)
+        }
+
+        return DropdownGeometry(boxRow: boxRow, visibleCount: visibleCount, scrollOffset: scrollOffset)
+    }
+
     /// The width of the widest option string.
     private var maxOptionWidth: Int {
         options.map(\.displayWidth).max() ?? 0
@@ -106,7 +163,7 @@ public struct Picker: PrimitiveView {
         // Register tap handler for mouse click activation (always, not just when focused)
         if let id = effectiveFocusID {
             let capturedKey = autoKey
-            store?.registerTapHandler(for: id) { [selection] in
+            store?.registerTapHandler(for: id) { [selection] _, _ in
                 guard let store else { return }
                 var state = store.controlState(forKey: capturedKey, as: PickerState.self)
                     ?? PickerState()
@@ -232,54 +289,71 @@ public struct Picker: PrimitiveView {
             let pickerCol = region.col
             let dropdownWidth = label.displayWidth + 2 + 2 + maxOptionWidth + 2
 
+            // Pre-compute dropdown geometry so we can register a focus entry for it.
+            // Use buffer dimensions as the full-screen region proxy.
+            let dropdownGeometry = Picker.computeDropdownGeometry(
+                pickerRow: pickerRow,
+                fullHeight: buffer.height,
+                fullOriginRow: 0,
+                optionCount: options.count,
+                highlightedIndex: highlightedIndex,
+            )
+
+            // Register a separate focus entry for the dropdown area so clicks on
+            // dropdown options route through the focus system instead of dismissing.
+            if let geom = dropdownGeometry {
+                let boxWidth = dropdownWidth + 2
+                let dropdownRegion = Region(
+                    row: geom.boxRow, col: pickerCol,
+                    width: boxWidth, height: geom.visibleCount + 2,
+                )
+                let dropdownID = store?.register(
+                    interaction: .activate,
+                    region: dropdownRegion,
+                    sectionID: context.currentFocusSectionID,
+                    bindingKey: nil,
+                    autoKey: AnyHashable("\(autoKey)-dropdown"),
+                )
+                if let dropdownID {
+                    let capturedKey = autoKey
+                    store?.registerTapHandler(for: dropdownID) {
+                        [onChange, geom] clickRow, _ in
+                        guard let store else { return }
+                        let contentStartRow = geom.boxRow + 1
+                        let optionIndex = (clickRow - contentStartRow) + geom.scrollOffset
+                        if optionIndex >= 0, optionIndex < capturedOptions.count {
+                            onChange(optionIndex)
+                            var state = store.controlState(forKey: capturedKey, as: PickerState.self)
+                                ?? PickerState()
+                            state.isDropdownOpen = false
+                            store.setControlState(state, forKey: capturedKey)
+                        } else {
+                            // Clicked on border row — just close
+                            var state = store.controlState(forKey: capturedKey, as: PickerState.self)
+                                ?? PickerState()
+                            state.isDropdownOpen = false
+                            store.setControlState(state, forKey: capturedKey)
+                        }
+                    }
+                }
+            }
+
             context.overlayStore?.addOverlay(OverlayStore.Overlay { buffer, fullRegion in
                 let border = BorderedView.BorderStyle.rounded
-                // Account for top + bottom border rows in available space
-                let spaceBelow = fullRegion.row + fullRegion.height - (pickerRow + 1) - 2
-                let spaceAbove = pickerRow - fullRegion.row - 2
-                let optionCount = capturedOptions.count
 
-                // Choose direction: prefer below, flip above if needed
-                let renderBelow: Bool
-                let visibleCount: Int
-                if optionCount <= spaceBelow {
-                    renderBelow = true
-                    visibleCount = optionCount
-                } else if optionCount <= spaceAbove {
-                    renderBelow = false
-                    visibleCount = optionCount
-                } else if spaceBelow >= spaceAbove {
-                    renderBelow = true
-                    visibleCount = max(spaceBelow, 0)
-                } else {
-                    renderBelow = false
-                    visibleCount = max(spaceAbove, 0)
-                }
+                guard let geom = Picker.computeDropdownGeometry(
+                    pickerRow: pickerRow,
+                    fullHeight: fullRegion.height,
+                    fullOriginRow: fullRegion.row,
+                    optionCount: capturedOptions.count,
+                    highlightedIndex: highlightedIndex,
+                ) else { return }
 
-                guard visibleCount > 0 else { return }
-
-                // Compute scroll offset to keep highlighted item visible
-                let scrollOffset: Int = if optionCount <= visibleCount {
-                    0
-                } else if highlightedIndex < visibleCount / 2 {
-                    0
-                } else if highlightedIndex > optionCount - visibleCount / 2 - 1 {
-                    optionCount - visibleCount
-                } else {
-                    highlightedIndex - visibleCount / 2
-                }
-
-                // Border box dimensions (content + 2 for border)
+                let visibleCount = geom.visibleCount
+                let scrollOffset = geom.scrollOffset
+                let boxRow = geom.boxRow
                 let boxWidth = dropdownWidth + 2
                 let boxHeight = visibleCount + 2
-
-                // Compute starting row for the border box
-                let boxRow: Int = if renderBelow {
-                    pickerRow + 1
-                } else {
-                    pickerRow - boxHeight
-                }
-
                 let boxCol = pickerCol
 
                 // Draw rounded border

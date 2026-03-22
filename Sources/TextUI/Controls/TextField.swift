@@ -53,6 +53,18 @@ public struct TextField: PrimitiveView {
         autoKey
     }
 
+    /// Computes the scroll offset for displaying text in a fixed-width field.
+    ///
+    /// The visible window starts at this offset into the text so that the
+    /// cursor always remains on-screen.
+    static func scrollOffset(cursorPos: Int, visibleWidth: Int) -> Int {
+        if cursorPos >= visibleWidth {
+            cursorPos - visibleWidth + 1
+        } else {
+            0
+        }
+    }
+
     public func sizeThatFits(_ proposal: SizeProposal, context _: RenderContext) -> Size2D {
         // Greedy width, fixed height of 1
         Size2D(width: proposal.width ?? 20, height: 1)
@@ -89,6 +101,22 @@ public struct TextField: PrimitiveView {
             )
             effectiveFocusID = focusID
             isFocused = focusID.flatMap { store?.isFocused($0) } ?? false
+        }
+
+        // Register tap handler for click-to-position cursor
+        if let id = effectiveFocusID {
+            let capturedStateKey = AnyHashable(stateKey)
+            store?.registerTapHandler(for: id) { [text] _, clickColumn in
+                guard let store else { return }
+                let state = store.controlState(forKey: capturedStateKey, as: EditState.self)
+                    ?? EditState(cursor: text.count, text: text)
+                let scrollOffset = TextField.scrollOffset(cursorPos: state.cursor, visibleWidth: region.width)
+                let charIndex = (clickColumn - region.col) + scrollOffset
+                let clamped = max(0, min(charIndex, text.count))
+                var updated = state
+                updated.cursor = clamped
+                store.setControlState(updated, forKey: capturedStateKey)
+            }
         }
 
         // Get or initialize editing state.
@@ -172,11 +200,7 @@ public struct TextField: PrimitiveView {
         } else {
             // Calculate visible window (scroll if cursor would be off-screen)
             let visibleWidth = region.width
-            let scrollOffset: Int = if cursorPos >= visibleWidth {
-                cursorPos - visibleWidth + 1
-            } else {
-                0
-            }
+            let scrollOffset = TextField.scrollOffset(cursorPos: cursorPos, visibleWidth: visibleWidth)
 
             // Render visible portion of text
             let chars = Array(text)

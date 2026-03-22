@@ -1,9 +1,10 @@
-/// A modifier that observes tab selection changes in a descendant ``TabView``.
+/// A modifier that observes selection changes in a descendant ``TabView`` or ``Table``.
 ///
-/// The handler is pushed onto the ``FocusStore``'s tab selection handler
-/// stack before rendering content and popped after. When a ``TabView``
-/// renders, it reads the top of the stack and stores it for use during
-/// key event handling (both focused arrow keys and global tab switching).
+/// The handler is pushed onto both the ``FocusStore``'s tab and table
+/// selection handler stacks before rendering content and popped after.
+/// When a ``TabView`` or ``Table`` renders, it reads the top of its
+/// respective stack and stores the handler for use during key event
+/// handling and mouse click handling.
 ///
 /// ```swift
 /// TabView(selection: state.selectedTab) {
@@ -21,15 +22,19 @@ struct OnTabSelectionChangeView: PrimitiveView {
     func sizeThatFits(_ proposal: SizeProposal, context: RenderContext) -> Size2D {
         let store = context.focusStore
         store?.pushTabSelectionHandler(handler)
+        store?.pushTableSelectionHandler(handler)
         let size = TextUI.sizeThatFits(content, proposal: proposal, context: context)
         store?.popTabSelectionHandler()
+        store?.popTableSelectionHandler()
         return size
     }
 
     func render(into buffer: inout Buffer, region: Region, context: RenderContext) {
         let store = context.focusStore
         store?.pushTabSelectionHandler(handler)
+        store?.pushTableSelectionHandler(handler)
         TextUI.render(content, into: &buffer, region: region, context: context)
         store?.popTabSelectionHandler()
+        store?.popTableSelectionHandler()
     }
 }

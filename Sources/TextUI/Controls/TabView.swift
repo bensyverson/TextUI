@@ -358,6 +358,36 @@ public struct TabView: PrimitiveView {
         let groupWidth = tabGroupWidth(controlSize: controlSize)
         let tabOffset = alignmentOffset(groupWidth: groupWidth, regionWidth: region.width)
 
+        // Register tap handler for click-on-tab
+        if let id = effectiveFocusID {
+            let capturedKey = autoKey
+            let capturedTabs = tabs
+            store?.registerTapHandler(for: id) {
+                [isParentDriven, selectionHandler, controlSize, dividerStyle, hasBorder]
+                _, clickColumn in
+                let ranges = TabView.tabClickRanges(
+                    tabs: capturedTabs,
+                    controlSize: controlSize,
+                    tabOffset: tabOffset,
+                    regionCol: region.col,
+                    dividerStyle: dividerStyle,
+                    hasBorder: hasBorder,
+                )
+                guard let tappedIndex = ranges.firstIndex(where: {
+                    clickColumn >= $0.start && clickColumn < $0.end
+                }) else { return }
+
+                guard let store else { return }
+                if !isParentDriven {
+                    var state = store.controlState(forKey: capturedKey, as: TabState.self)
+                        ?? TabState()
+                    state.selectedIndex = tappedIndex
+                    store.setControlState(state, forKey: capturedKey)
+                }
+                selectionHandler?(tappedIndex)
+            }
+        }
+
         // Render tab chrome
         switch controlSize {
         case .small:
@@ -440,6 +470,46 @@ public struct TabView: PrimitiveView {
         }
 
         TextUI.render(tabs[selectedIndex].content, into: &buffer, region: contentRegion, context: contentContext)
+    }
+
+    // MARK: - Tab Click Ranges
+
+    /// Computes the clickable column range for each tab label (including padding).
+    ///
+    /// Returns absolute column positions as `(start, end)` half-open intervals.
+    /// The prefix before the first label varies by control size and styling:
+    /// - **Small, `.none` divider or border:** 0
+    /// - **Small, `.bottom` divider, no border:** 1 (leading `│`)
+    /// - **Regular:** 2 (leading `╭─`)
+    /// - **Large:** 1 (leading `│`)
+    static func tabClickRanges(
+        tabs: [Tab],
+        controlSize: ControlSize,
+        tabOffset: Int,
+        regionCol: Int,
+        dividerStyle: TabDividerStyle,
+        hasBorder: Bool,
+    ) -> [(start: Int, end: Int)] {
+        let prefix: Int = switch controlSize {
+        case .small:
+            (dividerStyle != .none && !hasBorder) ? 1 : 0
+        case .regular:
+            2
+        case .large:
+            1
+        }
+
+        var col = regionCol + tabOffset + prefix
+        var ranges: [(start: Int, end: Int)] = []
+        for (i, tab) in tabs.enumerated() {
+            let width = tab.label.displayWidth + 2 // space + label + space
+            ranges.append((start: col, end: col + width))
+            col += width
+            if i < tabs.count - 1 {
+                col += 1 // separator │
+            }
+        }
+        return ranges
     }
 
     // MARK: - Alignment

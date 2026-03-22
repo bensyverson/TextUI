@@ -78,10 +78,10 @@ final class FocusStore {
     /// Per-control tap handlers for mouse click activation, keyed by focus entry ID.
     ///
     /// Unlike inline handlers (which only the focused control registers),
-    /// tap handlers are registered by ALL `.activate` controls during render.
+    /// tap handlers are registered by all clickable controls during render.
     /// This allows mouse clicks to fire a control's action without requiring
-    /// it to be focused first.
-    private var tapHandlers: [Int: () -> Void] = [:]
+    /// it to be focused first. The handler receives the click's (row, column).
+    private var tapHandlers: [Int: (Int, Int) -> Void] = [:]
 
     // MARK: - Dismiss Handlers
 
@@ -169,6 +169,18 @@ final class FocusStore {
     /// to notify the parent when the user switches tabs globally.
     var tabSelectionHandlers: [AnyHashable: (Int) -> Void] = [:]
 
+    // MARK: - Table Selection Handlers
+
+    /// Ancestor stack of table selection change handlers, built during render.
+    ///
+    /// The `.onSelectionChange` modifier pushes a handler before rendering
+    /// its content and pops it afterward. ``Table`` reads the top of the
+    /// stack during its own render and stores it for use in click/keyboard handlers.
+    private var tableSelectionHandlerStack: [(Int) -> Void] = []
+
+    /// Per-Table selection change handlers, keyed by the Table's auto key.
+    var tableSelectionHandlers: [AnyHashable: (Int) -> Void] = [:]
+
     // MARK: - Frame Lifecycle
 
     /// Resets the focus ring for a new render pass.
@@ -187,6 +199,8 @@ final class FocusStore {
         tabViewKeys = []
         tabSelectionHandlerStack = []
         tabSelectionHandlers = [:]
+        tableSelectionHandlerStack = []
+        tableSelectionHandlers = [:]
         nextID = 0
     }
 
@@ -312,15 +326,19 @@ final class FocusStore {
 
     /// Registers a tap handler for mouse click activation.
     ///
-    /// All `.activate` controls should register a tap handler during render,
+    /// All clickable controls should register a tap handler during render,
     /// regardless of focus state. This allows mouse clicks to fire a control's
     /// action without requiring the control to be focused first.
-    func registerTapHandler(for entryID: Int, handler: @escaping () -> Void) {
+    ///
+    /// - Parameters:
+    ///   - entryID: The focus entry ID returned by ``register``.
+    ///   - handler: A closure receiving the click's `(row, column)`.
+    func registerTapHandler(for entryID: Int, handler: @escaping (Int, Int) -> Void) {
         tapHandlers[entryID] = handler
     }
 
     /// Returns the tap handler for the given focus entry ID, if registered.
-    func tapHandler(for entryID: Int) -> (() -> Void)? {
+    func tapHandler(for entryID: Int) -> ((Int, Int) -> Void)? {
         tapHandlers[entryID]
     }
 
@@ -468,6 +486,25 @@ final class FocusStore {
     /// Returns the current (topmost) tab selection change handler, if any.
     var currentTabSelectionHandler: ((Int) -> Void)? {
         tabSelectionHandlerStack.last
+    }
+
+    /// Pushes a table selection change handler onto the ancestor stack.
+    ///
+    /// Called by ``OnTabSelectionChangeView`` before rendering its content.
+    func pushTableSelectionHandler(_ handler: @escaping (Int) -> Void) {
+        tableSelectionHandlerStack.append(handler)
+    }
+
+    /// Pops the most recent table selection change handler.
+    ///
+    /// Called by ``OnTabSelectionChangeView`` after rendering its content.
+    func popTableSelectionHandler() {
+        _ = tableSelectionHandlerStack.popLast()
+    }
+
+    /// Returns the current (topmost) table selection change handler, if any.
+    var currentTableSelectionHandler: ((Int) -> Void)? {
+        tableSelectionHandlerStack.last
     }
 
     // MARK: - Section IDs

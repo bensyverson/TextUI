@@ -75,6 +75,7 @@ fixed height of 1. Features:
 - Character insertion and backspace/delete
 - Scrolling when text exceeds visible width
 - Dim placeholder text when empty and unfocused
+- Click to position cursor at the clicked column
 
 ### Toggle
 
@@ -102,6 +103,7 @@ Picker("Color", selection: state.colorIndex, options: ["Red", "Green", "Blue"]) 
 Pickers render as `Label: < Option >` and respond to Left/Right arrow
 keys when focused. Pressing Space or Enter opens a dropdown overlay
 where Up/Down navigates options, Enter confirms, and Escape cancels.
+Clicking an option in the dropdown selects it and closes the dropdown.
 They use ``FocusInteraction/activate``.
 
 ### TabView
@@ -141,7 +143,8 @@ TabView(alignment: .center) {
 ```
 
 Inactive tabs render dim, the selected tab renders bold (unfocused) or
-inverse (focused). The tab bar responds to Left/Right arrow keys.
+inverse (focused). The tab bar responds to Left/Right arrow keys, and
+tab titles are clickable — clicking a tab switches to it.
 
 ### Building a Form
 
