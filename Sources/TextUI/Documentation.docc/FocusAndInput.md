@@ -103,6 +103,22 @@ TextField("Search", text: query) { query = $0 }
 automatically when focused. Use the `onChange` callback to update your
 state as the user types.
 
+### Mouse Interaction
+
+When mouse events are enabled (the default), interactive controls respond
+to mouse clicks in addition to keyboard input:
+
+- **Click an `.activate` control** (``Button``, ``Toggle``, ``Picker``) —
+  focuses the control and fires its action immediately (click-to-activate)
+- **Click an `.edit` control** (``TextField``) — focuses the control for
+  keyboard input
+- **Click empty space** — dismisses any open overlays (e.g. Picker dropdowns)
+- **Scroll wheel** — scrolls the currently focused view (e.g. ``ScrollView``)
+
+Mouse clicks and keyboard activation (Enter/Space) are equivalent — both
+go through the same action path. Every mouse-clickable control is also
+keyboard-accessible via the focus ring.
+
 ### Command Palette
 
 Press **Ctrl+P** to open the command palette overlay. The palette

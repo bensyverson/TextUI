@@ -93,6 +93,13 @@ public struct Button: PrimitiveView {
             isFocused = focusID.flatMap { store?.isFocused($0) } ?? false
         }
 
+        // Register tap handler for mouse click activation (always, not just when focused)
+        if let id = effectiveFocusID {
+            store?.registerTapHandler(for: id) { [action] in
+                action()
+            }
+        }
+
         // Register inline handler when focused
         if isFocused, let id = effectiveFocusID {
             store?.registerInlineHandler(for: id) { [action] key in

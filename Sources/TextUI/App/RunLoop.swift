@@ -330,11 +330,71 @@ final class RunLoop {
 
     /// Handles a mouse event by routing clicks and scroll wheel actions.
     ///
-    /// Phase 2 will implement hit-testing against the focus ring and
-    /// gesture routing. For now, mouse events are received but not acted upon.
-    private func handleMouse(_: MouseEvent) {
-        // Phase 2: hit-test mouse.row/mouse.column against focusStore,
-        // route clicks to tap targets, scroll wheel to focused scrollable.
+    /// Left-click routing:
+    /// 1. If the command palette is visible, dismiss it
+    /// 2. Hit-test the click position against the focus ring (reverse order)
+    /// 3. If an `.activate` control is hit, focus it and fire its tap handler
+    /// 4. If an `.edit` control is hit, focus it
+    /// 5. If nothing is hit, fire dismiss handlers (e.g. close Picker dropdowns)
+    ///
+    /// Scroll wheel events synthesize arrow key events and route through
+    /// ``FocusStore/routeKeyEvent(_:)``, reusing existing scroll handling
+    /// in controls like ``ScrollView``.
+    private func handleMouse(_ event: MouseEvent) {
+        switch event.button {
+        case .left where event.kind == .press:
+            handleLeftClick(row: event.row, column: event.column)
+        case .scrollUp:
+            handleScroll(direction: .up)
+        case .scrollDown:
+            handleScroll(direction: .down)
+        default:
+            break // Ignore release, right click (Phase 4), middle click
+        }
+    }
+
+    /// Handles a left mouse click at the given screen position.
+    private func handleLeftClick(row: Int, column: Int) {
+        // Dismiss command palette on any click
+        if commandRegistry.isPaletteVisible {
+            commandRegistry.isPaletteVisible = false
+            commandRegistry.resetPaletteState()
+            pendingFullRender = true
+            renderFrame()
+            return
+        }
+
+        // Hit-test against focus ring (reverse order = topmost wins)
+        guard let entry = focusStore.entry(at: row, column: column) else {
+            // Click on empty area — fire dismiss handlers (e.g. close Picker dropdowns)
+            focusStore.fireDismissHandlers()
+            pendingFullRender = true
+            renderFrame()
+            return
+        }
+
+        // Focus the clicked entry
+        focusStore.focusByEntryID(entry.id)
+
+        // For .activate controls, fire the tap handler immediately
+        if entry.interaction == .activate, let tap = focusStore.tapHandler(for: entry.id) {
+            tap()
+        }
+
+        // For .edit controls (TextField), just focusing is sufficient.
+
+        pendingFullRender = true
+        renderFrame()
+    }
+
+    /// Handles a scroll wheel event by synthesizing a key event.
+    private func handleScroll(direction: KeyEvent) {
+        // Route through focus system — reuses existing scroll handling
+        // in ScrollView, Picker, and other controls
+        if focusStore.routeKeyEvent(direction) == .handled {
+            pendingFullRender = true
+            renderFrame()
+        }
     }
 
     /// Handles key events while the command palette is visible.

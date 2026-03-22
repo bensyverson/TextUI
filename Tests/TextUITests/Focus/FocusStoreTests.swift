@@ -516,4 +516,191 @@ struct FocusStoreTests {
         #expect(store.isFocused(id0))
         #expect(!store.isFocused(id1))
     }
+
+    // MARK: - Tap Handlers
+
+    @Test("registerTapHandler stores and retrieves handler")
+    func tapHandlerRegistration() {
+        let store = FocusStore()
+        let region = Region(row: 0, col: 0, width: 10, height: 1)
+
+        let id = store.register(
+            interaction: .activate,
+            region: region,
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "btn",
+        )
+
+        let called = Flag()
+        store.registerTapHandler(for: id) {
+            called.value = true
+        }
+
+        let handler = store.tapHandler(for: id)
+        #expect(handler != nil)
+        handler?()
+        #expect(called.value)
+    }
+
+    @Test("tapHandler returns nil for unregistered entry")
+    func tapHandlerMissing() {
+        let store = FocusStore()
+        #expect(store.tapHandler(for: 99) == nil)
+    }
+
+    @Test("beginFrame clears tap handlers")
+    func beginFrameClearsTapHandlers() {
+        let store = FocusStore()
+        let region = Region(row: 0, col: 0, width: 10, height: 1)
+
+        let id = store.register(
+            interaction: .activate,
+            region: region,
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "btn",
+        )
+        store.registerTapHandler(for: id) {}
+
+        store.beginFrame()
+        #expect(store.tapHandler(for: id) == nil)
+    }
+
+    // MARK: - Hit Testing
+
+    @Test("entry(at:) returns entry containing the point")
+    func entryAtHit() {
+        let store = FocusStore()
+
+        store.register(
+            interaction: .activate,
+            region: Region(row: 0, col: 0, width: 10, height: 1),
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "btn1",
+        )
+
+        let entry = store.entry(at: 0, column: 5)
+        #expect(entry != nil)
+        #expect(entry?.autoKey == AnyHashable("btn1"))
+    }
+
+    @Test("entry(at:) returns nil when no entry contains the point")
+    func entryAtMiss() {
+        let store = FocusStore()
+
+        store.register(
+            interaction: .activate,
+            region: Region(row: 0, col: 0, width: 10, height: 1),
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "btn1",
+        )
+
+        #expect(store.entry(at: 5, column: 5) == nil)
+    }
+
+    @Test("entry(at:) returns last matching entry for overlapping regions")
+    func entryAtOverlap() {
+        let store = FocusStore()
+        let region = Region(row: 0, col: 0, width: 20, height: 10)
+
+        store.register(
+            interaction: .activate,
+            region: region,
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "background",
+        )
+        store.register(
+            interaction: .activate,
+            region: region,
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "foreground",
+        )
+
+        let entry = store.entry(at: 5, column: 10)
+        #expect(entry?.autoKey == AnyHashable("foreground"))
+    }
+
+    @Test("entry(at:) returns nil on empty ring")
+    func entryAtEmptyRing() {
+        let store = FocusStore()
+        #expect(store.entry(at: 0, column: 0) == nil)
+    }
+
+    // MARK: - Focus by Entry ID
+
+    @Test("focusByEntryID sets focus to matching entry")
+    func focusByEntryID() {
+        let store = FocusStore()
+        let region = Region(row: 0, col: 0, width: 10, height: 1)
+
+        store.register(
+            interaction: .activate,
+            region: region,
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "a",
+        )
+        let id1 = store.register(
+            interaction: .activate,
+            region: region,
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "b",
+        )
+        store.applyDefaultFocus()
+        #expect(store.focusedIndex == 0)
+
+        store.focusByEntryID(id1)
+        #expect(store.focusedIndex == 1)
+    }
+
+    @Test("focusByEntryID does nothing for unknown ID")
+    func focusByEntryIDUnknown() {
+        let store = FocusStore()
+        let region = Region(row: 0, col: 0, width: 10, height: 1)
+
+        store.register(
+            interaction: .activate,
+            region: region,
+            sectionID: nil,
+            bindingKey: nil,
+            autoKey: "a",
+        )
+        store.applyDefaultFocus()
+
+        store.focusByEntryID(99)
+        #expect(store.focusedIndex == 0) // unchanged
+    }
+
+    // MARK: - Dismiss Handlers
+
+    @Test("fireDismissHandlers calls all registered handlers")
+    func dismissHandlers() {
+        let store = FocusStore()
+        let called1 = Flag()
+        let called2 = Flag()
+
+        store.registerDismissHandler { called1.value = true }
+        store.registerDismissHandler { called2.value = true }
+
+        store.fireDismissHandlers()
+        #expect(called1.value)
+        #expect(called2.value)
+    }
+
+    @Test("beginFrame clears dismiss handlers")
+    func beginFrameClearsDismissHandlers() {
+        let store = FocusStore()
+        let called = Flag()
+        store.registerDismissHandler { called.value = true }
+
+        store.beginFrame()
+        store.fireDismissHandlers()
+        #expect(!called.value)
+    }
 }

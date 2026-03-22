@@ -103,6 +103,35 @@ public struct Picker: PrimitiveView {
             ?? PickerState()
         let isDropdownOpen = pickerState.isDropdownOpen
 
+        // Register tap handler for mouse click activation (always, not just when focused)
+        if let id = effectiveFocusID {
+            let capturedKey = autoKey
+            store?.registerTapHandler(for: id) { [selection] in
+                guard let store else { return }
+                var state = store.controlState(forKey: capturedKey, as: PickerState.self)
+                    ?? PickerState()
+                if state.isDropdownOpen {
+                    state.isDropdownOpen = false
+                } else {
+                    state.isDropdownOpen = true
+                    state.highlightedIndex = selection
+                }
+                store.setControlState(state, forKey: capturedKey)
+            }
+        }
+
+        // Register dismiss handler when dropdown is open (closes on click-outside)
+        if isDropdownOpen {
+            let capturedKey = autoKey
+            store?.registerDismissHandler { [weak store] in
+                guard let store else { return }
+                var state = store.controlState(forKey: capturedKey, as: PickerState.self)
+                    ?? PickerState()
+                state.isDropdownOpen = false
+                store.setControlState(state, forKey: capturedKey)
+            }
+        }
+
         // Register inline handler when focused
         if isFocused, let id = effectiveFocusID {
             let capturedKey = autoKey

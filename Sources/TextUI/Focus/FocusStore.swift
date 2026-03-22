@@ -73,6 +73,24 @@ final class FocusStore {
     /// Per-control inline key handlers, keyed by focus entry ID.
     private var inlineHandlers: [Int: (KeyEvent) -> KeyEventResult] = [:]
 
+    // MARK: - Tap Handlers
+
+    /// Per-control tap handlers for mouse click activation, keyed by focus entry ID.
+    ///
+    /// Unlike inline handlers (which only the focused control registers),
+    /// tap handlers are registered by ALL `.activate` controls during render.
+    /// This allows mouse clicks to fire a control's action without requiring
+    /// it to be focused first.
+    private var tapHandlers: [Int: () -> Void] = [:]
+
+    // MARK: - Dismiss Handlers
+
+    /// Handlers that fire when the user clicks outside all focusable controls.
+    ///
+    /// Used by controls with open overlays (e.g. ``Picker`` dropdowns) to
+    /// dismiss themselves on click-outside.
+    private var dismissHandlers: [() -> Void] = []
+
     // MARK: - Control State
 
     /// Per-control state storage (e.g. cursor position), keyed by the
@@ -132,6 +150,8 @@ final class FocusStore {
     func beginFrame() {
         ring = []
         inlineHandlers = [:]
+        tapHandlers = [:]
+        dismissHandlers = []
         keyHandlerStack = []
         submitHandlerStack = []
         tabViewKeys = []
@@ -260,6 +280,54 @@ final class FocusStore {
         inlineHandlers[entryID] = handler
     }
 
+    /// Registers a tap handler for mouse click activation.
+    ///
+    /// All `.activate` controls should register a tap handler during render,
+    /// regardless of focus state. This allows mouse clicks to fire a control's
+    /// action without requiring the control to be focused first.
+    func registerTapHandler(for entryID: Int, handler: @escaping () -> Void) {
+        tapHandlers[entryID] = handler
+    }
+
+    /// Returns the tap handler for the given focus entry ID, if registered.
+    func tapHandler(for entryID: Int) -> (() -> Void)? {
+        tapHandlers[entryID]
+    }
+
+    /// Registers a handler to be called when the user clicks outside all
+    /// focusable controls.
+    ///
+    /// Used by controls with open overlays (e.g. Picker dropdowns) to
+    /// dismiss themselves when the user clicks elsewhere.
+    func registerDismissHandler(_ handler: @escaping () -> Void) {
+        dismissHandlers.append(handler)
+    }
+
+    /// Fires all registered dismiss handlers.
+    ///
+    /// Called by the run loop when a mouse click does not hit any
+    /// focusable control.
+    func fireDismissHandlers() {
+        for handler in dismissHandlers {
+            handler()
+        }
+    }
+
+    // MARK: - Hit Testing
+
+    /// Returns the focus entry at the given screen position, if any.
+    ///
+    /// Searches the ring in **reverse** order so that the topmost control
+    /// wins when views overlap (e.g. in a ``ZStack`` or overlay).
+    ///
+    /// - Parameters:
+    ///   - row: The 0-based row to test.
+    ///   - column: The 0-based column to test.
+    /// - Returns: The topmost ``FocusEntry`` whose region contains the point.
+    func entry(at row: Int, column: Int) -> FocusEntry? {
+        ring.last { $0.region.contains(row: row, column: column) }
+    }
+
     // MARK: - Focus Queries
 
     /// Whether the given entry ID is currently focused.
@@ -290,6 +358,17 @@ final class FocusStore {
             return
         }
         if let idx = ring.firstIndex(where: { $0.bindingKey == key }) {
+            focusedIndex = idx
+            focusedIdentity = identityOf(ring[idx])
+        }
+    }
+
+    /// Moves focus to the entry with the given ID.
+    ///
+    /// Used by mouse click handling to focus a specific control by its
+    /// focus ring entry ID. Does nothing if the ID is not in the ring.
+    func focusByEntryID(_ id: Int) {
+        if let idx = ring.firstIndex(where: { $0.id == id }) {
             focusedIndex = idx
             focusedIdentity = identityOf(ring[idx])
         }
