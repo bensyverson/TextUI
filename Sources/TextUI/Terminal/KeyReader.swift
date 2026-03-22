@@ -6,7 +6,7 @@
 import Foundation
 
 /// Reads raw bytes from stdin on a detached thread and produces
-/// an `AsyncStream` of ``KeyEvent``s.
+/// an `AsyncStream` of ``InputEvent``s.
 ///
 /// The reader runs on a detached OS thread (not a cooperative task)
 /// because `read(STDIN_FILENO)` blocks and cannot be cancelled by
@@ -16,22 +16,25 @@ import Foundation
 /// ```swift
 /// let reader = KeyReader()
 /// reader.start()
-/// for await key in reader.events {
-///     // handle key
+/// for await event in reader.events {
+///     switch event {
+///     case .key(let key): handleKey(key)
+///     case .mouse(let mouse): handleMouse(mouse)
+///     }
 /// }
 /// ```
 public final class KeyReader: Sendable {
-    private let stream: AsyncStream<KeyEvent>
-    private let continuation: AsyncStream<KeyEvent>.Continuation
+    private let stream: AsyncStream<InputEvent>
+    private let continuation: AsyncStream<InputEvent>.Continuation
 
-    /// The async stream of parsed key events.
-    public var events: AsyncStream<KeyEvent> {
+    /// The async stream of parsed input events (keyboard and mouse).
+    public var events: AsyncStream<InputEvent> {
         stream
     }
 
     /// Creates a new key reader.
     public init() {
-        let (stream, continuation) = AsyncStream<KeyEvent>.makeStream(
+        let (stream, continuation) = AsyncStream<InputEvent>.makeStream(
             bufferingPolicy: .unbounded,
         )
         self.stream = stream
@@ -73,7 +76,7 @@ public final class KeyReader: Sendable {
                         }
                     }
 
-                    if let (event, consumed) = KeyEvent.parse(slice) {
+                    if let (event, consumed) = InputEvent.parse(slice) {
                         let result = continuation.yield(event)
                         if case .terminated = result { return }
                         offset += consumed

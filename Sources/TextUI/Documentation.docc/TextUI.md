@@ -64,7 +64,9 @@ adapted for the character-grid world of terminal emulators.
 ### Terminal I/O
 
 - ``Terminal``
+- ``InputEvent``
 - ``KeyEvent``
+- ``MouseEvent``
 - ``KeyReader``
 - ``ColorCapability``
 - <doc:Terminal>

@@ -78,10 +78,16 @@ final class RunLoop {
     /// The merged event stream continuation, used to inject shutdown events.
     private var eventContinuation: AsyncStream<Event>.Continuation?
 
+    /// Whether mouse tracking is enabled for this application.
+    private let mouseEventsEnabled: Bool
+
     /// Internal event types that the run loop processes.
     enum Event: Sendable {
         /// A key was pressed.
         case key(KeyEvent)
+
+        /// A mouse event was received (click, release, or scroll).
+        case mouse(MouseEvent)
 
         /// State changed (an `@Observed` property was mutated).
         case stateChanged
@@ -101,6 +107,7 @@ final class RunLoop {
         let runLoop = RunLoop(
             rootViewBuilder: { app.body },
             commands: app.commands,
+            mouseEventsEnabled: app.allowsMouseEvents,
         )
         await runLoop.run()
     }
@@ -110,12 +117,17 @@ final class RunLoop {
     /// The `rootViewBuilder` closure is called on every render frame,
     /// so `@State` and other property wrappers on the `App` struct
     /// are re-read each frame — matching SwiftUI's behavior.
-    init(rootViewBuilder: @escaping @MainActor () -> any View, commands: [CommandGroup] = []) {
+    init(
+        rootViewBuilder: @escaping @MainActor () -> any View,
+        commands: [CommandGroup] = [],
+        mouseEventsEnabled: Bool = true,
+    ) {
         let size = Terminal.size()
         screen = Screen(width: size.width, height: size.height)
         screen.colorCapability = ColorCapability.detect()
         keyReader = KeyReader()
         self.rootViewBuilder = rootViewBuilder
+        self.mouseEventsEnabled = mouseEventsEnabled
         context = RenderContext()
         focusStore = FocusStore()
         animationTracker = AnimationTracker()
@@ -136,10 +148,16 @@ final class RunLoop {
         Terminal.hideCursor()
         Terminal.clearScreen()
         Terminal.installSignalHandlers()
+        if mouseEventsEnabled {
+            Terminal.enableMouseTracking()
+        }
 
         defer {
             RunLoop.current = nil
             // Always clean up, even on unexpected exit
+            if mouseEventsEnabled {
+                Terminal.disableMouseTracking()
+            }
             keyReader.stop()
             Terminal.showCursor()
             Terminal.leaveAlternateScreen()
@@ -159,6 +177,8 @@ final class RunLoop {
             switch event {
             case let .key(keyEvent):
                 handleKey(keyEvent)
+            case let .mouse(mouseEvent):
+                handleMouse(mouseEvent)
             case .stateChanged:
                 pendingFullRender = true
                 renderFrame()
@@ -184,10 +204,15 @@ final class RunLoop {
         AsyncStream<Event> { continuation in
             self.eventContinuation = continuation
 
-            // Forward key events
-            let keyTask = Task { [keyReader] in
-                for await key in keyReader.events {
-                    continuation.yield(.key(key))
+            // Forward input events (keyboard and mouse)
+            let inputTask = Task { [keyReader] in
+                for await input in keyReader.events {
+                    switch input {
+                    case let .key(key):
+                        continuation.yield(.key(key))
+                    case let .mouse(mouse):
+                        continuation.yield(.mouse(mouse))
+                    }
                 }
             }
 
@@ -212,7 +237,7 @@ final class RunLoop {
             }
 
             continuation.onTermination = { _ in
-                keyTask.cancel()
+                inputTask.cancel()
                 stateTask.cancel()
                 resizeTask.cancel()
             }
@@ -299,6 +324,17 @@ final class RunLoop {
             pendingFullRender = true
             renderFrame()
         }
+    }
+
+    // MARK: - Mouse Handling
+
+    /// Handles a mouse event by routing clicks and scroll wheel actions.
+    ///
+    /// Phase 2 will implement hit-testing against the focus ring and
+    /// gesture routing. For now, mouse events are received but not acted upon.
+    private func handleMouse(_: MouseEvent) {
+        // Phase 2: hit-test mouse.row/mouse.column against focusStore,
+        // route clicks to tap targets, scroll wheel to focused scrollable.
     }
 
     /// Handles key events while the command palette is visible.

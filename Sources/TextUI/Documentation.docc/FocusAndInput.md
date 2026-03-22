@@ -127,6 +127,8 @@ with no additional setup required.
 
 ### Input
 
+- ``InputEvent``
 - ``KeyEvent``
+- ``MouseEvent``
 - ``KeyReader``
 - ``TextField``

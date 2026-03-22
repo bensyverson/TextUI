@@ -40,6 +40,18 @@ public protocol App {
     /// ```
     var commands: [CommandGroup] { get }
 
+    /// Whether mouse events (clicks, scroll wheel) are enabled.
+    ///
+    /// Defaults to `true`. Set to `false` to disable terminal mouse
+    /// tracking, which restores normal text selection in the terminal.
+    ///
+    /// ```swift
+    /// var allowsMouseEvents: Bool {
+    ///     !CommandLine.arguments.contains("--no-mouse")
+    /// }
+    /// ```
+    var allowsMouseEvents: Bool { get }
+
     /// Creates a new instance of the application.
     init()
 }
@@ -48,6 +60,11 @@ public extension App {
     /// Default empty commands for apps that don't define any.
     var commands: [CommandGroup] {
         []
+    }
+
+    /// Mouse events are enabled by default.
+    var allowsMouseEvents: Bool {
+        true
     }
 
     /// Launches the application with the default run loop.

@@ -75,4 +75,54 @@ struct RegionTests {
         #expect(a == b)
         #expect(a != c)
     }
+
+    // MARK: - Hit Testing
+
+    @Test("contains: point inside region")
+    func containsInside() {
+        let region = Region(row: 5, col: 10, width: 20, height: 10)
+        #expect(region.contains(row: 10, column: 20))
+    }
+
+    @Test("contains: point at top-left origin")
+    func containsOrigin() {
+        let region = Region(row: 5, col: 10, width: 20, height: 10)
+        #expect(region.contains(row: 5, column: 10))
+    }
+
+    @Test("contains: point at bottom-right boundary is exclusive")
+    func containsBoundaryExclusive() {
+        let region = Region(row: 5, col: 10, width: 20, height: 10)
+        #expect(!region.contains(row: 15, column: 30)) // row 5+10, col 10+20
+    }
+
+    @Test("contains: point above region")
+    func containsAbove() {
+        let region = Region(row: 5, col: 10, width: 20, height: 10)
+        #expect(!region.contains(row: 4, column: 15))
+    }
+
+    @Test("contains: point below region")
+    func containsBelow() {
+        let region = Region(row: 5, col: 10, width: 20, height: 10)
+        #expect(!region.contains(row: 15, column: 15))
+    }
+
+    @Test("contains: point left of region")
+    func containsLeft() {
+        let region = Region(row: 5, col: 10, width: 20, height: 10)
+        #expect(!region.contains(row: 7, column: 9))
+    }
+
+    @Test("contains: point right of region")
+    func containsRight() {
+        let region = Region(row: 5, col: 10, width: 20, height: 10)
+        #expect(!region.contains(row: 7, column: 30))
+    }
+
+    @Test("contains: empty region contains nothing")
+    func containsEmpty() {
+        let region = Region(row: 0, col: 0, width: 0, height: 0)
+        #expect(!region.contains(row: 0, column: 0))
+    }
 }
